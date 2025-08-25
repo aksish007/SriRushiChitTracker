@@ -256,7 +256,7 @@ export default function BulkUploadPage() {
                     <span>Uploading...</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <Progress value={uploadProgress} className="w-full" />
+                  {/* <Progress value={uploadProgress} className="w-full" /> */}
                 </div>
               )}
             </CardContent>
@@ -380,7 +380,7 @@ export default function BulkUploadPage() {
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="text-sm">
-                    <strong>Password:</strong> All users get default password "defaultPassword123"
+                    <strong>Password:</strong> All users get default password &quot;defaultPassword123&quot;
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -452,7 +452,7 @@ export default function BulkUploadPage() {
               </div>
               <div className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Don't include header row in template</span>
+                <span>Don&apos;t include header row in template</span>
               </div>
             </CardContent>
           </Card>

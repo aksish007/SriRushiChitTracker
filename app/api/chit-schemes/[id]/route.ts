@@ -121,7 +121,7 @@ export async function DELETE(
     }
 
     // Check if scheme has active subscriptions
-    const activeSubscriptions = await prisma.subscription.findMany({
+    const activeSubscriptions = await prisma.chitSubscription.findMany({
       where: {
         chitSchemeId: params.id,
         status: 'ACTIVE',

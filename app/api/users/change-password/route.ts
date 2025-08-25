@@ -10,12 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const authResult = await requireAuth(request);
-    if (!authResult.success) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { user } = authResult;
+    const user = await requireAuth(request);
     const { currentPassword, newPassword } = await request.json();
 
     if (!currentPassword || !newPassword) {

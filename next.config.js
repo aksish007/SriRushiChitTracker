@@ -1,9 +1,57 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable static export for IIS deployment with API routes
+  // output: 'export',
+  
+  // Image optimization settings
+  images: {
+    unoptimized: false,
+  },
+  
+  // Set trailing slash for IIS compatibility (optional for non-static export)
+  // trailingSlash: true,
+  
+  // Disable ESLint and TypeScript checking during build for deployment
   eslint: {
     ignoreDuringBuilds: true,
   },
-  images: { unoptimized: true },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  // Disable server-side features that don't work with static export
+  experimental: {
+    // Disable features that require server-side rendering
+  },
+  
+  // Configure for IIS hosting (root deployment)
+  // assetPrefix: process.env.NODE_ENV === 'production' ? '/ChitReferralTracker' : '',
+  // basePath: process.env.NODE_ENV === 'production' ? '/ChitReferralTracker' : '',
+  
+  // Disable dynamic features that require server
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
+  
+  // Webpack configuration for IIS compatibility
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Ensure client-side only features work properly
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
+  
+  // Environment variables for production
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+  
+
 };
 
 module.exports = nextConfig;

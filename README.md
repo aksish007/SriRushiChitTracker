@@ -76,6 +76,31 @@ A comprehensive, production-ready chit fund management system built with Next.js
    docker-compose up
    ```
 
+## 🚀 Deployment
+
+### IIS Deployment
+
+For deploying to IIS (Internet Information Services):
+
+1. **Build for IIS**
+   ```bash
+   npm run build:iis
+   ```
+
+2. **Deploy to IIS**
+   - Copy the `out` folder to your IIS web directory
+   - Configure IIS application pool and bindings
+   - Install URL Rewrite Module
+
+3. **Detailed Guide**
+   - See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete IIS deployment instructions
+
+### Other Deployment Options
+
+- **Vercel**: `npm run build && vercel --prod`
+- **Netlify**: `npm run build && netlify deploy --prod`
+- **Static Hosting**: `npm run build:static`
+
 ## �� Demo Credentials
 
 After running the seed script, use these credentials:

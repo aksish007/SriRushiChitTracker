@@ -12,12 +12,7 @@ export async function POST(
 ) {
   try {
     // Check authentication and admin role
-    const authResult = await requireAuth(request);
-    if (!authResult.success) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { user } = authResult;
+    const user = await requireAuth(request);
     if (user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }

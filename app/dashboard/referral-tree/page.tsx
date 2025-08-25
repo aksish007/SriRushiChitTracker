@@ -741,7 +741,7 @@ export default function ReferralTreePage() {
               <TreePine className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium mb-2">No Referral Tree Found</h3>
               <p className="text-muted-foreground">
-                This user doesn't have any referrals in their network yet.
+                This user doesn&apos;t have any referrals in their network yet.
               </p>
             </div>
           </CardContent>
