@@ -3,6 +3,9 @@ import { prisma } from '@/lib/database';
 import { comparePassword, generateToken } from '@/lib/auth';
 import { loginSchema } from '@/lib/validations';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

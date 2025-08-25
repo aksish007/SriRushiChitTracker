@@ -3,6 +3,9 @@ import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { exportUsersToExcel } from '@/lib/excel-utils';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const adminUser = await requireAuth(request, 'ADMIN');

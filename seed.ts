@@ -1,5 +1,6 @@
 import { prisma, generateRegistrationId, generateSubscriberId } from './lib/database';
 import { hashPassword } from './lib/auth';
+import { USER_ROLES, SUBSCRIPTION_STATUS, PAYOUT_STATUS } from './lib/constants';
 
 async function main() {
   console.log('🌱 Starting seed...');
@@ -17,7 +18,7 @@ async function main() {
       lastName: 'User',
       phone: '9876543210',
       address: 'Admin Office, City',
-      role: 'ADMIN',
+      role: USER_ROLES.ADMIN,
     },
   });
 
@@ -34,7 +35,7 @@ async function main() {
       lastName: 'Doe',
       phone: '9876543211',
       address: '123 Main Street, City',
-      role: 'USER',
+      role: USER_ROLES.USER,
     },
   });
 
@@ -53,7 +54,7 @@ async function main() {
         lastName: `Referral`,
         phone: `987654321${i}`,
         address: `${i} User Street, City`,
-        role: 'USER',
+        role: USER_ROLES.USER,
         referredBy: user.id,
       },
     });
@@ -134,7 +135,7 @@ async function main() {
         amount: 5000,
         month: currentMonth - 1 || 12,
         year: currentMonth - 1 > 0 ? currentYear : currentYear - 1,
-        status: 'PAID',
+        status: PAYOUT_STATUS.PAID,
         paidAt: new Date(),
       },
     });
@@ -146,7 +147,7 @@ async function main() {
         amount: 5000,
         month: currentMonth,
         year: currentYear,
-        status: 'PENDING',
+        status: PAYOUT_STATUS.PENDING,
       },
     });
   }

@@ -3,6 +3,9 @@ import { prisma, generateRegistrationId } from '@/lib/database';
 import { hashPassword, requireAuth } from '@/lib/auth';
 import { registerUserSchema } from '@/lib/validations';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Require admin authentication

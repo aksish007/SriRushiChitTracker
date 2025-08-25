@@ -3,6 +3,9 @@ import { prisma, generateSubscriberId } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { subscriptionSchema } from '@/lib/validations';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
