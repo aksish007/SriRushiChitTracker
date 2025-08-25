@@ -13,21 +13,42 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const sortField = searchParams.get('sortField') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const status = searchParams.get('status') || '';
 
     const skip = (page - 1) * limit;
 
-    const where = search ? {
-      AND: [
-        { isActive: true },
-        {
-          OR: [
-            { chitId: { contains: search } },
-            { name: { contains: search } },
-            { description: { contains: search } },
-          ],
-        },
-      ],
-    } : { isActive: true };
+    // Build where clause
+    const where: any = {};
+    
+    if (search) {
+      where.OR = [
+        { chitId: { contains: search } },
+        { name: { contains: search } },
+        { description: { contains: search } },
+      ];
+    }
+
+    if (status && status !== 'all') {
+      where.isActive = status === 'true';
+    }
+
+    // Build orderBy clause
+    const orderBy: any = {};
+    if (sortField === 'name') {
+      orderBy.name = sortOrder;
+    } else if (sortField === 'amount') {
+      orderBy.amount = sortOrder;
+    } else if (sortField === 'duration') {
+      orderBy.duration = sortOrder;
+    } else if (sortField === 'totalSlots') {
+      orderBy.totalSlots = sortOrder;
+    } else if (sortField === 'chitId') {
+      orderBy.chitId = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
 
     const [schemes, total] = await Promise.all([
       prisma.chitScheme.findMany({
@@ -48,7 +69,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),

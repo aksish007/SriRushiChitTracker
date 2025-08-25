@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, UserPlus, Download, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, Lock } from 'lucide-react';
+import { Search, Users, UserPlus, Download, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, Lock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -63,6 +63,9 @@ interface UsersResponse {
   };
 }
 
+type SortField = 'firstName' | 'lastName' | 'email' | 'registrationId' | 'createdAt' | 'role';
+type SortOrder = 'asc' | 'desc';
+
 export default function UsersPage() {
   const { token } = useAuth();
   const { toast } = useToast();
@@ -85,6 +88,14 @@ export default function UsersPage() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  
+  // Filter state
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -99,7 +110,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, debouncedSearch, pageSize]);
+  }, [currentPage, debouncedSearch, pageSize, sortField, sortOrder, roleFilter, statusFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -108,6 +119,10 @@ export default function UsersPage() {
         page: currentPage.toString(),
         limit: pageSize.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
+        sortField: sortField,
+        sortOrder: sortOrder,
+        ...(roleFilter !== 'all' && { role: roleFilter }),
+        ...(statusFilter !== 'all' && { status: statusFilter }),
       });
 
       const response = await fetch(`/api/users?${params}`, {
@@ -131,8 +146,6 @@ export default function UsersPage() {
     }
   };
 
-  // Only search when explicitly triggered, not automatically
-
   const handleSearch = (value: string) => {
     setSearchInput(value);
   };
@@ -141,6 +154,23 @@ export default function UsersPage() {
     e.preventDefault();
     setDebouncedSearch(searchInput);
     setCurrentPage(1);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
   };
 
   const handleSelectUser = (userId: string, checked: boolean) => {
@@ -182,6 +212,7 @@ export default function UsersPage() {
     if (!selectedUser) return;
 
     try {
+      setLoading(true);
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
@@ -208,11 +239,14 @@ export default function UsersPage() {
         description: 'Failed to update user',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      setLoading(true);
       const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -234,11 +268,14 @@ export default function UsersPage() {
         description: 'Failed to delete user',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleBulkDelete = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/users/bulk-delete', {
         method: 'DELETE',
         headers: {
@@ -265,11 +302,14 @@ export default function UsersPage() {
         description: 'Failed to delete users',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleBulkStatusUpdate = async (isActive: boolean) => {
     try {
+      setLoading(true);
       const response = await fetch('/api/users/bulk-status', {
         method: 'PUT',
         headers: {
@@ -296,11 +336,14 @@ export default function UsersPage() {
         description: 'Failed to update users',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResetPassword = async (userId: string) => {
     try {
+      setLoading(true);
       const response = await fetch(`/api/users/${userId}/reset-password`, {
         method: 'POST',
         headers: {
@@ -329,37 +372,63 @@ export default function UsersPage() {
         description: "An error occurred while resetting password",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const exportUsers = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/reports/export-users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (!response.ok) throw new Error('Failed to export users');
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'users-export.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `users-export-${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+        toast({
+          title: 'Success',
+          description: 'Users exported successfully',
+        });
+      } else {
+        throw new Error('Failed to export users');
+      }
     } catch (error) {
       console.error('Error exporting users:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to export users',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return 'bg-gradient-danger text-white';
+      case 'USER':
+        return 'bg-gradient-success text-white';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-  };
-
-  const getRoleColor = (role: string) => {
-    return role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800';
+    return isActive 
+      ? 'bg-gradient-success text-white' 
+      : 'bg-gradient-warning text-white';
   };
 
   if (loading) {
@@ -451,13 +520,30 @@ export default function UsersPage() {
                 <SelectItem value="50">50 rows</SelectItem>
               </SelectContent>
             </Select>
-            <Button 
-              variant="outline"
-              className="hover:bg-gradient-secondary hover:text-white hover:border-blue-500 transition-all duration-300"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
+            
+            {/* Role Filter */}
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="USER">User</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Status Filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -540,24 +626,64 @@ export default function UsersPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gradient-primary text-white">
-                <TableHead className="w-12 text-white">
-                  <Checkbox
-                    checked={selectedUsers.length === users.length && users.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="text-white">Registration ID</TableHead>
-                <TableHead className="text-white">Name</TableHead>
-                <TableHead className="text-white">Email</TableHead>
-                <TableHead className="text-white">Phone</TableHead>
-                <TableHead className="text-white">Role</TableHead>
-                <TableHead className="text-white">Status</TableHead>
-                <TableHead className="text-white">Referrals</TableHead>
-                <TableHead className="text-white">Subscriptions</TableHead>
-                <TableHead className="text-white">Joined</TableHead>
-                <TableHead className="w-12 text-white">Actions</TableHead>
-              </TableRow>
+                              <TableRow className="bg-gradient-primary text-white">
+                  <TableHead className="w-12 text-white">
+                    <Checkbox
+                      checked={selectedUsers.length === users.length && users.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('registrationId')}
+                    >
+                      Registration ID {getSortIcon('registrationId')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('firstName')}
+                    >
+                      Name {getSortIcon('firstName')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('email')}
+                    >
+                      Email {getSortIcon('email')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">Phone</TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('role')}
+                    >
+                      Role {getSortIcon('role')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-white">Referrals</TableHead>
+                  <TableHead className="text-white">Subscriptions</TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      Joined {getSortIcon('createdAt')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-12 text-white">Actions</TableHead>
+                </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
@@ -663,6 +789,16 @@ export default function UsersPage() {
               ))}
             </TableBody>
           </Table>
+          
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="text-sm text-muted-foreground">Loading...</span>
+              </div>
+            </div>
+          )}
 
           {/* Pagination */}
           {pagination.total > 0 && (

@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
     const userId = searchParams.get('userId');
+    const sortField = searchParams.get('sortField') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     const skip = (page - 1) * limit;
 
@@ -39,6 +41,20 @@ export async function GET(request: NextRequest) {
       where.status = status;
     }
 
+    // Build orderBy clause
+    const orderBy: any = {};
+    if (sortField === 'status') {
+      orderBy.status = sortOrder;
+    } else if (sortField === 'joinedAt') {
+      orderBy.joinedAt = sortOrder;
+    } else if (sortField === 'userName') {
+      orderBy.user = { firstName: sortOrder };
+    } else if (sortField === 'schemeName') {
+      orderBy.chitScheme = { name: sortOrder };
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
+
     const [subscriptions, total] = await Promise.all([
       prisma.chitSubscription.findMany({
         where,
@@ -56,7 +72,7 @@ export async function GET(request: NextRequest) {
             orderBy: { createdAt: 'desc' },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),

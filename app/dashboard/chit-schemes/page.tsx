@@ -15,7 +15,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CreditCard, Plus, Users, IndianRupee, Calendar, Activity, Edit, Eye, Trash2, MoreHorizontal, Check, X, Search } from 'lucide-react';
+import { CreditCard, Plus, Users, IndianRupee, Calendar, Activity, Edit, Eye, Trash2, MoreHorizontal, Check, X, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface ChitScheme {
@@ -61,6 +61,13 @@ export default function ChitSchemesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formData, setFormData] = useState({
     chitId: '',
     name: '',
@@ -82,7 +89,7 @@ export default function ChitSchemesPage() {
 
   useEffect(() => {
     fetchSchemes();
-  }, [currentPage, pageSize, debouncedSearch]);
+  }, [currentPage, pageSize, debouncedSearch, sortField, sortOrder, statusFilter]);
 
   const fetchSchemes = async () => {
     try {
@@ -91,6 +98,9 @@ export default function ChitSchemesPage() {
         page: currentPage.toString(),
         limit: pageSize.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
+        sortField: sortField,
+        sortOrder: sortOrder,
+        ...(statusFilter !== 'all' && { status: statusFilter }),
       });
 
       const response = await fetch(`/api/chit-schemes?${params}`, {
@@ -124,6 +134,23 @@ export default function ChitSchemesPage() {
     e.preventDefault();
     setDebouncedSearch(searchInput);
     setCurrentPage(1);
+  };
+
+  const handleSort = (field: 'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (field: 'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
   };
 
   const handleSelectScheme = (schemeId: string, checked: boolean) => {
@@ -165,6 +192,7 @@ export default function ChitSchemesPage() {
     if (!selectedScheme) return;
 
     try {
+      setLoading(true);
       const response = await fetch(`/api/chit-schemes/${selectedScheme.id}`, {
         method: 'PUT',
         headers: {
@@ -191,11 +219,14 @@ export default function ChitSchemesPage() {
         description: 'Failed to update chit scheme',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteScheme = async (schemeId: string) => {
     try {
+      setLoading(true);
       const response = await fetch(`/api/chit-schemes/${schemeId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -217,11 +248,14 @@ export default function ChitSchemesPage() {
         description: 'Failed to delete chit scheme',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleBulkDelete = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/chit-schemes/bulk-delete', {
         method: 'DELETE',
         headers: {
@@ -248,11 +282,14 @@ export default function ChitSchemesPage() {
         description: 'Failed to delete chit schemes',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleBulkStatusUpdate = async (isActive: boolean) => {
     try {
+      setLoading(true);
       const response = await fetch('/api/chit-schemes/bulk-status', {
         method: 'PUT',
         headers: {
@@ -279,6 +316,8 @@ export default function ChitSchemesPage() {
         description: 'Failed to update chit schemes',
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -381,7 +420,9 @@ export default function ChitSchemesPage() {
   };
 
   const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+    return isActive 
+      ? 'bg-gradient-success text-white' 
+      : 'bg-gradient-warning text-white';
   };
 
   const getSubscriptionStatusColor = (status: string) => {
@@ -418,16 +459,17 @@ export default function ChitSchemesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Chit Schemes</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Chit Schemes</h1>
           <p className="text-muted-foreground">
             Manage chit fund schemes and their subscriptions
           </p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               Create Scheme
             </Button>
@@ -549,25 +591,31 @@ export default function ChitSchemesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-blue transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-8 w-8 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-primary rounded-full">
+                <CreditCard className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">{schemes.length}</p>
+                <p className="text-2xl font-bold text-gradient-primary">
+                  {schemes.length}
+                </p>
                 <p className="text-sm text-muted-foreground">Total Schemes</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-green transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Activity className="h-8 w-8 text-green-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-success rounded-full">
+                <Activity className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-success">
                   {schemes.filter(s => s.isActive).length}
                 </p>
                 <p className="text-sm text-muted-foreground">Active Schemes</p>
@@ -576,12 +624,14 @@ export default function ChitSchemesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-blue transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Users className="h-8 w-8 text-purple-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-secondary rounded-full">
+                <Users className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-secondary">
                   {schemes.reduce((sum, scheme) => sum + scheme.subscriptions.length, 0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Subscriptions</p>
@@ -590,12 +640,14 @@ export default function ChitSchemesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-green transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <IndianRupee className="h-8 w-8 text-orange-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-warning rounded-full">
+                <IndianRupee className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-warning">
                   ₹{schemes.reduce((sum, scheme) => sum + Number(scheme.amount), 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Value</p>
@@ -607,17 +659,24 @@ export default function ChitSchemesPage() {
 
       {/* Bulk Actions */}
       {selectedSchemes.length > 0 && (
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20">
+          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+            <CardTitle className="text-white">Bulk Actions</CardTitle>
+            <CardDescription className="text-yellow-100">
+              {selectedSchemes.length} scheme(s) selected
+            </CardDescription>
+          </CardHeader>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium text-primary">
                   {selectedSchemes.length} scheme(s) selected
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedSchemes([])}
+                  className="hover:bg-gradient-secondary hover:text-white hover:border-blue-500 transition-all duration-300"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Clear
@@ -628,6 +687,7 @@ export default function ChitSchemesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleBulkStatusUpdate(true)}
+                  className="hover:bg-gradient-success hover:text-white hover:border-green-500 transition-all duration-300"
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Activate
@@ -636,13 +696,18 @@ export default function ChitSchemesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleBulkStatusUpdate(false)}
+                  className="hover:bg-gradient-warning hover:text-white hover:border-orange-500 transition-all duration-300"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Deactivate
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="hover:shadow-glow-red transition-all duration-300"
+                    >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete
                     </Button>
@@ -668,30 +733,32 @@ export default function ChitSchemesPage() {
         </Card>
       )}
 
-      {/* Search and Page Size */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <form onSubmit={handleSearchSubmit} className="relative flex">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      {/* Search and Filters */}
+      <Card className="shadow-glow border-2 border-primary/20">
+        <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
+          <CardTitle className="text-white">Search & Filters</CardTitle>
+          <CardDescription className="text-blue-100">
+            Find and filter chit schemes
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-4">
+              <div className="flex-1">
                 <Input
-                  placeholder="Search schemes..."
+                  placeholder="Search schemes by name, chit ID..."
                   value={searchInput}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10 pr-20"
+                  className="border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
-                <Button 
-                  type="submit" 
-                  size="sm" 
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3"
-                >
-                  Search
-                </Button>
-              </form>
-            </div>
+              </div>
+              <Button type="submit" className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+            </form>
             <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -701,36 +768,100 @@ export default function ChitSchemesPage() {
                 <SelectItem value="50">50 rows</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Status Filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
       {/* Schemes Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Chit Schemes ({pagination.total})</CardTitle>
+      <Card className="shadow-glow border-2 border-primary/20">
+        <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+          <CardTitle className="text-white">All Chit Schemes ({pagination.total})</CardTitle>
+          <CardDescription className="text-yellow-100">
+            Manage and monitor all chit fund schemes
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedSchemes.length === schemes.length && schemes.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Chit ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Slots</TableHead>
-                <TableHead>Subscriptions</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-12">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+        <CardContent className="p-0">
+          <div className="relative">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gradient-primary text-white">
+                  <TableHead className="w-12 text-white">
+                    <Checkbox
+                      checked={selectedSchemes.length === schemes.length && schemes.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('chitId')}
+                    >
+                      Chit ID {getSortIcon('chitId')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('name')}
+                    >
+                      Name {getSortIcon('name')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('amount')}
+                    >
+                      Amount {getSortIcon('amount')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('duration')}
+                    >
+                      Duration {getSortIcon('duration')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('totalSlots')}
+                    >
+                      Slots {getSortIcon('totalSlots')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-white">Subscriptions</TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-white">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-white hover:bg-white/20"
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      Created {getSortIcon('createdAt')}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-12 text-white">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {schemes.map((scheme) => (
                 <TableRow key={scheme.id}>
@@ -846,9 +977,20 @@ export default function ChitSchemesPage() {
               ))}
             </TableBody>
           </Table>
+          
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="text-sm text-muted-foreground">Loading...</span>
+              </div>
+            </div>
+          )}
+        </div>
 
-          {/* Pagination */}
-          {pagination.total > 0 && (
+        {/* Pagination */}
+        {pagination.total > 0 && (
             <div className="mt-6">
               <Pagination>
                 <PaginationContent>

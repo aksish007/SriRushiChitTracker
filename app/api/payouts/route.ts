@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get('month') || '';
     const year = searchParams.get('year') || '';
     const userId = searchParams.get('userId');
+    const sortField = searchParams.get('sortField') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     const skip = (page - 1) * limit;
 
@@ -48,6 +50,22 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Build orderBy clause
+    const orderBy: any = {};
+    if (sortField === 'amount') {
+      orderBy.amount = sortOrder;
+    } else if (sortField === 'month') {
+      orderBy.month = sortOrder;
+    } else if (sortField === 'year') {
+      orderBy.year = sortOrder;
+    } else if (sortField === 'status') {
+      orderBy.status = sortOrder;
+    } else if (sortField === 'paidAt') {
+      orderBy.paidAt = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
+
     const [payouts, total] = await Promise.all([
       prisma.payout.findMany({
         where,
@@ -66,7 +84,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),

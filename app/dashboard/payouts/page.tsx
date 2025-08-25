@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X } from 'lucide-react';
+import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface Payout {
@@ -87,6 +87,10 @@ export default function PayoutsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<'amount' | 'month' | 'year' | 'status' | 'createdAt' | 'paidAt'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [formData, setFormData] = useState({
     subscriptionId: '',
     amount: '',
@@ -103,7 +107,7 @@ export default function PayoutsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, debouncedSearch, statusFilter, monthFilter, yearFilter, pageSize]);
+  }, [currentPage, debouncedSearch, statusFilter, monthFilter, yearFilter, pageSize, sortField, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -115,6 +119,8 @@ export default function PayoutsPage() {
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(monthFilter !== 'all' && { month: monthFilter }),
         ...(yearFilter !== 'all' && { year: yearFilter }),
+        sortField: sortField,
+        sortOrder: sortOrder,
       });
 
       const [payoutsRes, subscriptionsRes] = await Promise.all([
@@ -173,6 +179,23 @@ export default function PayoutsPage() {
   const handleYearFilter = (value: string) => {
     setYearFilter(value);
     setCurrentPage(1);
+  };
+
+  const handleSort = (field: 'amount' | 'month' | 'year' | 'status' | 'createdAt' | 'paidAt') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (field: 'amount' | 'month' | 'year' | 'status' | 'createdAt' | 'paidAt') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
   };
 
   const handleSelectPayout = (payoutId: string, checked: boolean) => {
@@ -461,11 +484,11 @@ export default function PayoutsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PAID':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-success text-white';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-warning text-white';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-danger text-white';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -518,9 +541,10 @@ export default function PayoutsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payouts</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Payouts</h1>
           <p className="text-muted-foreground">
             Manage payouts for chit fund subscriptions
           </p>
@@ -528,7 +552,7 @@ export default function PayoutsPage() {
         {user?.role === 'ADMIN' && (
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Payout
               </Button>
@@ -641,25 +665,31 @@ export default function PayoutsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-blue transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <FileText className="h-8 w-8 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-primary rounded-full">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">{payouts.length}</p>
+                <p className="text-2xl font-bold text-gradient-primary">
+                  {payouts.length}
+                </p>
                 <p className="text-sm text-muted-foreground">Total Payouts</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-green transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-success rounded-full">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-success">
                   {payouts.filter(p => p.status === 'PAID').length}
                 </p>
                 <p className="text-sm text-muted-foreground">Paid Payouts</p>
@@ -668,12 +698,14 @@ export default function PayoutsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-blue transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Clock className="h-8 w-8 text-yellow-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-warning rounded-full">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-warning">
                   {payouts.filter(p => p.status === 'PENDING').length}
                 </p>
                 <p className="text-sm text-muted-foreground">Pending Payouts</p>
@@ -682,12 +714,14 @@ export default function PayoutsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-green transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <IndianRupee className="h-8 w-8 text-orange-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-secondary rounded-full">
+                <IndianRupee className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-secondary">
                   ₹{payouts.reduce((sum, p) => sum + Number(p.amount), 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
@@ -698,34 +732,31 @@ export default function PayoutsPage() {
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search & Filter
-          </CardTitle>
+      <Card className="shadow-glow border-2 border-primary/20">
+        <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
+          <CardTitle className="text-white">Search & Filters</CardTitle>
+          <CardDescription className="text-blue-100">
+            Find and filter payouts
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-5">
-            <div>
-              <form onSubmit={handleSearchSubmit} className="relative flex">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-4">
+              <div className="flex-1">
                 <Input
                   placeholder="Search by name or ID..."
                   value={searchInput}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pr-20"
+                  className="border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
-                <Button 
-                  type="submit" 
-                  size="sm" 
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3"
-                >
-                  Search
-                </Button>
-              </form>
-            </div>
+              </div>
+              <Button type="submit" className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+            </form>
             <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
-              <SelectTrigger>
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -736,8 +767,8 @@ export default function PayoutsPage() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -747,8 +778,8 @@ export default function PayoutsPage() {
               </SelectContent>
             </Select>
             <Select value={monthFilter} onValueChange={handleMonthFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by month" />
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Month" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Months</SelectItem>
@@ -760,8 +791,8 @@ export default function PayoutsPage() {
               </SelectContent>
             </Select>
             <Select value={yearFilter} onValueChange={handleYearFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by year" />
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>

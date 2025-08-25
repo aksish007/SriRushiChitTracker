@@ -12,17 +12,46 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const sortField = searchParams.get('sortField') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const role = searchParams.get('role') || '';
+    const status = searchParams.get('status') || '';
 
     const skip = (page - 1) * limit;
 
-    const where = search ? {
-      OR: [
+    // Build where clause
+    const where: any = {};
+    
+    if (search) {
+      where.OR = [
         { firstName: { contains: search } },
         { lastName: { contains: search } },
         { email: { contains: search } },
         { registrationId: { contains: search } },
-      ],
-    } : {};
+      ];
+    }
+
+    if (role && role !== 'all') {
+      where.role = role;
+    }
+
+    if (status && status !== 'all') {
+      where.isActive = status === 'true';
+    }
+
+    // Build orderBy clause
+    const orderBy: any = {};
+    if (sortField === 'firstName' || sortField === 'lastName') {
+      orderBy[sortField] = sortOrder;
+    } else if (sortField === 'registrationId') {
+      orderBy.registrationId = sortOrder;
+    } else if (sortField === 'email') {
+      orderBy.email = sortOrder;
+    } else if (sortField === 'role') {
+      orderBy.role = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -68,7 +97,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),

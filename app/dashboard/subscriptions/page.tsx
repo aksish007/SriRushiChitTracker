@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { TrendingUp, Plus, Users, IndianRupee, Calendar, Activity, Search, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X } from 'lucide-react';
+import { TrendingUp, Plus, Users, IndianRupee, Calendar, Activity, Search, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -62,6 +62,7 @@ interface ChitScheme {
   name: string;
   amount: number;
   totalSlots: number;
+  isActive: boolean;
 }
 
 interface SubscriptionsResponse {
@@ -98,6 +99,10 @@ export default function SubscriptionsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<'status' | 'joinedAt' | 'createdAt' | 'userName' | 'schemeName'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Form states
   const [formData, setFormData] = useState({
@@ -111,7 +116,7 @@ export default function SubscriptionsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, debouncedSearch, statusFilter, pageSize]);
+  }, [currentPage, debouncedSearch, statusFilter, pageSize, sortField, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -121,6 +126,8 @@ export default function SubscriptionsPage() {
         limit: pageSize.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
+        sortField: sortField,
+        sortOrder: sortOrder,
       });
 
       const [subscriptionsRes, usersRes, schemesRes] = await Promise.all([
@@ -177,6 +184,23 @@ export default function SubscriptionsPage() {
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value);
     setCurrentPage(1);
+  };
+
+  const handleSort = (field: 'status' | 'joinedAt' | 'createdAt' | 'userName' | 'schemeName') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (field: 'status' | 'joinedAt' | 'createdAt' | 'userName' | 'schemeName') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
   };
 
   const handleSelectSubscription = (subscriptionId: string, checked: boolean) => {
@@ -379,11 +403,11 @@ export default function SubscriptionsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-success text-white';
       case 'COMPLETED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-secondary text-white';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-danger text-white';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -392,11 +416,11 @@ export default function SubscriptionsPage() {
   const getPayoutStatusColor = (status: string) => {
     switch (status) {
       case 'PAID':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-success text-white';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-warning text-white';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-danger text-white';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -423,38 +447,48 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Subscriptions</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Subscriptions</h1>
           <p className="text-muted-foreground">
             Manage chit fund subscriptions and track member participation
           </p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Subscription
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-blue transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-8 w-8 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-primary rounded-full">
+                <TrendingUp className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">{subscriptions.length}</p>
+                <p className="text-2xl font-bold text-gradient-primary">
+                  {subscriptions.length}
+                </p>
                 <p className="text-sm text-muted-foreground">Total Subscriptions</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-green transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Activity className="h-8 w-8 text-green-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-success rounded-full">
+                <Activity className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-success">
                   {subscriptions.filter(s => s.status === 'ACTIVE').length}
                 </p>
                 <p className="text-sm text-muted-foreground">Active</p>
@@ -462,12 +496,14 @@ export default function SubscriptionsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-blue transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-8 w-8 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-secondary rounded-full">
+                <Calendar className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-secondary">
                   {subscriptions.filter(s => s.status === 'COMPLETED').length}
                 </p>
                 <p className="text-sm text-muted-foreground">Completed</p>
@@ -475,12 +511,14 @@ export default function SubscriptionsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-glow border-2 border-primary/20 hover:shadow-glow-green transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <IndianRupee className="h-8 w-8 text-orange-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-warning rounded-full">
+                <IndianRupee className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gradient-warning">
                   ₹{subscriptions.reduce((sum, sub) => sum + Number(sub.chitScheme.amount), 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Value</p>
