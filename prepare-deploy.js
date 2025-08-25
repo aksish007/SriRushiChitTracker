@@ -21,6 +21,11 @@ const OPTIONAL_FILES = [
   '.env.production'
 ];
 
+// Always include production env file for deployment
+const ALWAYS_INCLUDE_FILES = [
+  '.env.production'
+];
+
 // Clean and create deploy directory
 function cleanDeployDir() {
   console.log('📁 Cleaning deployment directory...');
@@ -115,6 +120,18 @@ function copyOptionalFiles() {
     
     if (copyFile(srcPath, destPath)) {
       console.log(`✅ Copied: ${file}`);
+    }
+  }
+  
+  // Always copy production env file
+  for (const file of ALWAYS_INCLUDE_FILES) {
+    const srcPath = path.join(process.cwd(), file);
+    const destPath = path.join(process.cwd(), DEPLOY_DIR, file);
+    
+    if (copyFile(srcPath, destPath)) {
+      console.log(`✅ Copied: ${file}`);
+    } else {
+      console.log(`⚠️  Warning: ${file} not found, but it's required for production`);
     }
   }
 }
