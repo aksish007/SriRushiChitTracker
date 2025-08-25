@@ -21,6 +21,7 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  User,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -36,6 +37,11 @@ const sidebarItems: SidebarItem[] = [
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'Profile',
+    href: '/dashboard/profile',
+    icon: User,
   },
   {
     title: 'Users',
@@ -191,9 +197,9 @@ export function Sidebar() {
       </Sheet>
       
       {/* Desktop sidebar */}
-      <div className="hidden md:block h-screen">
+      <div className="hidden md:block">
         <div className={cn(
-          "h-full border-r bg-gradient-to-b from-background to-muted/20 shadow-glow transition-all duration-300",
+          "border-r bg-gradient-to-b from-background to-muted/20 shadow-glow transition-all duration-300",
           collapsed ? "w-16" : "w-[280px]"
         )}>
           <SidebarContent collapsed={collapsed} onToggle={handleToggle} />
