@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { Users, CreditCard, TrendingUp, DollarSign, Activity } from 'lucide-react';
+import { Users, CreditCard, TrendingUp, IndianRupee, Activity, Plus, FileText, Download, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { useRouter } from 'next/navigation';
 
 interface DashboardStats {
   totalUsers: number;
@@ -14,10 +17,17 @@ interface DashboardStats {
   activeSchemes: number;
   monthlyData: Array<{ month: string; users: number; payouts: number }>;
   statusData: Array<{ name: string; value: number; color: string }>;
+  userStats?: {
+    mySubscriptions: number;
+    myPayouts: number;
+    nextPayoutDate?: string;
+    totalEarned: number;
+  };
 }
 
 export default function Dashboard() {
   const { user, token } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -56,6 +66,23 @@ export default function Dashboard() {
       const totalPayouts = payoutsData.payouts?.reduce((sum: number, payout: any) => 
         sum + (payout.status === 'PAID' ? Number(payout.amount) : 0), 0) || 0;
 
+      // Calculate user-specific stats if not admin
+      let userStats = undefined;
+      if (user?.role !== 'ADMIN') {
+        const mySubscriptions = subscriptionsData.subscriptions?.filter((s: any) => 
+          s.subscriberId === user?.registrationId) || [];
+        const myPayouts = payoutsData.payouts?.filter((p: any) => 
+          p.subscription.subscriberId === user?.registrationId) || [];
+        
+        userStats = {
+          mySubscriptions: mySubscriptions.length,
+          myPayouts: myPayouts.filter((p: any) => p.status === 'PAID').length,
+          totalEarned: myPayouts.reduce((sum: number, p: any) => 
+            sum + (p.status === 'PAID' ? Number(p.amount) : 0), 0),
+          nextPayoutDate: mySubscriptions.find((s: any) => s.status === 'ACTIVE')?.nextPayoutDate
+        };
+      }
+
       // Generate monthly data (mock data for demo)
       const monthlyData = [
         { month: 'Jan', users: 45, payouts: 125000 },
@@ -68,7 +95,7 @@ export default function Dashboard() {
 
       // Status data for pie chart
       const statusData = [
-        { name: 'Active Subscriptions', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'ACTIVE').length || 0, color: '#10b981' },
+        { name: 'Active', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'ACTIVE').length || 0, color: '#10b981' },
         { name: 'Completed', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'COMPLETED').length || 0, color: '#3b82f6' },
         { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
       ];
@@ -80,11 +107,41 @@ export default function Dashboard() {
         activeSchemes: schemesData.schemes?.filter((s: any) => s.isActive).length || 0,
         monthlyData,
         statusData,
+        userStats,
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'register':
+        router.push('/dashboard/register');
+        break;
+      case 'scheme':
+        router.push('/dashboard/chit-schemes');
+        break;
+      case 'payouts':
+        router.push('/dashboard/payouts');
+        break;
+      case 'users':
+        router.push('/dashboard/users');
+        break;
+      case 'bulk-upload':
+        router.push('/dashboard/bulk-upload');
+        break;
+      case 'reports':
+        router.push('/dashboard/reports');
+        break;
+      case 'subscriptions':
+        router.push('/dashboard/subscriptions');
+        break;
+      case 'referral-tree':
+        router.push('/dashboard/referral-tree');
+        break;
     }
   };
 
@@ -116,128 +173,272 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, {user?.firstName}! Here's what's happening with your chit fund business.
+            Welcome back, {user?.firstName}! {user?.role === 'ADMIN' ? "Here's what's happening with your chit fund business." : "Here's your chit fund overview."}
           </p>
         </div>
         <div className="text-sm text-muted-foreground">
           <p>Registration ID: <span className="font-medium">{user?.registrationId}</span></p>
-          <p>Role: <span className="font-medium">{user?.role}</span></p>
+          <p>Role: <Badge variant={user?.role === 'ADMIN' ? 'default' : 'secondary'}>{user?.role}</Badge></p>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Users"
-          value={stats?.totalUsers || 0}
-          description="Registered members"
-          icon={Users}
-          trend={{ value: 12, isPositive: true }}
-        />
-        <StatsCard
-          title="Active Subscriptions"
-          value={stats?.totalSubscriptions || 0}
-          description="Current chit subscriptions"
-          icon={CreditCard}
-          trend={{ value: 8, isPositive: true }}
-        />
-        <StatsCard
-          title="Total Payouts"
-          value={`₹${(stats?.totalPayouts || 0).toLocaleString()}`}
-          description="Amount distributed"
-          icon={DollarSign}
-          trend={{ value: 15, isPositive: true }}
-        />
-        <StatsCard
-          title="Active Schemes"
-          value={stats?.activeSchemes || 0}
-          description="Running chit schemes"
-          icon={Activity}
-          trend={{ value: 3, isPositive: true }}
-        />
+        {user?.role === 'ADMIN' ? (
+          <>
+            <StatsCard
+              title="Total Users"
+              value={stats?.totalUsers || 0}
+              description="Registered members"
+              icon={Users}
+              trend={{ value: 12, isPositive: true }}
+            />
+            <StatsCard
+              title="Active Subscriptions"
+              value={stats?.totalSubscriptions || 0}
+              description="Current chit subscriptions"
+              icon={CreditCard}
+              trend={{ value: 8, isPositive: true }}
+            />
+            <StatsCard
+              title="Total Payouts"
+              value={`₹${Number(stats?.totalPayouts || 0).toLocaleString()}`}
+              description="Amount distributed"
+              icon={IndianRupee}
+              trend={{ value: 15, isPositive: true }}
+            />
+            <StatsCard
+              title="Active Schemes"
+              value={stats?.activeSchemes || 0}
+              description="Running chit schemes"
+              icon={Activity}
+              trend={{ value: 3, isPositive: true }}
+            />
+          </>
+        ) : (
+          <>
+            <StatsCard
+              title="My Subscriptions"
+              value={stats?.userStats?.mySubscriptions || 0}
+              description="Active chit subscriptions"
+              icon={CreditCard}
+            />
+            <StatsCard
+              title="Total Earned"
+              value={`₹${Number(stats?.userStats?.totalEarned || 0).toLocaleString()}`}
+              description="Total payouts received"
+              icon={IndianRupee}
+            />
+            <StatsCard
+              title="Payouts Received"
+              value={stats?.userStats?.myPayouts || 0}
+              description="Successful payouts"
+              icon={CheckCircle}
+            />
+            <StatsCard
+              title="Next Payout"
+              value={stats?.userStats?.nextPayoutDate ? new Date(stats.userStats.nextPayoutDate).toLocaleDateString() : 'N/A'}
+              description="Expected payout date"
+              icon={Calendar}
+            />
+          </>
+        )}
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Monthly Activity Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Activity</CardTitle>
-            <CardDescription>User registrations and payouts over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats?.monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="users" fill="#3b82f6" name="New Users" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Charts - Only show for Admin */}
+      {user?.role === 'ADMIN' && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Monthly Activity Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Activity</CardTitle>
+              <CardDescription>User registrations and payouts over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats?.monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="users" fill="#3b82f6" name="New Users" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-        {/* Subscription Status Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscription Status</CardTitle>
-            <CardDescription>Distribution of subscription statuses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={stats?.statusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {stats?.statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Subscription Status Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscription Status</CardTitle>
+              <CardDescription>Distribution of subscription statuses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={stats?.statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {stats?.statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Quick Actions */}
-      {user?.role === 'ADMIN' && (
+      {user?.role === 'ADMIN' ? (
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4 text-center">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <h3 className="font-semibold">Register New User</h3>
-                  <p className="text-sm text-muted-foreground">Add a new member</p>
-                </CardContent>
-              </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4 text-center">
-                  <CreditCard className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <h3 className="font-semibold">Create Chit Scheme</h3>
-                  <p className="text-sm text-muted-foreground">Start new chit</p>
-                </CardContent>
-              </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4 text-center">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('register')}
+              >
+                <Users className="h-8 w-8 text-blue-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Register User</h3>
+                  <p className="text-sm text-muted-foreground">Add new member</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('bulk-upload')}
+              >
+                <FileText className="h-8 w-8 text-green-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Bulk Upload</h3>
+                  <p className="text-sm text-muted-foreground">Upload users</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('scheme')}
+              >
+                <CreditCard className="h-8 w-8 text-purple-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Create Scheme</h3>
+                  <p className="text-sm text-muted-foreground">New chit scheme</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('payouts')}
+              >
+                <IndianRupee className="h-8 w-8 text-orange-600" />
+                <div className="text-center">
                   <h3 className="font-semibold">Process Payouts</h3>
                   <p className="text-sm text-muted-foreground">Manage payments</p>
-                </CardContent>
-              </Card>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('users')}
+              >
+                <Users className="h-8 w-8 text-indigo-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Manage Users</h3>
+                  <p className="text-sm text-muted-foreground">View all users</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('subscriptions')}
+              >
+                <CreditCard className="h-8 w-8 text-teal-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Subscriptions</h3>
+                  <p className="text-sm text-muted-foreground">Manage subscriptions</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('referral-tree')}
+              >
+                <TrendingUp className="h-8 w-8 text-pink-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Referral Tree</h3>
+                  <p className="text-sm text-muted-foreground">View network</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('reports')}
+              >
+                <Download className="h-8 w-8 text-red-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">Reports</h3>
+                  <p className="text-sm text-muted-foreground">Download reports</p>
+                </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>My Activities</CardTitle>
+            <CardDescription>Quick access to your chit fund activities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('subscriptions')}
+              >
+                <CreditCard className="h-8 w-8 text-blue-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">My Subscriptions</h3>
+                  <p className="text-sm text-muted-foreground">View my chits</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('payouts')}
+              >
+                <IndianRupee className="h-8 w-8 text-green-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">My Payouts</h3>
+                  <p className="text-sm text-muted-foreground">Payment history</p>
+                </div>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                onClick={() => handleQuickAction('referral-tree')}
+              >
+                <TrendingUp className="h-8 w-8 text-purple-600" />
+                <div className="text-center">
+                  <h3 className="font-semibold">My Network</h3>
+                  <p className="text-sm text-muted-foreground">Referral tree</p>
+                </div>
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -7,11 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { TrendingUp, Plus, Users, DollarSign, Calendar, Activity, Search, Filter } from 'lucide-react';
+import { TrendingUp, Plus, Users, IndianRupee, Calendar, Activity, Search, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Subscription {
   id: string;
@@ -60,6 +64,16 @@ interface ChitScheme {
   totalSlots: number;
 }
 
+interface SubscriptionsResponse {
+  subscriptions: Subscription[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 export default function SubscriptionsPage() {
   const { token, user } = useAuth();
   const { toast } = useToast();
@@ -69,22 +83,48 @@ export default function SubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSubscriptions, setSelectedSubscriptions] = useState<string[]>([]);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+  });
+  const [pageSize, setPageSize] = useState(10);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Form states
   const [formData, setFormData] = useState({
     userId: '',
     chitSchemeId: '',
+  });
+  const [editForm, setEditForm] = useState({
+    status: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage, debouncedSearch, statusFilter, pageSize]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+      });
+
       const [subscriptionsRes, usersRes, schemesRes] = await Promise.all([
-        fetch('/api/subscriptions', {
+        fetch(`/api/subscriptions?${params}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch('/api/users?limit=1000', {
@@ -96,8 +136,9 @@ export default function SubscriptionsPage() {
       ]);
 
       if (subscriptionsRes.ok) {
-        const subscriptionsData = await subscriptionsRes.json();
+        const subscriptionsData: SubscriptionsResponse = await subscriptionsRes.json();
         setSubscriptions(subscriptionsData.subscriptions);
+        setPagination(subscriptionsData.pagination);
       }
 
       if (usersRes.ok) {
@@ -107,13 +148,13 @@ export default function SubscriptionsPage() {
 
       if (schemesRes.ok) {
         const schemesData = await schemesRes.json();
-        setSchemes(schemesData.schemes);
+        setSchemes(schemesData.schemes.filter((scheme: ChitScheme) => scheme.isActive));
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load data',
+        description: 'Failed to fetch data',
         variant: 'destructive',
       });
     } finally {
@@ -121,25 +162,184 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  // Only search when explicitly triggered, not automatically
 
-    if (!formData.userId) {
-      newErrors.userId = 'Please select a user';
-    }
-
-    if (!formData.chitSchemeId) {
-      newErrors.chitSchemeId = 'Please select a chit scheme';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleSearch = (value: string) => {
+    setSearchInput(value);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+    setDebouncedSearch(searchInput);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilter = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSelectSubscription = (subscriptionId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSubscriptions([...selectedSubscriptions, subscriptionId]);
+    } else {
+      setSelectedSubscriptions(selectedSubscriptions.filter(id => id !== subscriptionId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedSubscriptions(subscriptions.map(sub => sub.id));
+    } else {
+      setSelectedSubscriptions([]);
+    }
+  };
+
+  const handleViewSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    setShowViewDialog(true);
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    setEditForm({
+      status: subscription.status,
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateSubscription = async () => {
+    if (!selectedSubscription) return;
+
+    try {
+      const response = await fetch(`/api/subscriptions/${selectedSubscription.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Subscription updated successfully',
+        });
+        setShowEditDialog(false);
+        fetchData();
+      } else {
+        throw new Error('Failed to update subscription');
+      }
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update subscription',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteSubscription = async (subscriptionId: string) => {
+    try {
+      const response = await fetch(`/api/subscriptions/${subscriptionId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Subscription deleted successfully',
+        });
+        fetchData();
+      } else {
+        throw new Error('Failed to delete subscription');
+      }
+    } catch (error) {
+      console.error('Error deleting subscription:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete subscription',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const response = await fetch('/api/subscriptions/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ subscriptionIds: selectedSubscriptions }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `${selectedSubscriptions.length} subscriptions deleted successfully`,
+        });
+        setSelectedSubscriptions([]);
+        fetchData();
+      } else {
+        throw new Error('Failed to delete subscriptions');
+      }
+    } catch (error) {
+      console.error('Error deleting subscriptions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete subscriptions',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkStatusUpdate = async (status: string) => {
+    try {
+      const response = await fetch('/api/subscriptions/bulk-status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ subscriptionIds: selectedSubscriptions, status }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `${selectedSubscriptions.length} subscriptions updated to ${status}`,
+        });
+        setSelectedSubscriptions([]);
+        fetchData();
+      } else {
+        throw new Error('Failed to update subscriptions');
+      }
+    } catch (error) {
+      console.error('Error updating subscriptions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update subscriptions',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCreateSubscription = async () => {
+    // Reset errors
+    setErrors({});
+
+    // Validate form
+    const newErrors: Record<string, string> = {};
+    if (!formData.userId) newErrors.userId = 'User is required';
+    if (!formData.chitSchemeId) newErrors.chitSchemeId = 'Chit scheme is required';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -153,46 +353,26 @@ export default function SubscriptionsPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
+        const data = await response.json();
         toast({
-          title: 'Success!',
+          title: 'Success',
           description: `Subscription created successfully for ${data.subscription.subscriberId}`,
         });
-        
         setShowCreateDialog(false);
-        resetForm();
+        setFormData({ userId: '', chitSchemeId: '' });
         fetchData();
       } else {
-        toast({
-          title: 'Error',
-          description: data.error || 'Failed to create subscription',
-          variant: 'destructive',
-        });
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create subscription');
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred',
+        description: error instanceof Error ? error.message : 'Failed to create subscription',
         variant: 'destructive',
       });
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      userId: '',
-      chitSchemeId: '',
-    });
-    setErrors({});
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -222,18 +402,6 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const filteredSubscriptions = subscriptions.filter(subscription => {
-    const matchesSearch = search === '' || 
-      subscription.user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      subscription.user.lastName.toLowerCase().includes(search.toLowerCase()) ||
-      subscription.user.registrationId.toLowerCase().includes(search.toLowerCase()) ||
-      subscription.subscriberId.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesStatus = statusFilter === '' || subscription.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -243,8 +411,8 @@ export default function SubscriptionsPage() {
         <Card>
           <CardContent className="p-6">
             <div className="animate-pulse space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-12 bg-gray-200 rounded"></div>
               ))}
             </div>
           </CardContent>
@@ -259,88 +427,13 @@ export default function SubscriptionsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Subscriptions</h1>
           <p className="text-muted-foreground">
-            Manage user subscriptions to chit fund schemes
+            Manage chit fund subscriptions and track member participation
           </p>
         </div>
-        {user?.role === 'ADMIN' && (
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Subscription
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Create New Subscription</DialogTitle>
-                <DialogDescription>
-                  Add a user to a chit fund scheme
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="userId">Select User *</Label>
-                  <Select
-                    value={formData.userId}
-                    onValueChange={(value) => handleInputChange('userId', value)}
-                  >
-                    <SelectTrigger className={errors.userId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Choose a user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.registrationId} - {user.firstName} {user.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.userId && (
-                    <p className="text-sm text-red-500">{errors.userId}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="chitSchemeId">Select Chit Scheme *</Label>
-                  <Select
-                    value={formData.chitSchemeId}
-                    onValueChange={(value) => handleInputChange('chitSchemeId', value)}
-                  >
-                    <SelectTrigger className={errors.chitSchemeId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Choose a scheme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schemes.filter(scheme => scheme.isActive).map((scheme) => (
-                        <SelectItem key={scheme.id} value={scheme.id}>
-                          {scheme.chitId} - {scheme.name} (₹{scheme.amount.toLocaleString()})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.chitSchemeId && (
-                    <p className="text-sm text-red-500">{errors.chitSchemeId}</p>
-                  )}
-                </div>
-
-                <div className="flex gap-4">
-                  <Button type="submit" className="flex-1">
-                    Create Subscription
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowCreateDialog(false);
-                      resetForm();
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Subscription
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -356,7 +449,6 @@ export default function SubscriptionsPage() {
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
@@ -365,33 +457,31 @@ export default function SubscriptionsPage() {
                 <p className="text-2xl font-bold">
                   {subscriptions.filter(s => s.status === 'ACTIVE').length}
                 </p>
-                <p className="text-sm text-muted-foreground">Active Subscriptions</p>
+                <p className="text-sm text-muted-foreground">Active</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <Users className="h-8 w-8 text-purple-600" />
+              <Calendar className="h-8 w-8 text-blue-600" />
               <div>
                 <p className="text-2xl font-bold">
-                  {new Set(subscriptions.map(s => s.userId)).size}
+                  {subscriptions.filter(s => s.status === 'COMPLETED').length}
                 </p>
-                <p className="text-sm text-muted-foreground">Unique Users</p>
+                <p className="text-sm text-muted-foreground">Completed</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-8 w-8 text-orange-600" />
+              <IndianRupee className="h-8 w-8 text-orange-600" />
               <div>
                 <p className="text-2xl font-bold">
-                  ₹{subscriptions.reduce((sum, sub) => sum + sub.chitScheme.amount, 0).toLocaleString()}
+                  ₹{subscriptions.reduce((sum, sub) => sum + Number(sub.chitScheme.amount), 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Value</p>
               </div>
@@ -410,19 +500,40 @@ export default function SubscriptionsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search by name, registration ID, or subscriber ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <div className="flex-1">
+                <form onSubmit={handleSearchSubmit} className="relative flex">
+                  <Input
+                    placeholder="Search by name, registration ID, or subscriber ID..."
+                    value={searchInput}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pr-20"
+                  />
+                  <Button 
+                    type="submit" 
+                    size="sm" 
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3"
+                  >
+                    Search
+                  </Button>
+                </form>
+              </div>
+            <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 rows</SelectItem>
+                <SelectItem value="10">10 rows</SelectItem>
+                <SelectItem value="20">20 rows</SelectItem>
+                <SelectItem value="50">50 rows</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={handleStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
                 <SelectItem value="COMPLETED">Completed</SelectItem>
                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
@@ -432,15 +543,92 @@ export default function SubscriptionsPage() {
         </CardContent>
       </Card>
 
+      {/* Bulk Actions */}
+      {selectedSubscriptions.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">
+                  {selectedSubscriptions.length} subscription(s) selected
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedSubscriptions([])}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkStatusUpdate('ACTIVE')}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Activate
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkStatusUpdate('COMPLETED')}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Complete
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkStatusUpdate('CANCELLED')}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Subscriptions</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete {selectedSubscriptions.length} subscription(s)? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleBulkDelete}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Subscriptions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Subscriptions ({filteredSubscriptions.length})</CardTitle>
+          <CardTitle>All Subscriptions ({pagination.total})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedSubscriptions.length === subscriptions.length && subscriptions.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Subscriber ID</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Chit Scheme</TableHead>
@@ -448,11 +636,18 @@ export default function SubscriptionsPage() {
                 <TableHead>Status</TableHead>
                 <TableHead>Payouts</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead className="w-12">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSubscriptions.map((subscription) => (
+              {subscriptions.map((subscription) => (
                 <TableRow key={subscription.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedSubscriptions.includes(subscription.id)}
+                      onCheckedChange={(checked) => handleSelectSubscription(subscription.id, checked as boolean)}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-sm">
                     {subscription.subscriberId}
                   </TableCell>
@@ -476,7 +671,7 @@ export default function SubscriptionsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      ₹{subscription.chitScheme.amount.toLocaleString()}
+                      ₹{Number(subscription.chitScheme.amount).toLocaleString()}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {subscription.chitScheme.duration} months
@@ -511,12 +706,263 @@ export default function SubscriptionsPage() {
                       {new Date(subscription.joinedAt).toLocaleDateString()}
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewSubscription(subscription)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditSubscription(subscription)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this subscription? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteSubscription(subscription.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {pagination.pages > 1 && (
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          className={currentPage === page ? 'bg-primary text-primary-foreground' : 'cursor-pointer'}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(Math.min(pagination.pages, currentPage + 1))}
+                      className={currentPage === pagination.pages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Create Subscription Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Subscription</DialogTitle>
+            <DialogDescription>
+              Add a new subscription to a chit scheme
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="userId">User *</Label>
+              <Select value={formData.userId} onValueChange={(value) => setFormData({ ...formData, userId: value })}>
+                <SelectTrigger className={errors.userId ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.registrationId} - {user.firstName} {user.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.userId && (
+                <p className="text-sm text-red-500">{errors.userId}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="chitSchemeId">Chit Scheme *</Label>
+              <Select value={formData.chitSchemeId} onValueChange={(value) => setFormData({ ...formData, chitSchemeId: value })}>
+                <SelectTrigger className={errors.chitSchemeId ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select a chit scheme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {schemes.filter(scheme => scheme.isActive).map((scheme) => (
+                    <SelectItem key={scheme.id} value={scheme.id}>
+                      {scheme.chitId} - {scheme.name} (₹{Number(scheme.amount).toLocaleString()})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.chitSchemeId && (
+                <p className="text-sm text-red-500">{errors.chitSchemeId}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateSubscription}>
+              Create Subscription
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Subscription Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Subscription Details</DialogTitle>
+            <DialogDescription>
+              View detailed information about the subscription
+            </DialogDescription>
+          </DialogHeader>
+          {selectedSubscription && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Subscriber ID</Label>
+                  <p className="font-mono text-sm">{selectedSubscription.subscriberId}</p>
+                </div>
+                <div>
+                  <Label>User</Label>
+                  <p>{selectedSubscription.user.firstName} {selectedSubscription.user.lastName}</p>
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <p>{selectedSubscription.user.email}</p>
+                </div>
+                <div>
+                  <Label>Registration ID</Label>
+                  <p className="font-mono text-sm">{selectedSubscription.user.registrationId}</p>
+                </div>
+                <div>
+                  <Label>Chit Scheme</Label>
+                  <p>{selectedSubscription.chitScheme.name} ({selectedSubscription.chitScheme.chitId})</p>
+                </div>
+                <div>
+                  <Label>Amount</Label>
+                  <p>₹{Number(selectedSubscription.chitScheme.amount).toLocaleString()}</p>
+                </div>
+                <div>
+                  <Label>Duration</Label>
+                  <p>{selectedSubscription.chitScheme.duration} months</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge className={getStatusColor(selectedSubscription.status)}>
+                    {selectedSubscription.status}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <Label>Joined Date</Label>
+                <p>{new Date(selectedSubscription.joinedAt).toLocaleDateString()}</p>
+              </div>
+              {selectedSubscription.completedAt && (
+                <div>
+                  <Label>Completed Date</Label>
+                  <p>{new Date(selectedSubscription.completedAt).toLocaleDateString()}</p>
+                </div>
+              )}
+              <div>
+                <Label>Payouts ({selectedSubscription.payouts.length})</Label>
+                <div className="space-y-2 mt-2">
+                  {selectedSubscription.payouts.map((payout) => (
+                    <div key={payout.id} className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <span className="font-medium">₹{Number(payout.amount).toLocaleString()}</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          {payout.month}/{payout.year}
+                        </span>
+                      </div>
+                      <Badge className={getPayoutStatusColor(payout.status)}>
+                        {payout.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Subscription Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Subscription</DialogTitle>
+            <DialogDescription>
+              Update subscription status
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateSubscription}>
+              Update Subscription
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

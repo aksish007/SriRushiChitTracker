@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Download, Users, TrendingUp, DollarSign, Calendar, BarChart3, PieChart, Activity } from 'lucide-react';
+import { FileText, Download, Users, TrendingUp, IndianRupee, Calendar, BarChart3, PieChart, Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function ReportsPage() {
@@ -46,7 +46,7 @@ export default function ReportsPage() {
       id: 'payouts',
       title: 'Payouts Report',
       description: 'Comprehensive payout tracking and analysis',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       features: [

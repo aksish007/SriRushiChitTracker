@@ -33,7 +33,7 @@ export default function RegisterUserPage() {
     address: '',
     password: '',
     confirmPassword: '',
-    referredBy: '',
+    referredBy: 'none',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -118,7 +118,7 @@ export default function RegisterUserPage() {
           phone: formData.phone.trim(),
           address: formData.address.trim() || undefined,
           password: formData.password,
-          referredBy: formData.referredBy || undefined,
+          referredBy: formData.referredBy === 'none' ? undefined : formData.referredBy,
         }),
       });
 
@@ -139,7 +139,7 @@ export default function RegisterUserPage() {
           address: '',
           password: '',
           confirmPassword: '',
-          referredBy: '',
+          referredBy: 'none',
         });
         setErrors({});
         
@@ -296,7 +296,7 @@ export default function RegisterUserPage() {
                       <SelectValue placeholder="Select referrer (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No referrer</SelectItem>
+                      <SelectItem value="none">No referrer</SelectItem>
                       {referrers.map((referrer) => (
                         <SelectItem key={referrer.id} value={referrer.registrationId}>
                           {referrer.registrationId} - {referrer.firstName} {referrer.lastName} 

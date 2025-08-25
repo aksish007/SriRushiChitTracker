@@ -10,10 +10,15 @@ export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
     const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
+    const month = searchParams.get('month') || '';
+    const year = searchParams.get('year') || '';
     const userId = searchParams.get('userId');
-    const status = searchParams.get('status');
-    const month = searchParams.get('month');
-    const year = searchParams.get('year');
+
+    const skip = (page - 1) * limit;
 
     let where: any = {};
 
@@ -23,39 +28,60 @@ export async function GET(request: NextRequest) {
       where.userId = userId;
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       where.status = status;
     }
 
-    if (month) {
+    if (month && month !== 'all') {
       where.month = parseInt(month);
     }
 
-    if (year) {
+    if (year && year !== 'all') {
       where.year = parseInt(year);
     }
 
-    const payouts = await prisma.payout.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            registrationId: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        subscription: {
-          include: {
-            chitScheme: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (search) {
+      where.OR = [
+        { user: { firstName: { contains: search } } },
+        { user: { lastName: { contains: search } } },
+        { user: { registrationId: { contains: search } } },
+      ];
+    }
 
-    return NextResponse.json({ payouts });
+    const [payouts, total] = await Promise.all([
+      prisma.payout.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              registrationId: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          subscription: {
+            include: {
+              chitScheme: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.payout.count({ where }),
+    ]);
+
+    return NextResponse.json({ 
+      payouts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error: any) {
     console.error('Get payouts error:', error);
     

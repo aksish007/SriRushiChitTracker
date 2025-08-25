@@ -9,8 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, Plus, Users, DollarSign, Calendar, Activity, Edit, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CreditCard, Plus, Users, IndianRupee, Calendar, Activity, Edit, Eye, Trash2, MoreHorizontal, Check, X, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface ChitScheme {
@@ -41,6 +46,21 @@ export default function ChitSchemesPage() {
   const [schemes, setSchemes] = useState<ChitScheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [selectedSchemes, setSelectedSchemes] = useState<string[]>([]);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedScheme, setSelectedScheme] = useState<ChitScheme | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+  });
+  const [pageSize, setPageSize] = useState(10);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [formData, setFormData] = useState({
     chitId: '',
     name: '',
@@ -49,16 +69,31 @@ export default function ChitSchemesPage() {
     totalSlots: '',
     description: '',
   });
+  const [editForm, setEditForm] = useState({
+    chitId: '',
+    name: '',
+    amount: '',
+    duration: '',
+    totalSlots: '',
+    description: '',
+    isActive: true,
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchSchemes();
-  }, []);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   const fetchSchemes = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/chit-schemes', {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+        ...(debouncedSearch && { search: debouncedSearch }),
+      });
+
+      const response = await fetch(`/api/chit-schemes?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -66,6 +101,7 @@ export default function ChitSchemesPage() {
 
       const data = await response.json();
       setSchemes(data.schemes);
+      setPagination(data.pagination);
     } catch (error) {
       console.error('Error fetching schemes:', error);
       toast({
@@ -75,6 +111,174 @@ export default function ChitSchemesPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Only search when explicitly triggered, not automatically
+
+  const handleSearch = (value: string) => {
+    setSearchInput(value);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDebouncedSearch(searchInput);
+    setCurrentPage(1);
+  };
+
+  const handleSelectScheme = (schemeId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSchemes([...selectedSchemes, schemeId]);
+    } else {
+      setSelectedSchemes(selectedSchemes.filter(id => id !== schemeId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedSchemes(schemes.map(scheme => scheme.id));
+    } else {
+      setSelectedSchemes([]);
+    }
+  };
+
+  const handleViewScheme = (scheme: ChitScheme) => {
+    setSelectedScheme(scheme);
+    setShowViewDialog(true);
+  };
+
+  const handleEditScheme = (scheme: ChitScheme) => {
+    setSelectedScheme(scheme);
+    setEditForm({
+      chitId: scheme.chitId,
+      name: scheme.name,
+      amount: scheme.amount.toString(),
+      duration: scheme.duration.toString(),
+      totalSlots: scheme.totalSlots.toString(),
+      description: scheme.description || '',
+      isActive: scheme.isActive,
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateScheme = async () => {
+    if (!selectedScheme) return;
+
+    try {
+      const response = await fetch(`/api/chit-schemes/${selectedScheme.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Chit scheme updated successfully',
+        });
+        setShowEditDialog(false);
+        fetchSchemes();
+      } else {
+        throw new Error('Failed to update chit scheme');
+      }
+    } catch (error) {
+      console.error('Error updating chit scheme:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update chit scheme',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteScheme = async (schemeId: string) => {
+    try {
+      const response = await fetch(`/api/chit-schemes/${schemeId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Chit scheme deleted successfully',
+        });
+        fetchSchemes();
+      } else {
+        throw new Error('Failed to delete chit scheme');
+      }
+    } catch (error) {
+      console.error('Error deleting chit scheme:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete chit scheme',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const response = await fetch('/api/chit-schemes/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ schemeIds: selectedSchemes }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `${selectedSchemes.length} chit schemes deleted successfully`,
+        });
+        setSelectedSchemes([]);
+        fetchSchemes();
+      } else {
+        throw new Error('Failed to delete chit schemes');
+      }
+    } catch (error) {
+      console.error('Error deleting chit schemes:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete chit schemes',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkStatusUpdate = async (isActive: boolean) => {
+    try {
+      const response = await fetch('/api/chit-schemes/bulk-status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ schemeIds: selectedSchemes, isActive }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `${selectedSchemes.length} chit schemes ${isActive ? 'activated' : 'deactivated'} successfully`,
+        });
+        setSelectedSchemes([]);
+        fetchSchemes();
+      } else {
+        throw new Error('Failed to update chit schemes');
+      }
+    } catch (error) {
+      console.error('Error updating chit schemes:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update chit schemes',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -389,10 +593,10 @@ export default function ChitSchemesPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-8 w-8 text-orange-600" />
+              <IndianRupee className="h-8 w-8 text-orange-600" />
               <div>
                 <p className="text-2xl font-bold">
-                  ₹{schemes.reduce((sum, scheme) => sum + scheme.amount, 0).toLocaleString()}
+                  ₹{schemes.reduce((sum, scheme) => sum + Number(scheme.amount), 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Value</p>
               </div>
@@ -401,15 +605,121 @@ export default function ChitSchemesPage() {
         </Card>
       </div>
 
+      {/* Bulk Actions */}
+      {selectedSchemes.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">
+                  {selectedSchemes.length} scheme(s) selected
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedSchemes([])}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkStatusUpdate(true)}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Activate
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkStatusUpdate(false)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Deactivate
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Chit Schemes</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete {selectedSchemes.length} chit scheme(s)? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleBulkDelete}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search and Page Size */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <form onSubmit={handleSearchSubmit} className="relative flex">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search schemes..."
+                  value={searchInput}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 pr-20"
+                />
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3"
+                >
+                  Search
+                </Button>
+              </form>
+            </div>
+            <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 rows</SelectItem>
+                <SelectItem value="10">10 rows</SelectItem>
+                <SelectItem value="20">20 rows</SelectItem>
+                <SelectItem value="50">50 rows</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Schemes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Chit Schemes</CardTitle>
+          <CardTitle>All Chit Schemes ({pagination.total})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedSchemes.length === schemes.length && schemes.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Chit ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Amount</TableHead>
@@ -418,11 +728,18 @@ export default function ChitSchemesPage() {
                 <TableHead>Subscriptions</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="w-12">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {schemes.map((scheme) => (
                 <TableRow key={scheme.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedSchemes.includes(scheme.id)}
+                      onCheckedChange={(checked) => handleSelectScheme(scheme.id, checked as boolean)}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-sm">
                     {scheme.chitId}
                   </TableCell>
@@ -438,7 +755,7 @@ export default function ChitSchemesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      ₹{scheme.amount.toLocaleString()}
+                      ₹{Number(scheme.amount).toLocaleString()}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -484,12 +801,254 @@ export default function ChitSchemesPage() {
                       {new Date(scheme.createdAt).toLocaleDateString()}
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewScheme(scheme)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditScheme(scheme)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Chit Scheme</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete {scheme.name}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteScheme(scheme.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {pagination.total > 0 && (
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          className={currentPage === page ? 'bg-primary text-primary-foreground' : 'cursor-pointer'}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(Math.min(pagination.pages, currentPage + 1))}
+                      className={currentPage === pagination.pages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* View Scheme Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chit Scheme Details</DialogTitle>
+            <DialogDescription>
+              View detailed information about the chit scheme
+            </DialogDescription>
+          </DialogHeader>
+          {selectedScheme && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Chit ID</Label>
+                  <p className="font-mono text-sm">{selectedScheme.chitId}</p>
+                </div>
+                <div>
+                  <Label>Name</Label>
+                  <p>{selectedScheme.name}</p>
+                </div>
+                <div>
+                  <Label>Amount</Label>
+                  <p>₹{Number(selectedScheme.amount).toLocaleString()}</p>
+                </div>
+                <div>
+                  <Label>Duration</Label>
+                  <p>{selectedScheme.duration} months</p>
+                </div>
+                <div>
+                  <Label>Total Slots</Label>
+                  <p>{selectedScheme.totalSlots}</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge className={getStatusColor(selectedScheme.isActive)}>
+                    {selectedScheme.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+              </div>
+              {selectedScheme.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="text-sm">{selectedScheme.description}</p>
+                </div>
+              )}
+              <div>
+                <Label>Created Date</Label>
+                <p>{new Date(selectedScheme.createdAt).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <Label>Subscriptions ({selectedScheme.subscriptions.length})</Label>
+                <div className="space-y-2 mt-2">
+                  {selectedScheme.subscriptions.map((sub) => (
+                    <div key={sub.id} className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <span className="font-medium">{sub.user.firstName} {sub.user.lastName}</span>
+                        <span className="text-sm text-muted-foreground ml-2">({sub.subscriberId})</span>
+                      </div>
+                      <Badge className={getSubscriptionStatusColor(sub.status)}>
+                        {sub.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Scheme Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Chit Scheme</DialogTitle>
+            <DialogDescription>
+              Update chit scheme information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-chitId">Chit ID *</Label>
+                <Input
+                  id="edit-chitId"
+                  value={editForm.chitId}
+                  onChange={(e) => setEditForm({ ...editForm, chitId: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Scheme Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-amount">Amount (₹) *</Label>
+                <Input
+                  id="edit-amount"
+                  type="number"
+                  value={editForm.amount}
+                  onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-duration">Duration (months) *</Label>
+                <Input
+                  id="edit-duration"
+                  type="number"
+                  value={editForm.duration}
+                  onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-totalSlots">Total Slots *</Label>
+                <Input
+                  id="edit-totalSlots"
+                  type="number"
+                  value={editForm.totalSlots}
+                  onChange={(e) => setEditForm({ ...editForm, totalSlots: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-isActive">Status</Label>
+                <Select value={editForm.isActive.toString()} onValueChange={(value) => setEditForm({ ...editForm, isActive: value === 'true' })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Active</SelectItem>
+                    <SelectItem value="false">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder="Optional description of the scheme"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateScheme}>
+              Update Scheme
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

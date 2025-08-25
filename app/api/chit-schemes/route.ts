@@ -9,29 +9,61 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
 
-    const schemes = await prisma.chitScheme.findMany({
-      where: { isActive: true },
-      include: {
-        subscriptions: {
-          select: {
-            id: true,
-            subscriberId: true,
-            status: true,
-            user: {
-              select: {
-                registrationId: true,
-                firstName: true,
-                lastName: true,
+    const skip = (page - 1) * limit;
+
+    const where = search ? {
+      AND: [
+        { isActive: true },
+        {
+          OR: [
+            { chitId: { contains: search } },
+            { name: { contains: search } },
+            { description: { contains: search } },
+          ],
+        },
+      ],
+    } : { isActive: true };
+
+    const [schemes, total] = await Promise.all([
+      prisma.chitScheme.findMany({
+        where,
+        include: {
+          subscriptions: {
+            select: {
+              id: true,
+              subscriberId: true,
+              status: true,
+              user: {
+                select: {
+                  registrationId: true,
+                  firstName: true,
+                  lastName: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.chitScheme.count({ where }),
+    ]);
 
-    return NextResponse.json({ schemes });
+    return NextResponse.json({ 
+      schemes,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error: any) {
     console.error('Get chit schemes error:', error);
     

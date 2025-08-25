@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tree, TreeNode } from 'react-organizational-chart';
-import { Users, TrendingUp, DollarSign, Search } from 'lucide-react';
+import { Users, TrendingUp, IndianRupee, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface ReferralNode {
@@ -49,8 +49,8 @@ function UserNode({ node }: { node: ReferralNode }) {
           <span className="text-gray-500">Subs</span>
         </div>
         <div className="flex flex-col items-center">
-          <DollarSign className="h-4 w-4 mb-1 text-green-600" />
-          <span>₹{node.totalPayouts.toLocaleString()}</span>
+                          <IndianRupee className="h-4 w-4 mb-1 text-green-600" />
+                      <span>₹{Number(node.totalPayouts).toLocaleString()}</span>
           <span className="text-gray-500">Payouts</span>
         </div>
       </div>
@@ -204,7 +204,7 @@ export function ReferralTree({ registrationId }: ReferralTreeProps) {
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  ₹{tree.totalPayouts.toLocaleString()}
+                  ₹{Number(tree.totalPayouts).toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">Total Payouts</div>
               </div>

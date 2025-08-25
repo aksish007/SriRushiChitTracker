@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { PieChart, Users, Search, TreePine, UserCheck, DollarSign, Activity } from 'lucide-react';
+import { PieChart, Users, Search, TreePine, UserCheck, IndianRupee, Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface ReferralNode {
@@ -134,7 +134,7 @@ export default function ReferralTreePage() {
                   <div className="text-muted-foreground">Subscriptions</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium text-green-600">₹{node.totalPayouts.toLocaleString()}</div>
+                  <div className="font-medium text-green-600">₹{Number(node.totalPayouts).toLocaleString()}</div>
                   <div className="text-muted-foreground">Payouts</div>
                 </div>
               </div>
@@ -277,9 +277,9 @@ export default function ReferralTreePage() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-8 w-8 text-orange-600" />
+                        <IndianRupee className="h-8 w-8 text-orange-600" />
                         <div>
-                          <p className="text-2xl font-bold">₹{stats.totalPayouts.toLocaleString()}</p>
+                          <p className="text-2xl font-bold">₹{Number(stats.totalPayouts).toLocaleString()}</p>
                           <p className="text-sm text-muted-foreground">Total Payouts</p>
                         </div>
                       </div>
@@ -342,8 +342,8 @@ export default function ReferralTreePage() {
                   <h4 className="font-medium mb-2">Performance Metrics</h4>
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     <li>• Total Subscriptions: {getTreeStats(referralTree).totalSubscriptions}</li>
-                    <li>• Total Payouts: ₹{getTreeStats(referralTree).totalPayouts.toLocaleString()}</li>
-                    <li>• Average Payouts per Member: ₹{(getTreeStats(referralTree).totalPayouts / getTreeStats(referralTree).totalMembers).toLocaleString()}</li>
+                    <li>• Total Payouts: ₹{Number(getTreeStats(referralTree).totalPayouts).toLocaleString()}</li>
+                    <li>• Average Payouts per Member: ₹{(Number(getTreeStats(referralTree).totalPayouts) / getTreeStats(referralTree).totalMembers).toLocaleString()}</li>
                     <li>• Network Growth: {referralTree.children.length > 0 ? 'Active' : 'No referrals yet'}</li>
                   </ul>
                 </div>

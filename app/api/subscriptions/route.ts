@@ -10,34 +10,68 @@ export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
     const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
     const userId = searchParams.get('userId');
 
-    const where = userId && user.role === 'ADMIN' 
-      ? { userId } 
-      : user.role === 'USER' 
-        ? { userId: user.id }
-        : {};
+    const skip = (page - 1) * limit;
 
-    const subscriptions = await prisma.chitSubscription.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            registrationId: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    let where: any = {};
+    
+    if (userId && user.role === 'ADMIN') {
+      where.userId = userId;
+    } else if (user.role === 'USER') {
+      where.userId = user.id;
+    }
+
+    if (search) {
+      where.OR = [
+        { user: { firstName: { contains: search } } },
+        { user: { lastName: { contains: search } } },
+        { user: { registrationId: { contains: search } } },
+        { subscriberId: { contains: search } },
+      ];
+    }
+
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const [subscriptions, total] = await Promise.all([
+      prisma.chitSubscription.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              registrationId: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          chitScheme: true,
+          payouts: {
+            orderBy: { createdAt: 'desc' },
           },
         },
-        chitScheme: true,
-        payouts: {
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.chitSubscription.count({ where }),
+    ]);
 
-    return NextResponse.json({ subscriptions });
+    return NextResponse.json({ 
+      subscriptions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error: any) {
     console.error('Get subscriptions error:', error);
     
