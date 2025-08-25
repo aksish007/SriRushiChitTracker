@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=sri-rushi-chits-jwt-secret-key-2024
+      - NEXTAUTH_SECRET=sri-rushi-chits-nextauth-secret
+      - NEXTAUTH_URL=http://localhost:3000
+    volumes:
+      - ./prisma:/app/prisma
+    command: >
+      sh -c "npx prisma db push && 
+             npx tsx seed.ts && 
+             node server.js"
+    restart: unless-stopped
+
+  # For development with live reload
+  dev:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=sri-rushi-chits-jwt-secret-key-2024
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    command: >
+      sh -c "npx prisma db push && 
+             npx tsx seed.ts && 
+             npm run dev"
+    restart: unless-stopped
+    profiles:
+      - dev
