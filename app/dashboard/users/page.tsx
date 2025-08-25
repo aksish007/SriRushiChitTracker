@@ -352,18 +352,22 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Users</h1>
           <p className="text-muted-foreground">
             Manage all registered users and their information
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportUsers}>
+          <Button 
+            variant="outline" 
+            onClick={exportUsers}
+            className="hover:bg-gradient-secondary hover:text-white hover:border-blue-500 transition-all duration-300"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
           <Link href="/dashboard/register">
-            <Button>
+            <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
               <UserPlus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -372,69 +376,73 @@ export default function UsersPage() {
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="shadow-glow border-2 border-primary/20">
+        <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+          <CardTitle className="flex items-center gap-2 text-white">
             <Users className="h-5 w-5" />
             User Management
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-yellow-100">
             Search and filter users by name, email, or registration ID
           </CardDescription>
         </CardHeader>
-        <CardContent>
-                      <div className="flex gap-4">
-              <div className="flex-1">
-                <form onSubmit={handleSearchSubmit} className="relative flex">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Search users..."
-                    value={searchInput}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10 pr-20"
-                  />
-                  <Button 
-                    type="submit" 
-                    size="sm" 
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3"
-                  >
-                    Search
-                  </Button>
-                </form>
-              </div>
-              <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5 rows</SelectItem>
-                  <SelectItem value="10">10 rows</SelectItem>
-                  <SelectItem value="20">20 rows</SelectItem>
-                  <SelectItem value="50">50 rows</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
+        <CardContent className="p-6">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <form onSubmit={handleSearchSubmit} className="relative flex">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary h-4 w-4" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Search users..."
+                  value={searchInput}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 pr-20 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                />
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 px-3 bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                >
+                  Search
+                </Button>
+              </form>
             </div>
+            <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
+              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 rows</SelectItem>
+                <SelectItem value="10">10 rows</SelectItem>
+                <SelectItem value="20">20 rows</SelectItem>
+                <SelectItem value="50">50 rows</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline"
+              className="hover:bg-gradient-secondary hover:text-white hover:border-blue-500 transition-all duration-300"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
-        <Card>
+        <Card className="shadow-glow-green border-2 border-green-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium text-green-800">
                   {selectedUsers.length} user(s) selected
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedUsers([])}
+                  className="hover:bg-gray-100 transition-all duration-300"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Clear
@@ -445,6 +453,7 @@ export default function UsersPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleBulkStatusUpdate(true)}
+                  className="hover:bg-gradient-success hover:text-white hover:border-green-500 transition-all duration-300"
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Activate
@@ -453,13 +462,18 @@ export default function UsersPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleBulkStatusUpdate(false)}
+                  className="hover:bg-gradient-warning hover:text-white hover:border-orange-500 transition-all duration-300"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Deactivate
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="hover:bg-gradient-danger hover:shadow-glow transition-all duration-300"
+                    >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete
                     </Button>
@@ -486,30 +500,30 @@ export default function UsersPage() {
       )}
 
       {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users ({pagination.total})</CardTitle>
+      <Card className="shadow-glow border-2 border-primary/20">
+        <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
+          <CardTitle className="text-white">All Users ({pagination.total})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
+              <TableRow className="bg-gradient-primary text-white">
+                <TableHead className="w-12 text-white">
                   <Checkbox
                     checked={selectedUsers.length === users.length && users.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Registration ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Referrals</TableHead>
-                <TableHead>Subscriptions</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="w-12">Actions</TableHead>
+                <TableHead className="text-white">Registration ID</TableHead>
+                <TableHead className="text-white">Name</TableHead>
+                <TableHead className="text-white">Email</TableHead>
+                <TableHead className="text-white">Phone</TableHead>
+                <TableHead className="text-white">Role</TableHead>
+                <TableHead className="text-white">Status</TableHead>
+                <TableHead className="text-white">Referrals</TableHead>
+                <TableHead className="text-white">Subscriptions</TableHead>
+                <TableHead className="text-white">Joined</TableHead>
+                <TableHead className="w-12 text-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

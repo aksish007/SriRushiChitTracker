@@ -19,6 +19,8 @@ import {
   PieChart,
   UserPlus,
   Upload,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -81,7 +83,7 @@ const sidebarItems: SidebarItem[] = [
   },
 ];
 
-function SidebarContent() {
+function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -90,12 +92,27 @@ function SidebarContent() {
   );
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+    <div className="flex h-screen flex-col bg-gradient-to-b from-background to-muted/20">
+      <div className="flex h-14 items-center justify-between border-b px-4 lg:h-[60px] lg:px-6 bg-gradient-primary">
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-white">
           <CreditCard className="h-6 w-6" />
-          <span>SRI RUSHI CHITS</span>
+          {!collapsed && <span>SRI RUSHI CHITS</span>}
         </Link>
+        
+        {/* Toggle Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-white hover:bg-white/20 transition-all duration-300"
+          onClick={onToggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
       </div>
       
       <ScrollArea className="flex-1">
@@ -105,31 +122,41 @@ function SidebarContent() {
               <Button
                 variant={pathname === item.href ? 'secondary' : 'ghost'}
                 className={cn(
-                  'w-full justify-start gap-2',
-                  pathname === item.href && 'bg-primary/10 text-primary'
+                  'w-full justify-start gap-2 transition-all duration-300',
+                  collapsed ? 'px-2' : 'px-4',
+                  pathname === item.href 
+                    ? 'bg-gradient-primary text-white shadow-glow hover:scale-105' 
+                    : 'hover:bg-primary/10 hover:text-primary hover:shadow-md'
                 )}
+                title={collapsed ? item.title : undefined}
               >
-                <item.icon className="h-4 w-4" />
-                {item.title}
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {!collapsed && <span>{item.title}</span>}
               </Button>
             </Link>
           ))}
         </nav>
       </ScrollArea>
       
-      <div className="border-t p-4">
-        <div className="mb-3 text-sm">
-          <p className="font-medium">{user?.firstName} {user?.lastName}</p>
-          <p className="text-muted-foreground">{user?.registrationId}</p>
-          <p className="text-xs text-muted-foreground">{user?.role}</p>
-        </div>
+      <div className="border-t p-4 bg-gradient-to-t from-muted/20 to-transparent">
+        {!collapsed && (
+          <div className="mb-3 text-sm">
+            <p className="font-medium text-primary">{user?.firstName} {user?.lastName}</p>
+            <p className="text-muted-foreground">{user?.registrationId}</p>
+            <p className="text-xs text-muted-foreground">{user?.role}</p>
+          </div>
+        )}
         <Button
           variant="outline"
-          className="w-full justify-start gap-2"
+          className={cn(
+            "w-full justify-start gap-2 hover:bg-gradient-danger hover:text-white hover:border-red-500 transition-all duration-300",
+            collapsed ? "px-2" : "px-4"
+          )}
           onClick={logout}
+          title={collapsed ? "Sign Out" : undefined}
         >
-          <LogOut className="h-4 w-4" />
-          Sign Out
+          <LogOut className="h-4 w-4 flex-shrink-0" />
+          {!collapsed && "Sign Out"}
         </Button>
       </div>
     </div>
@@ -138,6 +165,11 @@ function SidebarContent() {
 
 export function Sidebar() {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  const handleToggle = () => {
+    setCollapsed(!collapsed);
+  };
 
   return (
     <>
@@ -147,21 +179,24 @@ export function Sidebar() {
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 md:hidden"
+            className="shrink-0 md:hidden hover:bg-gradient-primary hover:text-white hover:border-primary transition-all duration-300"
           >
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="flex flex-col p-0">
-          <SidebarContent />
+          <SidebarContent collapsed={false} onToggle={() => {}} />
         </SheetContent>
       </Sheet>
       
       {/* Desktop sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block">
-        <div className="flex h-full w-[280px] flex-col">
-          <SidebarContent />
+      <div className="hidden md:block h-screen">
+        <div className={cn(
+          "h-full border-r bg-gradient-to-b from-background to-muted/20 shadow-glow transition-all duration-300",
+          collapsed ? "w-16" : "w-[280px]"
+        )}>
+          <SidebarContent collapsed={collapsed} onToggle={handleToggle} />
         </div>
       </div>
     </>

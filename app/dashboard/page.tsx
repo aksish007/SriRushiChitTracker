@@ -149,11 +149,11 @@ export default function Dashboard() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Dashboard</h1>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="shadow-glow">
               <CardContent className="p-6">
                 <div className="animate-pulse">
                   <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
@@ -171,14 +171,14 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Dashboard</h1>
           <p className="text-muted-foreground">
             Welcome back, {user?.firstName}! {user?.role === 'ADMIN' ? "Here's what's happening with your chit fund business." : "Here's your chit fund overview."}
           </p>
         </div>
         <div className="text-sm text-muted-foreground">
-          <p>Registration ID: <span className="font-medium">{user?.registrationId}</span></p>
-          <p>Role: <Badge variant={user?.role === 'ADMIN' ? 'default' : 'secondary'}>{user?.role}</Badge></p>
+          <p>Registration ID: <span className="font-medium text-primary">{user?.registrationId}</span></p>
+          <p>Role: <Badge variant={user?.role === 'ADMIN' ? 'default' : 'secondary'} className="bg-gradient-primary text-white">{user?.role}</Badge></p>
         </div>
       </div>
 
@@ -249,31 +249,31 @@ export default function Dashboard() {
       {user?.role === 'ADMIN' && (
         <div className="grid gap-6 md:grid-cols-2">
           {/* Monthly Activity Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Activity</CardTitle>
-              <CardDescription>User registrations and payouts over time</CardDescription>
+          <Card className="shadow-glow-blue">
+            <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
+              <CardTitle className="text-white">Monthly Activity</CardTitle>
+              <CardDescription className="text-blue-100">User registrations and payouts over time</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={stats?.monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="users" fill="#3b82f6" name="New Users" />
+                  <Bar dataKey="users" fill="#d19d0d" name="New Users" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
           {/* Subscription Status Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Subscription Status</CardTitle>
-              <CardDescription>Distribution of subscription statuses</CardDescription>
+          <Card className="shadow-glow-green">
+            <CardHeader className="bg-gradient-success text-white rounded-t-lg">
+              <CardTitle className="text-white">Subscription Status</CardTitle>
+              <CardDescription className="text-green-100">Distribution of subscription statuses</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -300,16 +300,16 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       {user?.role === 'ADMIN' ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
+        <Card className="shadow-glow">
+          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+            <CardTitle className="text-white">Quick Actions</CardTitle>
+            <CardDescription className="text-yellow-100">Common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-blue transition-all duration-300 border-2 hover:border-blue-500 hover:scale-105"
                 onClick={() => handleQuickAction('register')}
               >
                 <Users className="h-8 w-8 text-blue-600" />
@@ -320,7 +320,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-green transition-all duration-300 border-2 hover:border-green-500 hover:scale-105"
                 onClick={() => handleQuickAction('bulk-upload')}
               >
                 <FileText className="h-8 w-8 text-green-600" />
@@ -331,10 +331,10 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-yellow-500 hover:scale-105"
                 onClick={() => handleQuickAction('scheme')}
               >
-                <CreditCard className="h-8 w-8 text-purple-600" />
+                <CreditCard className="h-8 w-8 text-yellow-600" />
                 <div className="text-center">
                   <h3 className="font-semibold">Create Scheme</h3>
                   <p className="text-sm text-muted-foreground">New chit scheme</p>
@@ -342,7 +342,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-orange-500 hover:scale-105"
                 onClick={() => handleQuickAction('payouts')}
               >
                 <IndianRupee className="h-8 w-8 text-orange-600" />
@@ -353,7 +353,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-blue transition-all duration-300 border-2 hover:border-indigo-500 hover:scale-105"
                 onClick={() => handleQuickAction('users')}
               >
                 <Users className="h-8 w-8 text-indigo-600" />
@@ -364,7 +364,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-green transition-all duration-300 border-2 hover:border-teal-500 hover:scale-105"
                 onClick={() => handleQuickAction('subscriptions')}
               >
                 <CreditCard className="h-8 w-8 text-teal-600" />
@@ -375,7 +375,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-pink-500 hover:scale-105"
                 onClick={() => handleQuickAction('referral-tree')}
               >
                 <TrendingUp className="h-8 w-8 text-pink-600" />
@@ -386,7 +386,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-red-500 hover:scale-105"
                 onClick={() => handleQuickAction('reports')}
               >
                 <Download className="h-8 w-8 text-red-600" />
@@ -399,16 +399,16 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>My Activities</CardTitle>
-            <CardDescription>Quick access to your chit fund activities</CardDescription>
+        <Card className="shadow-glow">
+          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+            <CardTitle className="text-white">My Activities</CardTitle>
+            <CardDescription className="text-yellow-100">Quick access to your chit fund activities</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-blue transition-all duration-300 border-2 hover:border-blue-500 hover:scale-105"
                 onClick={() => handleQuickAction('subscriptions')}
               >
                 <CreditCard className="h-8 w-8 text-blue-600" />
@@ -419,7 +419,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-green transition-all duration-300 border-2 hover:border-green-500 hover:scale-105"
                 onClick={() => handleQuickAction('payouts')}
               >
                 <IndianRupee className="h-8 w-8 text-green-600" />
@@ -430,7 +430,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-purple-500 hover:scale-105"
                 onClick={() => handleQuickAction('referral-tree')}
               >
                 <TrendingUp className="h-8 w-8 text-purple-600" />

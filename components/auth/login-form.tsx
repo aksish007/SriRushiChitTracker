@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn, CreditCard } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { loginSchema, LoginData } from '@/lib/validations';
 
@@ -43,32 +43,37 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 px-4">
+      <Card className="w-full max-w-md shadow-glow border-2 border-primary/20">
+        <CardHeader className="text-center bg-gradient-primary text-white rounded-t-lg">
+          <div className="flex items-center justify-center mb-2">
+            <CreditCard className="h-8 w-8 mr-2" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-white">
             SRI RUSHI CHITS
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-yellow-100">
             Sign in to your account to continue
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="border-red-500 bg-red-50">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-primary font-medium">Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Enter your email"
                 {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                className={`border-2 transition-all duration-300 focus:ring-2 focus:ring-primary/20 ${
+                  errors.email ? 'border-red-500 focus:border-red-500' : 'border-primary/20 focus:border-primary'
+                }`}
               />
               {errors.email && (
                 <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -76,26 +81,28 @@ export function LoginForm() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-primary font-medium">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   {...register('password')}
-                  className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                  className={`border-2 transition-all duration-300 focus:ring-2 focus:ring-primary/20 pr-10 ${
+                    errors.password ? 'border-red-500 focus:border-red-500' : 'border-primary/20 focus:border-primary'
+                  }`}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-primary"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </Button>
               </div>
@@ -106,7 +113,7 @@ export function LoginForm() {
             
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300 hover:scale-105"
               disabled={loading}
             >
               {loading ? (
@@ -123,10 +130,12 @@ export function LoginForm() {
             </Button>
           </form>
           
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Demo Credentials:</p>
-            <p><strong>Admin:</strong> admin@sriruschichits.com / admin123</p>
-            <p><strong>User:</strong> user@sriruschichits.com / user123</p>
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+            <p className="text-center text-sm font-medium text-blue-800 mb-2">Demo Credentials:</p>
+            <div className="space-y-1 text-xs text-blue-700">
+              <p><strong>Admin:</strong> admin@sriruschichits.com / admin123</p>
+              <p><strong>User:</strong> user@sriruschichits.com / user123</p>
+            </div>
           </div>
         </CardContent>
       </Card>

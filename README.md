@@ -2,7 +2,7 @@
 
 A comprehensive, production-ready chit fund management system built with Next.js 14, TypeScript, and modern web technologies.
 
-## 🌟 Features
+## Features
 
 ### User Management
 - **Role-based Access Control**: Admin and User roles with specific permissions
@@ -76,14 +76,14 @@ A comprehensive, production-ready chit fund management system built with Next.js
    docker-compose up
    ```
 
-## 🔑 Demo Credentials
+## �� Demo Credentials
 
 After running the seed script, use these credentials:
 
 - **Admin**: admin@sriruschichits.com / admin123
 - **User**: user@sriruschichits.com / user123
 
-## 🏗️ Architecture
+## ��️ Architecture
 
 ### Database Schema
 - **Users**: Registration management with referral relationships
@@ -101,7 +101,7 @@ After running the seed script, use these credentials:
 - `/api/referral-tree/*` - Referral hierarchy
 - `/api/reports/*` - Export functionality
 
-## 🎨 Design System
+## �� Design System
 
 ### Color Palette
 - **Primary**: Blue (#2563eb) - Trust and reliability
@@ -143,6 +143,169 @@ After running the seed script, use these credentials:
 - Monitor payout history
 - Generate referral links
 - Access personal dashboard
+
+## 📋 TODO List & Implementation Status
+
+### 🔴 HIGH PRIORITY - Core Business Logic
+
+#### Incentive & Payout Management System
+- [ ] **Incentive Calculation Engine**
+  - [ ] Step-based referral incentive calculation
+  - [ ] Configurable rate multipliers (0.1%–0.3%) per chit plan
+  - [ ] Support for multiple subscriptions per user
+  - [ ] Incentive rules configuration per chit plan
+
+- [ ] **TDS Deduction System**
+  - [ ] 5% TDS calculation on gross incentive
+  - [ ] Net Paid = Incentive – TDS calculation
+  - [ ] Configurable TDS percentage
+  - [ ] TDS tracking and reporting
+
+- [ ] **Enhanced Chit Plan Configuration**
+  - [ ] Step rules configuration
+  - [ ] Rate multipliers per plan
+  - [ ] Incentive values per plan
+  - [ ] Duration validation (20–40 months)
+
+#### User Incentive Reports
+- [ ] **Step-wise Breakdown Reports**
+  - [ ] Step, Subscribers, Rate, Amount display
+  - [ ] Total Incentive calculation
+  - [ ] TDS deduction display
+  - [ ] Net Paid calculation
+  - [ ] PDF export functionality
+
+#### Monthly Consolidated Reports
+- [ ] **Monthly Payout Sheet**
+  - [ ] All users listing with incentives
+  - [ ] TDS and Net Paid calculations
+  - [ ] Excel export functionality
+  - [ ] PDF export functionality
+  - [ ] Digital approval workflow (mark as certified)
+
+### 🟡 MEDIUM PRIORITY - Enhanced Features
+
+#### Enhanced Referral System
+- [ ] **Step-wise Growth Calculation**
+  - [ ] 3 → 9 → 27 → … progression tracking
+  - [ ] Level-based incentive calculations
+  - [ ] User-specific downline views
+  - [ ] Advanced referral analytics
+
+#### Advanced Reporting
+- [ ] **PDF Export System**
+  - [ ] User incentive reports in PDF
+  - [ ] Monthly consolidated reports in PDF
+  - [ ] Customizable report templates
+  - [ ] Email report delivery
+
+#### Digital Approval Workflow
+- [ ] **Report Certification**
+  - [ ] Mark reports as certified
+  - [ ] Approval workflow for monthly reports
+  - [ ] Audit trail for approvals
+  - [ ] Digital signatures
+
+### 🟢 LOW PRIORITY - Nice to Have
+
+#### System Enhancements
+- [ ] **Mobile App Development**
+  - [ ] React Native mobile app
+  - [ ] Push notifications
+  - [ ] Offline capability
+
+- [ ] **Advanced Analytics Dashboard**
+  - [ ] Real-time analytics
+  - [ ] Predictive modeling
+  - [ ] Performance metrics
+
+- [ ] **Communication System**
+  - [ ] SMS notifications
+  - [ ] Email notifications
+  - [ ] In-app messaging
+
+- [ ] **Payment Integration**
+  - [ ] Payment gateway integration
+  - [ ] Online payment processing
+  - [ ] Payment tracking
+
+- [ ] **Multi-language Support**
+  - [ ] Hindi language support
+  - [ ] Regional language support
+  - [ ] Language switching
+
+### 🗄️ Database Schema Updates Required
+
+#### New Tables/Fields
+- [ ] **IncentiveRules Table**
+  - [ ] chitPlanId, stepLevel, rateMultiplier, incentiveValue
+  - [ ] Configurable rules per chit plan
+
+- [ ] **UserIncentives Table**
+  - [ ] userId, month, year, stepLevel, subscribers, rate, amount
+  - [ ] TDS amount, net amount, status
+
+- [ ] **TDSConfig Table**
+  - [ ] percentage, effectiveDate, isActive
+
+- [ ] **IncentiveReports Table**
+  - [ ] reportId, userId, month, year, stepBreakdown
+  - [ ] totalIncentive, tdsAmount, netAmount
+
+- [ ] **MonthlyReports Table**
+  - [ ] month, year, totalUsers, totalIncentive
+  - [ ] totalTDS, totalNetAmount, certifiedBy, certifiedAt
+
+### 🔧 Technical Improvements
+
+#### Performance & Security
+- [ ] **API Rate Limiting**
+  - [ ] Implement rate limiting for all endpoints
+  - [ ] Protect against abuse
+
+- [ ] **Caching System**
+  - [ ] Redis caching for frequently accessed data
+  - [ ] Report caching
+
+- [ ] **Backup & Recovery**
+  - [ ] Automated database backups
+  - [ ] Disaster recovery procedures
+
+#### Testing & Quality
+- [ ] **Comprehensive Testing**
+  - [ ] Unit tests for incentive calculations
+  - [ ] Integration tests for reports
+  - [ ] E2E tests for critical workflows
+
+- [ ] **Code Quality**
+  - [ ] TypeScript strict mode
+  - [ ] ESLint configuration
+  - [ ] Prettier formatting
+
+### 📊 Current Implementation Status
+
+#### ✅ COMPLETED FEATURES
+- [x] User Management (CRUD, bulk upload, referral system)
+- [x] Basic Chit Scheme Management
+- [x] Subscription Management
+- [x] Basic Payout Tracking
+- [x] Referral Tree Visualization
+- [x] Excel Export for basic reports
+- [x] Role-based Access Control
+- [x] Audit Logging
+- [x] Dashboard Analytics
+
+#### 🔄 IN PROGRESS
+- [ ] Search functionality improvements
+- [ ] Pagination enhancements
+- [ ] UI/UX refinements
+
+#### ❌ NOT STARTED
+- [ ] Incentive calculation system
+- [ ] TDS deduction system
+- [ ] Advanced reporting features
+- [ ] PDF export functionality
+- [ ] Digital approval workflow
 
 ## 🚀 Deployment
 
