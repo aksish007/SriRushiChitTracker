@@ -77,6 +77,7 @@ export default function UsersPage() {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -341,10 +342,17 @@ export default function UsersPage() {
     }
   };
 
-  const handleResetPassword = async (userId: string) => {
+  const handleResetPasswordConfirm = (user: User) => {
+    setSelectedUser(user);
+    setShowResetPasswordDialog(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUser) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/users/${userId}/reset-password`, {
+      const response = await fetch(`/api/users/${selectedUser.id}/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -359,6 +367,8 @@ export default function UsersPage() {
           title: "Password Reset Success",
           description: data.message,
         });
+        setShowResetPasswordDialog(false);
+        setSelectedUser(null);
       } else {
         toast({
           title: "Error",
@@ -756,7 +766,7 @@ export default function UsersPage() {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleResetPassword(user.id)}>
+                        <DropdownMenuItem onClick={() => handleResetPasswordConfirm(user)}>
                           <Lock className="h-4 w-4 mr-2" />
                           Reset Password
                         </DropdownMenuItem>
@@ -993,6 +1003,37 @@ export default function UsersPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Reset Password Confirmation Dialog */}
+      <AlertDialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Password</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reset the password for <strong>{selectedUser?.firstName} {selectedUser?.lastName}</strong> ({selectedUser?.email})?
+              <br /><br />
+              <span className="text-sm text-muted-foreground">
+                • The new password will be the last 6 digits of their phone number: <strong>{selectedUser?.phone?.slice(-6) || 'N/A'}</strong>
+                <br />
+                • The user will need to change this password on their next login
+                <br />
+                • This action cannot be undone
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowResetPasswordDialog(false);
+              setSelectedUser(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetPassword} disabled={loading}>
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

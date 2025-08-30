@@ -7,11 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminUser = await requireAuth(request, 'ADMIN');
-    const payoutId = params.id;
+    const { id: payoutId } = await params;
 
     const payout = await prisma.payout.findUnique({
       where: { id: payoutId },

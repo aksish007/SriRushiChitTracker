@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET - Get single chit scheme
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -20,8 +20,9 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { id } = await params;
     const scheme = await prisma.chitScheme.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         subscriptions: {
           include: {
@@ -51,7 +52,7 @@ export async function GET(
 // PUT - Update chit scheme
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -72,11 +73,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const { id } = await params;
+
     // Check if chitId is already taken by another scheme
     const existingScheme = await prisma.chitScheme.findFirst({
       where: {
         chitId,
-        id: { not: params.id },
+        id: { not: id },
       },
     });
 
@@ -85,7 +88,7 @@ export async function PUT(
     }
 
     const updatedScheme = await prisma.chitScheme.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         chitId,
         name,
@@ -107,7 +110,7 @@ export async function PUT(
 // DELETE - Delete chit scheme
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -120,10 +123,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { id } = await params;
+
     // Check if scheme has active subscriptions
     const activeSubscriptions = await prisma.chitSubscription.findMany({
       where: {
-        chitSchemeId: params.id,
+        chitSchemeId: id,
         status: 'ACTIVE',
       },
     });
@@ -136,7 +141,7 @@ export async function DELETE(
 
     // Delete chit scheme
     await prisma.chitScheme.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Chit scheme deleted successfully' });

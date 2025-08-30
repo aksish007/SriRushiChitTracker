@@ -63,11 +63,11 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { registrationId: string } }
+  { params }: { params: Promise<{ registrationId: string }> }
 ) {
   try {
     const currentUser = await requireAuth(request);
-    const registrationId = params.registrationId;
+    const { registrationId } = await params;
 
     // Find the target user
     const targetUser = await prisma.user.findUnique({

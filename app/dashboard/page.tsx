@@ -104,12 +104,6 @@ export default function Dashboard() {
             { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
           ];
 
-          console.log('Dashboard data:', {
-            subscriptions: subscriptionsData.subscriptions?.length || 0,
-            statusData,
-            userRole: user?.role
-          });
-
           setStats({
             totalUsers: usersData.pagination?.total || 0,
             totalSubscriptions: subscriptionsData.subscriptions?.length || 0,

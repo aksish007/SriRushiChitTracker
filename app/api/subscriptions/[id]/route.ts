@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET - Get single subscription
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -20,8 +20,9 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { id } = await params;
     const subscription = await prisma.chitSubscription.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -52,7 +53,7 @@ export async function GET(
 // PUT - Update subscription
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -72,8 +73,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    const { id } = await params;
     const updatedSubscription = await prisma.chitSubscription.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status,
         completedAt: status === 'COMPLETED' ? new Date() : null,
@@ -90,7 +92,7 @@ export async function PUT(
 // DELETE - Delete subscription
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -103,10 +105,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const { id } = await params;
+
     // Check if subscription has paid payouts
     const paidPayouts = await prisma.payout.findMany({
       where: {
-        subscriptionId: params.id,
+        subscriptionId: id,
         status: 'PAID',
       },
     });
@@ -119,7 +123,7 @@ export async function DELETE(
 
     // Delete subscription
     await prisma.chitSubscription.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Subscription deleted successfully' });
