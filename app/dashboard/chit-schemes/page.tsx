@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,11 +87,7 @@ export default function ChitSchemesPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    fetchSchemes();
-  }, [currentPage, pageSize, debouncedSearch, sortField, sortOrder, statusFilter]);
-
-  const fetchSchemes = async () => {
+  const fetchSchemes = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -122,7 +118,11 @@ export default function ChitSchemesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, debouncedSearch, sortField, sortOrder, statusFilter, token, toast]);
+
+  useEffect(() => {
+    fetchSchemes();
+  }, [fetchSchemes]);
 
   // Only search when explicitly triggered, not automatically
 

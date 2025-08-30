@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,125 +30,105 @@ export default function Dashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
-      setLoading(true);
+    if (token && user && !hasFetched.current) {
+      hasFetched.current = true;
       
-      // Fetch multiple endpoints for dashboard data
-      const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse] = await Promise.all([
-        fetch('/api/users?limit=1000', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('/api/subscriptions', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('/api/payouts', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('/api/chit-schemes', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
+      const fetchDashboardStats = async () => {
+        try {
+          setLoading(true);
+          
+          // Fetch multiple endpoints for dashboard data
+          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse] = await Promise.all([
+            fetch('/api/users?limit=1000', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch('/api/subscriptions', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch('/api/payouts', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch('/api/chit-schemes', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+          ]);
 
-      const [usersData, subscriptionsData, payoutsData, schemesData] = await Promise.all([
-        usersResponse.json(),
-        subscriptionsResponse.json(),
-        payoutsResponse.json(),
-        schemesResponse.json()
-      ]);
+          const [usersData, subscriptionsData, payoutsData, schemesData] = await Promise.all([
+            usersResponse.json(),
+            subscriptionsResponse.json(),
+            payoutsResponse.json(),
+            schemesResponse.json()
+          ]);
 
-      // Calculate stats
-      const totalPayouts = payoutsData.payouts?.reduce((sum: number, payout: any) => 
-        sum + (payout.status === 'PAID' ? Number(payout.amount) : 0), 0) || 0;
+          // Calculate stats
+          const totalPayouts = payoutsData.payouts?.reduce((sum: number, payout: any) => 
+            sum + (payout.status === 'PAID' ? Number(payout.amount) : 0), 0) || 0;
 
-      // Calculate user-specific stats if not admin
-      let userStats = undefined;
-      if (user?.role !== 'ADMIN') {
-        // Use userId if available, otherwise fall back to filtering by registrationId
-        const mySubscriptions = subscriptionsData.subscriptions?.filter((s: any) => 
-          s.userId === user?.id || s.user?.registrationId === user?.registrationId) || [];
-        const myPayouts = payoutsData.payouts?.filter((p: any) => 
-          p.userId === user?.id || p.user?.registrationId === user?.registrationId) || [];
-        
-        console.log('User stats calculation:', {
-          userId: user?.id,
-          userRegistrationId: user?.registrationId,
-          totalSubscriptions: subscriptionsData.subscriptions?.length || 0,
-          totalPayouts: payoutsData.payouts?.length || 0,
-          mySubscriptionsCount: mySubscriptions.length,
-          myPayoutsCount: myPayouts.length,
-          myPayouts: myPayouts.map((p: any) => ({
-            id: p.id,
-            amount: p.amount,
-            status: p.status,
-            userId: p.userId,
-            userRegistrationId: p.user?.registrationId,
-            subscriptionId: p.subscriptionId
-          })),
-          allPayouts: payoutsData.payouts?.map((p: any) => ({
-            id: p.id,
-            amount: p.amount,
-            status: p.status,
-            userId: p.userId,
-            userRegistrationId: p.user?.registrationId
-          }))
-        });
-        
-        userStats = {
-          mySubscriptions: mySubscriptions.length,
-          myPayouts: myPayouts.filter((p: any) => p.status === 'PAID').length,
-          totalEarned: myPayouts.reduce((sum: number, p: any) => 
-            sum + (p.status === 'PAID' ? Number(p.amount) : 0), 0),
-          nextPayoutDate: mySubscriptions.find((s: any) => s.status === 'ACTIVE')?.nextPayoutDate
-        };
-      }
+          // Calculate user-specific stats if not admin
+          let userStats = undefined;
+          if (user?.role !== 'ADMIN') {
+            // Use userId if available, otherwise fall back to filtering by registrationId
+            const mySubscriptions = subscriptionsData.subscriptions?.filter((s: any) => 
+              s.userId === user?.id || s.user?.registrationId === user?.registrationId) || [];
+            const myPayouts = payoutsData.payouts?.filter((p: any) => 
+              p.userId === user?.id || p.user?.registrationId === user?.registrationId) || [];
+            
 
-      // Generate monthly data (mock data for demo)
-      const monthlyData = [
-        { month: 'Jan', users: 45, payouts: 125000 },
-        { month: 'Feb', users: 52, payouts: 145000 },
-        { month: 'Mar', users: 48, payouts: 135000 },
-        { month: 'Apr', users: 61, payouts: 165000 },
-        { month: 'May', users: 55, payouts: 155000 },
-        { month: 'Jun', users: 67, payouts: 185000 },
-      ];
+            
+            userStats = {
+              mySubscriptions: mySubscriptions.length,
+              myPayouts: myPayouts.filter((p: any) => p.status === 'PAID').length,
+              totalEarned: myPayouts.reduce((sum: number, p: any) => 
+                sum + (p.status === 'PAID' ? Number(p.amount) : 0), 0),
+              nextPayoutDate: mySubscriptions.find((s: any) => s.status === 'ACTIVE')?.nextPayoutDate
+            };
+          }
 
-      // Status data for pie chart
-      const statusData = [
-        { name: 'Active', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'ACTIVE').length || 0, color: '#10b981' },
-        { name: 'Completed', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'COMPLETED').length || 0, color: '#3b82f6' },
-        { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
-      ];
+          // Generate monthly data (mock data for demo)
+          const monthlyData = [
+            { month: 'Jan', users: 45, payouts: 125000 },
+            { month: 'Feb', users: 52, payouts: 145000 },
+            { month: 'Mar', users: 48, payouts: 135000 },
+            { month: 'Apr', users: 61, payouts: 165000 },
+            { month: 'May', users: 55, payouts: 155000 },
+            { month: 'Jun', users: 67, payouts: 185000 },
+          ];
 
-      console.log('Dashboard data:', {
-        subscriptions: subscriptionsData.subscriptions?.length || 0,
-        statusData,
-        userRole: user?.role,
-        userStats,
-        totalPayouts,
-        payoutsCount: payoutsData.payouts?.length || 0
-      });
+          // Status data for pie chart
+          const statusData = [
+            { name: 'Active', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'ACTIVE').length || 0, color: '#10b981' },
+            { name: 'Completed', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'COMPLETED').length || 0, color: '#3b82f6' },
+            { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
+          ];
 
-      setStats({
-        totalUsers: usersData.pagination?.total || 0,
-        totalSubscriptions: subscriptionsData.subscriptions?.length || 0,
-        totalPayouts,
-        activeSchemes: schemesData.schemes?.filter((s: any) => s.isActive).length || 0,
-        monthlyData,
-        statusData,
-        userStats,
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-    } finally {
-      setLoading(false);
+          console.log('Dashboard data:', {
+            subscriptions: subscriptionsData.subscriptions?.length || 0,
+            statusData,
+            userRole: user?.role
+          });
+
+          setStats({
+            totalUsers: usersData.pagination?.total || 0,
+            totalSubscriptions: subscriptionsData.subscriptions?.length || 0,
+            totalPayouts,
+            activeSchemes: schemesData.schemes?.filter((s: any) => s.isActive).length || 0,
+            monthlyData,
+            statusData,
+            userStats,
+          });
+        } catch (error) {
+          console.error('Error fetching dashboard stats:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchDashboardStats();
     }
-  };
+  }, [token, user]);
 
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -212,7 +192,7 @@ export default function Dashboard() {
         </div>
         <div className="text-sm text-muted-foreground">
           <p>Registration ID: <span className="font-medium text-primary">{user?.registrationId}</span></p>
-          <p>Role: <Badge variant={user?.role === 'ADMIN' ? 'default' : 'secondary'} className="bg-gradient-primary text-white">{user?.role}</Badge></p>
+          <div>Role: <Badge variant={user?.role === 'ADMIN' ? 'default' : 'secondary'} className="bg-gradient-primary text-white">{user?.role}</Badge></div>
         </div>
       </div>
 

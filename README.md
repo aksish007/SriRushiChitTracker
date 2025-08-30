@@ -53,7 +53,7 @@ You can bulk import subscriptions using the subscriber IDs:
 - **Database**: SQLite (Prisma ORM) - easily switchable to PostgreSQL/MySQL
 - **Authentication**: JWT-based with secure middleware
 - **Charts**: Recharts for data visualization
-- **File Processing**: xlsx for Excel operations
+- **File Processing**: node-xlsx for Excel operations
 - **Styling**: Tailwind CSS with custom design system
 
 ## 📦 Installation

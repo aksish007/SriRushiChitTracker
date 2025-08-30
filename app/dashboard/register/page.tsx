@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,11 +37,7 @@ export default function RegisterUserPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    fetchReferrers();
-  }, []);
-
-  const fetchReferrers = async () => {
+  const fetchReferrers = useCallback(async () => {
     try {
       const response = await fetch('/api/users?limit=1000', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -56,7 +52,11 @@ export default function RegisterUserPage() {
     } catch (error) {
       console.error('Error fetching referrers:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchReferrers();
+  }, [fetchReferrers]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

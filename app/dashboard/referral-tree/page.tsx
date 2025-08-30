@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,23 +67,7 @@ export default function ReferralTreePage() {
   const [treeStats, setTreeStats] = useState<TreeStats | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    if (selectedUser) {
-      fetchReferralTree(selectedUser);
-    }
-  }, [selectedUser]);
-
-  useEffect(() => {
-    if (referralTree) {
-      calculateTreeStats();
-    }
-  }, [referralTree]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/users?limit=1000', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -101,9 +85,9 @@ export default function ReferralTreePage() {
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+  }, [token, user]);
 
-  const fetchReferralTree = async (registrationId: string) => {
+  const fetchReferralTree = useCallback(async (registrationId: string) => {
     try {
       setLoading(true);
       const response = await fetch(`/api/referral-tree/${registrationId}`, {
@@ -133,9 +117,9 @@ export default function ReferralTreePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, toast]);
 
-  const calculateTreeStats = () => {
+  const calculateTreeStats = useCallback(() => {
     if (!referralTree) return;
 
     let totalMembers = 1;
@@ -173,7 +157,23 @@ export default function ReferralTreePage() {
     };
 
     setTreeStats(stats);
-  };
+  }, [referralTree]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      fetchReferralTree(selectedUser);
+    }
+  }, [selectedUser, fetchReferralTree]);
+
+  useEffect(() => {
+    if (referralTree) {
+      calculateTreeStats();
+    }
+  }, [referralTree, calculateTreeStats]);
 
   const toggleNodeExpansion = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import * as xlsx from 'node-xlsx';
 
 export interface ExcelUserData {
   firstName: string;
@@ -11,15 +11,12 @@ export interface ExcelUserData {
 }
 
 export function parseExcelFile(file: ArrayBuffer): ExcelUserData[] {
-  const workbook = XLSX.read(file, { type: 'array' });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  const buffer = Buffer.from(file);
+  const sheets = xlsx.parse(buffer);
+  const sheet = sheets[0]; // Get first sheet
   
   // Assuming first row is headers
-  const headers = jsonData[0];
-  const dataRows = jsonData.slice(1);
+  const dataRows = sheet.data.slice(1) as any[][];
   
   return dataRows.map(row => {
     const user: ExcelUserData = {
@@ -42,11 +39,10 @@ export function generateExcelTemplate(): ArrayBuffer {
     ['Jane', 'Smith', 'jane.smith@example.com', '9876543211', '456 Oak Ave', '', ''],
   ];
   
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+  const sheetData = [headers, ...sampleData];
+  const buffer = xlsx.build([{ name: 'Users', data: sheetData }]);
   
-  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  return buffer;
 }
 
 export function exportUsersToExcel(users: any[]): ArrayBuffer {
@@ -62,9 +58,8 @@ export function exportUsersToExcel(users: any[]): ArrayBuffer {
     new Date(user.createdAt).toLocaleDateString(),
   ]);
   
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+  const sheetData = [headers, ...data];
+  const buffer = xlsx.build([{ name: 'Users', data: sheetData }]);
   
-  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  return buffer;
 }

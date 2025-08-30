@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,11 +108,7 @@ export default function UsersPage() {
     isActive: true,
   });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, debouncedSearch, pageSize, sortField, sortOrder, roleFilter, statusFilter]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -144,7 +140,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, debouncedSearch, pageSize, sortField, sortOrder, roleFilter, statusFilter, token, toast]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearch = (value: string) => {
     setSearchInput(value);
