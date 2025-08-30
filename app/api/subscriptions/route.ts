@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, generateSubscriberId } from '@/lib/database';
+import { prisma, generateSubscriberIdWithNumber } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { subscriptionSchema } from '@/lib/validations';
 import logger from '@/lib/logger';
@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
+  let user: any = null;
 
   try {
-    const user = await requireAuth(request);
+    user = await requireAuth(request);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -102,8 +103,8 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error('Get subscriptions error', error instanceof Error ? error : new Error(String(error)), {
       action: 'SUBSCRIPTIONS_API_GET_ERROR',
-      userId: user?.id,
-      registrationId: user?.registrationId,
+      userId: user?.id || 'unknown',
+      registrationId: user?.registrationId || 'unknown',
       ipAddress,
       userAgent,
       metadata: {
@@ -158,21 +159,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already subscribed to this scheme
-    const existingSubscription = await prisma.chitSubscription.findFirst({
-      where: {
-        userId,
-        chitSchemeId,
-        status: 'ACTIVE',
-      },
-    });
-
-    if (existingSubscription) {
-      return NextResponse.json(
-        { error: 'User already has an active subscription to this chit scheme' },
-        { status: 400 }
-      );
-    }
+    // Note: Users can now subscribe to the same chit scheme multiple times
 
     // Check if scheme has available slots
     const activeSubscriptions = await prisma.chitSubscription.count({

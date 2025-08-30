@@ -533,14 +533,15 @@ export default function SubscriptionsPage() {
         </div>
         {user?.role === 'ADMIN' && (
           <div className="flex gap-2">
-            <Button 
+            {/* Bulk Import button hidden for now */}
+            {/* <Button 
               onClick={() => setShowBulkImportDialog(true)}
               variant="outline"
               className="hover:shadow-glow transition-all duration-300"
             >
               <Users className="h-4 w-4 mr-2" />
               Bulk Import
-            </Button>
+            </Button> */}
             <Button 
               onClick={() => setShowCreateDialog(true)}
               className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
@@ -1120,8 +1121,8 @@ export default function SubscriptionsPage() {
       </Dialog>
       )}
 
-      {/* Bulk Import Dialog */}
-      {user?.role === 'ADMIN' && (
+      {/* Bulk Import Dialog - Hidden for now */}
+      {/* {user?.role === 'ADMIN' && (
         <Dialog open={showBulkImportDialog} onOpenChange={setShowBulkImportDialog}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -1170,7 +1171,7 @@ export default function SubscriptionsPage() {
           </div>
         </DialogContent>
       </Dialog>
-      )}
+      )} */}
     </div>
   );
 }

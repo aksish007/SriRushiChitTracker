@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  PieChart, Users, Search, TreePine, UserCheck, IndianRupee, Activity, 
-  ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, ChevronDown, ChevronRight,
-  Crown, Star, TrendingUp, Network, Layers, Target, Award, Sparkles
+  Users, Search, TreePine, UserCheck, IndianRupee, Activity, 
+  ZoomIn, ZoomOut, RotateCcw, ChevronDown, ChevronRight,
+  Star, TrendingUp, Network, Target
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -39,17 +38,6 @@ interface User {
   role: string;
 }
 
-interface TreeStats {
-  totalMembers: number;
-  totalSubscriptions: number;
-  totalPayouts: number;
-  maxLevel: number;
-  directReferrals: number;
-  averagePayoutsPerMember: number;
-  networkGrowth: string;
-  topPerformers: ReferralNode[];
-}
-
 export default function ReferralTreePage() {
   const { token, user } = useAuth();
   const { toast } = useToast();
@@ -58,13 +46,11 @@ export default function ReferralTreePage() {
   const [referralTree, setReferralTree] = useState<ReferralNode | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'tree' | 'list' | 'stats'>('tree');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
   const [animationSpeed, setAnimationSpeed] = useState(300);
   const [showConnections, setShowConnections] = useState(true);
-  const [treeStats, setTreeStats] = useState<TreeStats | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchUsers = useCallback(async () => {
@@ -100,10 +86,9 @@ export default function ReferralTreePage() {
         // Expand root node by default
         setExpandedNodes(new Set([data.tree.id]));
       } else {
-        const errorData = await response.json();
         toast({
           title: 'Error',
-          description: errorData.error || 'Failed to load referral tree',
+          description: 'Failed to fetch referral tree',
           variant: 'destructive',
         });
       }
@@ -111,7 +96,7 @@ export default function ReferralTreePage() {
       console.error('Error fetching referral tree:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load referral tree',
+        description: 'Failed to fetch referral tree',
         variant: 'destructive',
       });
     } finally {
@@ -119,104 +104,55 @@ export default function ReferralTreePage() {
     }
   }, [token, toast]);
 
-  const calculateTreeStats = useCallback(() => {
-    if (!referralTree) return;
-
-    let totalMembers = 1;
-    let totalSubscriptions = referralTree.subscriptionsCount;
-    let totalPayouts = referralTree.totalPayouts;
-    let maxLevel = referralTree.level;
-    let allNodes: ReferralNode[] = [referralTree];
-
-    const traverse = (node: ReferralNode) => {
-      totalMembers += node.children.length;
-      totalSubscriptions += node.subscriptionsCount;
-      totalPayouts += node.totalPayouts;
-      maxLevel = Math.max(maxLevel, node.level);
-      allNodes.push(node);
-      
-      node.children.forEach(traverse);
-    };
-
-    traverse(referralTree);
-
-    // Find top performers (nodes with highest payouts)
-    const topPerformers = allNodes
-      .sort((a, b) => b.totalPayouts - a.totalPayouts)
-      .slice(0, 5);
-
-    const stats: TreeStats = {
-      totalMembers,
-      totalSubscriptions,
-      totalPayouts,
-      maxLevel,
-      directReferrals: referralTree.children.length,
-      averagePayoutsPerMember: totalPayouts / totalMembers,
-      networkGrowth: referralTree.children.length > 0 ? 'Active' : 'No referrals yet',
-      topPerformers
-    };
-
-    setTreeStats(stats);
-  }, [referralTree]);
-
   useEffect(() => {
-    fetchUsers();
+    if (token) {
+      fetchUsers();
+    }
   }, [fetchUsers]);
 
   useEffect(() => {
-    if (selectedUser) {
+    if (selectedUser && token) {
       fetchReferralTree(selectedUser);
     }
   }, [selectedUser, fetchReferralTree]);
 
-  useEffect(() => {
-    if (referralTree) {
-      calculateTreeStats();
-    }
-  }, [referralTree, calculateTreeStats]);
-
-  const toggleNodeExpansion = (nodeId: string) => {
-    const newExpanded = new Set(expandedNodes);
-    if (newExpanded.has(nodeId)) {
-      newExpanded.delete(nodeId);
-    } else {
-      newExpanded.add(nodeId);
-    }
-    setExpandedNodes(newExpanded);
-  };
-
-  const highlightNode = (nodeId: string) => {
-    setHighlightedNode(nodeId);
-    setTimeout(() => setHighlightedNode(null), 2000);
-  };
-
-  const resetView = () => {
-    setZoomLevel(1);
-    setExpandedNodes(new Set([referralTree?.id || '']));
-    setHighlightedNode(null);
-  };
-
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.firstName.toLowerCase().includes(search.toLowerCase()) ||
     user.lastName.toLowerCase().includes(search.toLowerCase()) ||
     user.registrationId.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getNodeColor = (level: number, isHighlighted: boolean = false) => {
-    if (isHighlighted) return 'bg-gradient-primary';
-    
-    const colors = [
-      'bg-gradient-primary',
-      'bg-gradient-secondary', 
-      'bg-gradient-success',
-      'bg-gradient-warning',
-      'bg-gradient-danger'
-    ];
-    return colors[level % colors.length];
+  const toggleNodeExpansion = (nodeId: string) => {
+    const newExpandedNodes = new Set(expandedNodes);
+    if (newExpandedNodes.has(nodeId)) {
+      newExpandedNodes.delete(nodeId);
+    } else {
+      newExpandedNodes.add(nodeId);
+    }
+    setExpandedNodes(newExpandedNodes);
+  };
+
+  const highlightNode = (nodeId: string) => {
+    setHighlightedNode(highlightedNode === nodeId ? null : nodeId);
+  };
+
+  const resetView = () => {
+    setZoomLevel(1);
+    setHighlightedNode(null);
+  };
+
+  const getNodeColor = (level: number, isHighlighted: boolean) => {
+    if (isHighlighted) return 'bg-primary';
+    switch (level) {
+      case 0: return 'bg-yellow-500';
+      case 1: return 'bg-blue-500';
+      case 2: return 'bg-green-500';
+      case 3: return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
   };
 
   const getPerformanceBadge = (payouts: number) => {
-    if (payouts > 100000) return { color: 'bg-gradient-primary', icon: Crown, text: 'Elite' };
     if (payouts > 50000) return { color: 'bg-gradient-success', icon: Star, text: 'Star' };
     if (payouts > 10000) return { color: 'bg-gradient-warning', icon: TrendingUp, text: 'Rising' };
     return { color: 'bg-gradient-secondary', icon: Target, text: 'New' };
@@ -230,6 +166,7 @@ export default function ReferralTreePage() {
     
     return (
       <div key={node.id} className="flex flex-col items-center">
+        {/* Node Card */}
         <div className={`relative transition-all duration-${animationSpeed} transform hover:scale-105`}>
           <Card 
             className={`w-64 mb-4 cursor-pointer transition-all duration-300 ${
@@ -294,223 +231,46 @@ export default function ReferralTreePage() {
           </Card>
         </div>
         
-        {/* Children */}
+        {/* Children with Proper Tree Layout */}
         {node.children.length > 0 && isExpanded && (
-          <div className="relative">
-            {/* Connection Lines */}
+          <div className="relative w-full">
+            {/* Vertical connection line from parent to children */}
             {showConnections && (
               <div className="absolute top-0 left-1/2 w-px h-4 bg-gradient-to-b from-primary to-transparent transform -translate-x-1/2"></div>
             )}
-            <div className="grid grid-cols-1 gap-6 mt-4">
-              {node.children.map((child, index) => (
-                <div key={child.id} className="relative">
-                  {showConnections && index < node.children.length - 1 && (
-                    <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-primary/50 to-transparent transform -translate-y-1/2"></div>
-                  )}
-                  {renderTreeNode(child, level + 1)}
+            
+            {/* Children Container */}
+            <div className="mt-4 relative">
+              {node.children.length === 1 ? (
+                // Single child - center alignment
+                <div className="flex justify-center">
+                  {renderTreeNode(node.children[0], level + 1)}
                 </div>
-              ))}
+              ) : (
+                // Multiple children - horizontal layout with proper connections
+                <div className="relative">
+                  {/* Horizontal connection line connecting all children */}
+                  {showConnections && node.children.length > 1 && (
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary/30 via-primary to-primary/30"></div>
+                  )}
+                  
+                  {/* Children grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                    {node.children.map((child, index) => (
+                      <div key={child.id} className="relative">
+                        {/* Vertical connection line from horizontal line to each child */}
+                        {showConnections && (
+                          <div className="absolute top-0 left-1/2 w-px h-4 bg-gradient-to-b from-primary to-transparent transform -translate-x-1/2"></div>
+                        )}
+                        {renderTreeNode(child, level + 1)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
-      </div>
-    );
-  };
-
-  const renderListView = () => {
-    if (!referralTree) return null;
-
-    const flattenTree = (node: ReferralNode): ReferralNode[] => {
-      return [node, ...node.children.flatMap(flattenTree)];
-    };
-
-    const allNodes = flattenTree(referralTree);
-
-    return (
-      <div className="space-y-4">
-        {allNodes.map((node, index) => {
-          const performanceBadge = getPerformanceBadge(node.totalPayouts);
-          const PerformanceIcon = performanceBadge.icon;
-          
-          return (
-            <Card 
-              key={node.id} 
-              className={`transition-all duration-300 cursor-pointer hover:shadow-glow ${
-                highlightedNode === node.id ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => highlightNode(node.id)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-4 h-4 ${getNodeColor(node.level)} rounded-full`}></div>
-                    <div>
-                      <h3 className="font-semibold">
-                        {node.firstName} {node.lastName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground font-mono">
-                        {node.registrationId}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Badge className={`${performanceBadge.color} text-white`}>
-                      <PerformanceIcon className="h-3 w-3 mr-1" />
-                      {performanceBadge.text}
-                    </Badge>
-                    <Badge variant="outline">Level {node.level}</Badge>
-                    <div className="text-right">
-                      <div className="font-semibold text-primary">{node.subscriptionsCount} subs</div>
-                      <div className="text-sm text-success">₹{Number(node.totalPayouts).toLocaleString()}</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderStatsView = () => {
-    if (!treeStats) return null;
-
-    return (
-      <div className="space-y-6">
-        {/* Performance Overview */}
-        <Card className="shadow-glow border-2 border-primary/20">
-          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
-            <CardTitle className="text-white">Network Performance Overview</CardTitle>
-            <CardDescription className="text-yellow-100">
-              Comprehensive analysis of your referral network
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <div className="text-center p-4 bg-gradient-primary/10 rounded-lg">
-                <Users className="h-8 w-8 mx-auto text-primary mb-2" />
-                <div className="text-2xl font-bold text-primary">{treeStats.totalMembers}</div>
-                <div className="text-sm text-muted-foreground">Total Members</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-success/10 rounded-lg">
-                <Activity className="h-8 w-8 mx-auto text-success mb-2" />
-                <div className="text-2xl font-bold text-success">{treeStats.totalSubscriptions}</div>
-                <div className="text-sm text-muted-foreground">Total Subscriptions</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-warning/10 rounded-lg">
-                <IndianRupee className="h-8 w-8 mx-auto text-warning mb-2" />
-                <div className="text-2xl font-bold text-warning">₹{Number(treeStats.totalPayouts).toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Total Payouts</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-secondary/10 rounded-lg">
-                <Layers className="h-8 w-8 mx-auto text-secondary mb-2" />
-                <div className="text-2xl font-bold text-secondary">{treeStats.maxLevel}</div>
-                <div className="text-sm text-muted-foreground">Max Level</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Performers */}
-        <Card className="shadow-glow border-2 border-primary/20">
-          <CardHeader className="bg-gradient-success text-white rounded-t-lg">
-            <CardTitle className="text-white flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Top Performers
-            </CardTitle>
-            <CardDescription className="text-green-100">
-              Members with highest payouts in your network
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {treeStats.topPerformers.map((performer, index) => {
-                const performanceBadge = getPerformanceBadge(performer.totalPayouts);
-                const PerformanceIcon = performanceBadge.icon;
-                
-                return (
-                  <div key={performer.id} className="flex items-center justify-between p-4 bg-gradient-primary/5 rounded-lg hover:bg-gradient-primary/10 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="text-2xl font-bold text-primary">#{index + 1}</div>
-                      <div>
-                        <h3 className="font-semibold">
-                          {performer.firstName} {performer.lastName}
-                        </h3>
-                        <p className="text-sm text-muted-foreground font-mono">
-                          {performer.registrationId}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Badge className={`${performanceBadge.color} text-white`}>
-                        <PerformanceIcon className="h-3 w-3 mr-1" />
-                        {performanceBadge.text}
-                      </Badge>
-                      <div className="text-right">
-                        <div className="font-semibold text-success">₹{Number(performer.totalPayouts).toLocaleString()}</div>
-                        <div className="text-sm text-muted-foreground">{performer.subscriptionsCount} subscriptions</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Network Insights */}
-        <Card className="shadow-glow border-2 border-primary/20">
-          <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
-            <CardTitle className="text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              Network Insights
-            </CardTitle>
-            <CardDescription className="text-blue-100">
-              Key metrics and growth indicators
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-4">
-                <h4 className="font-semibold text-primary">Growth Metrics</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-gradient-primary/10 rounded-lg">
-                    <span className="text-sm">Direct Referrals</span>
-                    <Badge variant="outline">{treeStats.directReferrals}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gradient-success/10 rounded-lg">
-                    <span className="text-sm">Network Growth</span>
-                    <Badge className="bg-gradient-success text-white">{treeStats.networkGrowth}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-gradient-warning/10 rounded-lg">
-                    <span className="text-sm">Avg Payouts/Member</span>
-                    <span className="font-semibold text-warning">₹{Number(treeStats.averagePayoutsPerMember).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-primary">Performance Indicators</h4>
-                <div className="space-y-3">
-                  <div className="p-3 bg-gradient-primary/10 rounded-lg">
-                    <div className="text-sm text-muted-foreground">Subscription Rate</div>
-                    <div className="text-2xl font-bold text-primary">
-                      {((treeStats.totalSubscriptions / treeStats.totalMembers) * 100).toFixed(1)}%
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gradient-success/10 rounded-lg">
-                    <div className="text-sm text-muted-foreground">Network Depth</div>
-                    <div className="text-2xl font-bold text-success">{treeStats.maxLevel} levels</div>
-                  </div>
-                  <div className="p-3 bg-gradient-warning/10 rounded-lg">
-                    <div className="text-sm text-muted-foreground">Total Value</div>
-                    <div className="text-2xl font-bold text-warning">₹{Number(treeStats.totalPayouts).toLocaleString()}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   };
@@ -573,22 +333,7 @@ export default function ReferralTreePage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="tree" className="flex items-center gap-2">
-                      <TreePine className="h-4 w-4" />
-                      Tree View
-                    </TabsTrigger>
-                    <TabsTrigger value="list" className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      List View
-                    </TabsTrigger>
-                    <TabsTrigger value="stats" className="flex items-center gap-2">
-                      <PieChart className="h-4 w-4" />
-                      Analytics
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <h3 className="font-semibold text-primary">Tree Controls</h3>
               </div>
               
               <div className="flex items-center gap-2">
@@ -681,57 +426,32 @@ export default function ReferralTreePage() {
       )}
 
       {!loading && referralTree && (
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-full">
-          <TabsContent value="tree" className="space-y-6">
-            <Card className="shadow-glow border-2 border-primary/20">
-              <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TreePine className="h-5 w-5" />
-                  Referral Tree for {referralTree.firstName} {referralTree.lastName}
-                </CardTitle>
-                <CardDescription className="text-yellow-100">
-                  Interactive tree visualization starting from {referralTree.registrationId}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div 
-                  ref={containerRef}
-                  className="overflow-auto"
-                  style={{ 
-                    transform: `scale(${zoomLevel})`,
-                    transformOrigin: 'top center',
-                    transition: 'transform 0.3s ease'
-                  }}
-                >
-                  <div className="min-w-max p-4">
-                    {renderTreeNode(referralTree)}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="list" className="space-y-6">
-            <Card className="shadow-glow border-2 border-primary/20">
-              <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Network Members List
-                </CardTitle>
-                <CardDescription className="text-blue-100">
-                  All members in the referral network
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                {renderListView()}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="stats" className="space-y-6">
-            {renderStatsView()}
-          </TabsContent>
-        </Tabs>
+        <Card className="shadow-glow border-2 border-primary/20">
+          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+            <CardTitle className="text-white flex items-center gap-2">
+              <TreePine className="h-5 w-5" />
+              Referral Tree for {referralTree.firstName} {referralTree.lastName}
+            </CardTitle>
+            <CardDescription className="text-yellow-100">
+              Interactive tree visualization starting from {referralTree.registrationId}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div 
+              ref={containerRef}
+              className="overflow-auto"
+              style={{ 
+                transform: `scale(${zoomLevel})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.3s ease'
+              }}
+            >
+              <div className="min-w-max p-4">
+                {renderTreeNode(referralTree)}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {!loading && !referralTree && selectedUser && (

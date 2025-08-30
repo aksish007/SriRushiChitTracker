@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
             password: hashedPassword,
             firstName: userData.firstName,
             lastName: userData.lastName,
-            phone: userData.phone,
+            phone: String(userData.phone), // Ensure phone is always a string
             address: userData.address,
             referredBy: referrerId,
           },

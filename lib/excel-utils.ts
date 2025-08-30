@@ -23,7 +23,7 @@ export function parseExcelFile(file: ArrayBuffer): ExcelUserData[] {
       firstName: row[0] || '',
       lastName: row[1] || '',
       email: row[2] || '',
-      phone: row[3] || '',
+      phone: String(row[3] || ''), // Ensure phone is always a string
       address: row[4] || '',
       referredBy: row[5] || '',
       chitId: row[6] || '',
@@ -42,7 +42,7 @@ export function generateExcelTemplate(): ArrayBuffer {
   const sheetData = [headers, ...sampleData];
   const buffer = xlsx.build([{ name: 'Users', data: sheetData }]);
   
-  return buffer;
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
 }
 
 export function exportUsersToExcel(users: any[]): ArrayBuffer {
@@ -61,5 +61,5 @@ export function exportUsersToExcel(users: any[]): ArrayBuffer {
   const sheetData = [headers, ...data];
   const buffer = xlsx.build([{ name: 'Users', data: sheetData }]);
   
-  return buffer;
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 }
