@@ -62,6 +62,26 @@ export async function POST(request: NextRequest) {
           referrerId = referrer.id;
         }
 
+        // Validate chit scheme if provided
+        let chitSchemeId = null;
+        if (userData.chitId) {
+          const chitScheme = await prisma.chitScheme.findUnique({
+            where: { chitId: userData.chitId },
+          });
+
+          if (!chitScheme) {
+            errors.push(`Row ${i + 2}: Invalid chit ID ${userData.chitId}`);
+            continue;
+          }
+
+          if (!chitScheme.isActive) {
+            errors.push(`Row ${i + 2}: Chit scheme ${userData.chitId} is not active`);
+            continue;
+          }
+
+          chitSchemeId = chitScheme.id;
+        }
+
         const hashedPassword = await hashPassword('defaultPassword123'); // Default password
         const registrationId = generateRegistrationId();
 
@@ -77,6 +97,19 @@ export async function POST(request: NextRequest) {
             referredBy: referrerId,
           },
         });
+
+        // Create subscription if chit ID is provided
+        if (chitSchemeId) {
+          const subscriberId = generateRegistrationId();
+          await prisma.chitSubscription.create({
+            data: {
+              subscriberId,
+              userId: newUser.id,
+              chitSchemeId,
+              status: 'ACTIVE',
+            },
+          });
+        }
 
         results.push({
           registrationId: newUser.registrationId,

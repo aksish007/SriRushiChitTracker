@@ -7,6 +7,7 @@ export interface ExcelUserData {
   phone: string;
   address?: string;
   referredBy?: string;
+  chitId?: string;
 }
 
 export function parseExcelFile(file: ArrayBuffer): ExcelUserData[] {
@@ -28,16 +29,17 @@ export function parseExcelFile(file: ArrayBuffer): ExcelUserData[] {
       phone: row[3] || '',
       address: row[4] || '',
       referredBy: row[5] || '',
+      chitId: row[6] || '',
     };
     return user;
   }).filter(user => user.email && user.firstName);
 }
 
 export function generateExcelTemplate(): ArrayBuffer {
-  const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'Referred By (Registration ID)'];
+  const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'Referred By (Registration ID)', 'Chit ID'];
   const sampleData = [
-    ['John', 'Doe', 'john.doe@example.com', '9876543210', '123 Main St', 'REG-123456'],
-    ['Jane', 'Smith', 'jane.smith@example.com', '9876543211', '456 Oak Ave', ''],
+    ['John', 'Doe', 'john.doe@example.com', '9876543210', '123 Main St', 'REG-123456', 'CHIT001'],
+    ['Jane', 'Smith', 'jane.smith@example.com', '9876543211', '456 Oak Ave', '', ''],
   ];
   
   const worksheet = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);

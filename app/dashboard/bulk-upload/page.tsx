@@ -374,13 +374,19 @@ export default function BulkUploadPage() {
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="text-sm">
-                    <strong>Optional fields:</strong> Address, Referred By (Registration ID)
+                    <strong>Optional fields:</strong> Address, Referred By (Registration ID), Chit ID
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="text-sm">
                     <strong>Password:</strong> All users get default password &quot;defaultPassword123&quot;
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="text-sm">
+                    <strong>Chit Subscription:</strong> If Chit ID is provided, user will be automatically subscribed to that chit
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -428,6 +434,10 @@ export default function BulkUploadPage() {
                   <span className="font-mono">F</span>
                   <span>Referred By</span>
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span className="font-mono">G</span>
+                  <span>Chit ID</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -453,6 +463,10 @@ export default function BulkUploadPage() {
               <div className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                 <span>Don&apos;t include header row in template</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Chit ID must be a valid active chit scheme ID</span>
               </div>
             </CardContent>
           </Card>
