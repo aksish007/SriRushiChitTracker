@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth, hashPassword } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -36,11 +36,14 @@ export async function POST(
     // Generate a simple password from phone number (last 6 digits)
     const phonePassword = targetUser.phone.slice(-6);
 
+    // Hash the password before storing
+    const hashedPassword = await hashPassword(phonePassword);
+
     // Update user password
     await prisma.user.update({
       where: { id: userId },
       data: {
-        password: phonePassword // In production, this should be hashed
+        password: hashedPassword
       }
     });
 

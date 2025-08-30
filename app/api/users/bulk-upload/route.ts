@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           chitSchemeId = chitScheme.id;
         }
 
-        const hashedPassword = await hashPassword('defaultPassword123'); // Default password
+        const hashedPassword = await hashPassword(String(userData.phone)); // Use mobile number as password
         const registrationId = generateRegistrationId();
 
         const newUser = await prisma.user.create({

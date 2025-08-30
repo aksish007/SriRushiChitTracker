@@ -1,0 +1,725 @@
+[2025-08-30T21:16:30.484Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:120:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/users/route.ts:21:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.485Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:122:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/users/route.ts:21:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.585Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:120:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/users/route.ts:21:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.585Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:122:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/users/route.ts:21:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Froute&page=%2Fapi%2Fusers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.614Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:120:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/subscriptions/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.615Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:122:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/subscriptions/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.648Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:120:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/chit-schemes/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.649Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:122:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/chit-schemes/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.710Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:120:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/chit-schemes/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.711Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:122:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/chit-schemes/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fchit-schemes%2Froute&page=%2Fapi%2Fchit-schemes%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fchit-schemes%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.740Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:120:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/subscriptions/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:30.741Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:122:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/subscriptions/route.ts:23:23)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fsubscriptions%2Froute&page=%2Fapi%2Fsubscriptions%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fsubscriptions%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:38.007Z] [ERROR] Authentication failed - User not found [UserID:cmeymdfrv00009f0qmik7a9k0|Action:AUTHENTICATION|IP:::1]
+  Error: Error: User not found in database
+  Stack: Error: User not found in database
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:90:109)
+    at async POST (webpack-internal:///(rsc)/./app/api/auth/logout/route.ts:16:22)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogout%2Froute&page=%2Fapi%2Fauth%2Flogout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogout%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogout%2Froute&page=%2Fapi%2Fauth%2Flogout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogout%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogout%2Froute&page=%2Fapi%2Fauth%2Flogout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogout%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-08-30T21:16:40.905Z] [ERROR] Login failed - Invalid password [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "admin@sriruschichits.com"
+}
+[2025-08-30T21:30:08.541Z] [ERROR] Error processing row 2 [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:BULK_UPLOAD_ROW_ERROR|IP:::1]
+  Error: PrismaClientValidationError: 
+Invalid `prisma.user.create()` invocation:
+
+{
+  data: {
+    registrationId: "REG-408539592",
+    email: "testuser4@gmail.com",
+    password: "$2a$12$8Jxj425bLi7iBcySdjDX3e1iCaP6UBqv9bI6NtsH4PPK.ogQdm4B6",
+    firstName: "Test",
+    lastName: "User4",
+    phone: 9876543210,
+           ~~~~~~~~~~
+    address: "123 Main St",
+    referredBy: "cmeyrc67a000kc9wb3plm3o8w"
+  }
+}
+
+Argument `phone`: Invalid value provided. Expected String, provided Int.
+  Stack: PrismaClientValidationError: 
+Invalid `prisma.user.create()` invocation:
+
+{
+  data: {
+    registrationId: "REG-408539592",
+    email: "testuser4@gmail.com",
+    password: "$2a$12$8Jxj425bLi7iBcySdjDX3e1iCaP6UBqv9bI6NtsH4PPK.ogQdm4B6",
+    firstName: "Test",
+    lastName: "User4",
+    phone: 9876543210,
+           ~~~~~~~~~~
+    address: "123 Main St",
+    referredBy: "cmeyrc67a000kc9wb3plm3o8w"
+  }
+}
+
+Argument `phone`: Invalid value provided. Expected String, provided Int.
+    at wn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/users/bulk-upload/route.ts:91:33)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "row": 2,
+  "userData": {
+    "firstName": "Test",
+    "lastName": "User4",
+    "email": "testuser4@gmail.com",
+    "phone": 9876543210,
+    "address": "123 Main St",
+    "referredBy": "REG-330337504",
+    "chitId": "TEST001"
+  },
+  "errorMessage": "\nInvalid `prisma.user.create()` invocation:\n\n{\n  data: {\n    registrationId: \"REG-408539592\",\n    email: \"testuser4@gmail.com\",\n    password: \"$2a$12$8Jxj425bLi7iBcySdjDX3e1iCaP6UBqv9bI6NtsH4PPK.ogQdm4B6\",\n    firstName: \"Test\",\n    lastName: \"User4\",\n    phone: 9876543210,\n           ~~~~~~~~~~\n    address: \"123 Main St\",\n    referredBy: \"cmeyrc67a000kc9wb3plm3o8w\"\n  }\n}\n\nArgument `phone`: Invalid value provided. Expected String, provided Int."
+}
+[2025-08-30T21:32:21.811Z] [ERROR] Error processing row 2 [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:BULK_UPLOAD_ROW_ERROR|IP:::1]
+  Error: PrismaClientValidationError: 
+Invalid `prisma.user.create()` invocation:
+
+{
+  data: {
+    registrationId: "REG-541810435",
+    email: "testuser4@gmail.com",
+    password: "$2a$12$5dHPJDbIyYYG/GLLlDi4JeNX3r9Fhl/5no7syJfFiOV.SO1me1I9G",
+    firstName: "Test",
+    lastName: "User4",
+    phone: 9876543210,
+           ~~~~~~~~~~
+    address: "123 Main St",
+    referredBy: "cmeyrc67a000kc9wb3plm3o8w"
+  }
+}
+
+Argument `phone`: Invalid value provided. Expected String, provided Int.
+  Stack: PrismaClientValidationError: 
+Invalid `prisma.user.create()` invocation:
+
+{
+  data: {
+    registrationId: "REG-541810435",
+    email: "testuser4@gmail.com",
+    password: "$2a$12$5dHPJDbIyYYG/GLLlDi4JeNX3r9Fhl/5no7syJfFiOV.SO1me1I9G",
+    firstName: "Test",
+    lastName: "User4",
+    phone: 9876543210,
+           ~~~~~~~~~~
+    address: "123 Main St",
+    referredBy: "cmeyrc67a000kc9wb3plm3o8w"
+  }
+}
+
+Argument `phone`: Invalid value provided. Expected String, provided Int.
+    at wn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/users/bulk-upload/route.ts:91:33)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "row": 2,
+  "userData": {
+    "firstName": "Test",
+    "lastName": "User4",
+    "email": "testuser4@gmail.com",
+    "phone": 9876543210,
+    "address": "123 Main St",
+    "referredBy": "REG-330337504",
+    "chitId": "TEST001"
+  },
+  "errorMessage": "\nInvalid `prisma.user.create()` invocation:\n\n{\n  data: {\n    registrationId: \"REG-541810435\",\n    email: \"testuser4@gmail.com\",\n    password: \"$2a$12$5dHPJDbIyYYG/GLLlDi4JeNX3r9Fhl/5no7syJfFiOV.SO1me1I9G\",\n    firstName: \"Test\",\n    lastName: \"User4\",\n    phone: 9876543210,\n           ~~~~~~~~~~\n    address: \"123 Main St\",\n    referredBy: \"cmeyrc67a000kc9wb3plm3o8w\"\n  }\n}\n\nArgument `phone`: Invalid value provided. Expected String, provided Int."
+}
+[2025-08-30T21:32:30.077Z] [ERROR] Error processing row 2 [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:BULK_UPLOAD_ROW_ERROR|IP:::1]
+  Error: PrismaClientValidationError: 
+Invalid `prisma.user.create()` invocation:
+
+{
+  data: {
+    registrationId: "REG-550076759",
+    email: "testuser4@gmail.com",
+    password: "$2a$12$W/iCIuNOPBOxXnmBTxd6FeR.2odC48HqnAPo71QbkPkfMPWuOS0se",
+    firstName: "Test",
+    lastName: "User4",
+    phone: 9876543210,
+           ~~~~~~~~~~
+    address: "123 Main St",
+    referredBy: "cmeyrc67a000kc9wb3plm3o8w"
+  }
+}
+
+Argument `phone`: Invalid value provided. Expected String, provided Int.
+  Stack: PrismaClientValidationError: 
+Invalid `prisma.user.create()` invocation:
+
+{
+  data: {
+    registrationId: "REG-550076759",
+    email: "testuser4@gmail.com",
+    password: "$2a$12$W/iCIuNOPBOxXnmBTxd6FeR.2odC48HqnAPo71QbkPkfMPWuOS0se",
+    firstName: "Test",
+    lastName: "User4",
+    phone: 9876543210,
+           ~~~~~~~~~~
+    address: "123 Main St",
+    referredBy: "cmeyrc67a000kc9wb3plm3o8w"
+  }
+}
+
+Argument `phone`: Invalid value provided. Expected String, provided Int.
+    at wn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/subhadip/Development/SriRushiChitTracker/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async POST (webpack-internal:///(rsc)/./app/api/users/bulk-upload/route.ts:91:33)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fusers%2Fbulk-upload%2Froute&page=%2Fapi%2Fusers%2Fbulk-upload%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fusers%2Fbulk-upload%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "row": 2,
+  "userData": {
+    "firstName": "Test",
+    "lastName": "User4",
+    "email": "testuser4@gmail.com",
+    "phone": 9876543210,
+    "address": "123 Main St",
+    "referredBy": "REG-330337504",
+    "chitId": "TEST001"
+  },
+  "errorMessage": "\nInvalid `prisma.user.create()` invocation:\n\n{\n  data: {\n    registrationId: \"REG-550076759\",\n    email: \"testuser4@gmail.com\",\n    password: \"$2a$12$W/iCIuNOPBOxXnmBTxd6FeR.2odC48HqnAPo71QbkPkfMPWuOS0se\",\n    firstName: \"Test\",\n    lastName: \"User4\",\n    phone: 9876543210,\n           ~~~~~~~~~~\n    address: \"123 Main St\",\n    referredBy: \"cmeyrc67a000kc9wb3plm3o8w\"\n  }\n}\n\nArgument `phone`: Invalid value provided. Expected String, provided Int."
+}
+[2025-08-30T21:55:00.267Z] [ERROR] Login failed - Invalid password [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "admin@sriruschichits.com"
+}
+[2025-08-30T21:55:41.669Z] [ERROR] Login failed - Invalid password [UserID:cmeyrc67a000kc9wb3plm3o8w|RegID:REG-330337504|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "testuser1@gmail.com"
+}
+[2025-08-30T21:55:54.117Z] [ERROR] Login failed - Invalid password [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "admin@sriruschichits.com"
+}
+[2025-08-30T21:57:50.669Z] [ERROR] Login failed - Invalid password [UserID:cmeyrc67a000kc9wb3plm3o8w|RegID:REG-330337504|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "testuser1@gmail.com"
+}
+[2025-08-30T21:57:56.733Z] [ERROR] Login failed - Invalid password [UserID:cmeyr315g0000q2th4byx4rk4|RegID:REG-903892683|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "admin@sriruschichits.com"
+}
+[2025-08-30T21:58:51.487Z] [ERROR] Login failed - Invalid password [UserID:cmeyrc67a000kc9wb3plm3o8w|RegID:REG-330337504|Action:LOGIN_FAILED|IP:::1]
+  Error: Error: Invalid password
+  Stack: Error: Invalid password
+    at POST (webpack-internal:///(rsc)/./app/api/auth/login/route.ts:49:106)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "email": "testuser1@gmail.com"
+}
