@@ -129,14 +129,6 @@ export function LoginForm() {
               )}
             </Button>
           </form>
-          
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-            <p className="text-center text-sm font-medium text-blue-800 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-blue-700">
-              <p><strong>Admin:</strong> admin@sriruschichits.com / admin123</p>
-              <p><strong>User:</strong> user@sriruschichits.com / user123</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
