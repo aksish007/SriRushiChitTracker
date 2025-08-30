@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
+import logger from '@/lib/logger';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     const user = await requireAuth(request);
+    
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -104,6 +111,8 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where }),
     ]);
 
+
+
     return NextResponse.json({
       users,
       pagination: {
@@ -114,7 +123,21 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Get users error:', error);
+    const responseTime = Date.now() - startTime;
+    
+    logger.error('Users API - GET error', error instanceof Error ? error : new Error(String(error)), {
+      action: 'USERS_API_GET_ERROR',
+      userId: user?.id,
+      registrationId: user?.registrationId,
+      ipAddress,
+      userAgent,
+      metadata: {
+        endpoint: '/api/users',
+        method: 'GET',
+        responseTime,
+        errorMessage: error.message
+      }
+    });
     
     if (error.message === 'Authentication required' || error.message === 'Insufficient permissions') {
       return NextResponse.json(

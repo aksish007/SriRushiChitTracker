@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { payoutSchema } from '@/lib/validations';
+import logger from '@/lib/logger';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     const user = await requireAuth(request);
     const { searchParams } = new URL(request.url);
@@ -101,7 +105,18 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Get payouts error:', error);
+    logger.error('Get payouts error', error instanceof Error ? error : new Error(String(error)), {
+      action: 'PAYOUTS_API_GET_ERROR',
+      userId: user?.id,
+      registrationId: user?.registrationId,
+      ipAddress,
+      userAgent,
+      metadata: {
+        endpoint: '/api/payouts',
+        method: 'GET',
+        errorMessage: error.message
+      }
+    });
     
     if (error.message === 'Authentication required') {
       return NextResponse.json(
@@ -118,6 +133,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     const adminUser = await requireAuth(request, 'ADMIN');
 
@@ -196,7 +214,18 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ payout: newPayout });
   } catch (error: any) {
-    console.error('Create payout error:', error);
+    logger.error('Create payout error', error instanceof Error ? error : new Error(String(error)), {
+      action: 'PAYOUTS_API_POST_ERROR',
+      userId: adminUser?.id,
+      registrationId: adminUser?.registrationId,
+      ipAddress,
+      userAgent,
+      metadata: {
+        endpoint: '/api/payouts',
+        method: 'POST',
+        errorMessage: error.message
+      }
+    });
     
     if (error.message === 'Authentication required' || error.message === 'Insufficient permissions') {
       return NextResponse.json(

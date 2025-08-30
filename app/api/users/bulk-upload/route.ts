@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, generateRegistrationId, generateSubscriberIdWithNumber } from '@/lib/database';
 import { hashPassword, requireAuth } from '@/lib/auth';
 import { parseExcelFile } from '@/lib/excel-utils';
+import logger from '@/lib/logger';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     // Require admin authentication
     const adminUser = await requireAuth(request, 'ADMIN');
@@ -122,7 +126,18 @@ export async function POST(request: NextRequest) {
           name: `${newUser.firstName} ${newUser.lastName}`,
         });
       } catch (error) {
-        console.error(`Error processing row ${i + 2}:`, error);
+        logger.error(`Error processing row ${i + 2}`, error instanceof Error ? error : new Error(String(error)), {
+          action: 'BULK_UPLOAD_ROW_ERROR',
+          userId: adminUser.id,
+          registrationId: adminUser.registrationId,
+          ipAddress,
+          userAgent,
+          metadata: {
+            row: i + 2,
+            userData,
+            errorMessage: error instanceof Error ? error.message : String(error)
+          }
+        });
         errors.push(`Row ${i + 2}: Failed to create user - ${error}`);
       }
     }
@@ -145,7 +160,18 @@ export async function POST(request: NextRequest) {
       errorDetails: errors,
     });
   } catch (error: any) {
-    console.error('Bulk upload error:', error);
+    logger.error('Bulk upload error', error instanceof Error ? error : new Error(String(error)), {
+      action: 'BULK_UPLOAD_ERROR',
+      userId: adminUser?.id,
+      registrationId: adminUser?.registrationId,
+      ipAddress,
+      userAgent,
+      metadata: {
+        endpoint: '/api/users/bulk-upload',
+        method: 'POST',
+        errorMessage: error.message
+      }
+    });
     
     if (error.message === 'Authentication required' || error.message === 'Insufficient permissions') {
       return NextResponse.json(

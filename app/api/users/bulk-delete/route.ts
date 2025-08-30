@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database';
 import { verifyToken } from '@/lib/auth';
+import logger from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: NextRequest) {
+  const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
@@ -60,7 +64,16 @@ export async function DELETE(request: NextRequest) {
       message: `${deletedUsers.count} users deleted successfully` 
     });
   } catch (error) {
-    console.error('Error bulk deleting users:', error);
+    logger.error('Error bulk deleting users', error instanceof Error ? error : new Error(String(error)), {
+      action: 'USERS_BULK_DELETE_ERROR',
+      ipAddress,
+      userAgent,
+      metadata: {
+        endpoint: '/api/users/bulk-delete',
+        method: 'DELETE',
+        errorMessage: error instanceof Error ? error.message : String(error)
+      }
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

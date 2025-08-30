@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { exportUsersToExcel } from '@/lib/excel-utils';
+import logger from '@/lib/logger';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     const adminUser = await requireAuth(request, 'ADMIN');
 
@@ -45,12 +49,23 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Export users error:', error);
+    logger.error('Export users error', error instanceof Error ? error : new Error(String(error)), {
+      action: 'EXPORT_USERS_ERROR',
+      userId: adminUser?.id,
+      registrationId: adminUser?.registrationId,
+      ipAddress,
+      userAgent,
+      metadata: {
+        endpoint: '/api/reports/export-users',
+        method: 'GET',
+        errorMessage: error.message
+      }
+    });
     
     if (error.message === 'Authentication required' || error.message === 'Insufficient permissions') {
       return NextResponse.json(
         { error: error.message },
-        { status: 401 }
+        { status: 500 }
       );
     }
 
