@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -85,10 +86,12 @@ export default function SubscriptionsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [chitIdFilter, setChitIdFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSubscriptions, setSelectedSubscriptions] = useState<string[]>([]);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -112,11 +115,15 @@ export default function SubscriptionsPage() {
   const [editForm, setEditForm] = useState({
     status: '',
   });
+  const [bulkImportData, setBulkImportData] = useState({
+    userId: '',
+    subscriberIds: '',
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchData();
-  }, [currentPage, debouncedSearch, statusFilter, pageSize, sortField, sortOrder]);
+  }, [currentPage, debouncedSearch, statusFilter, chitIdFilter, pageSize, sortField, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -126,6 +133,7 @@ export default function SubscriptionsPage() {
         limit: pageSize.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(chitIdFilter !== 'all' && { chitId: chitIdFilter }),
         sortField: sortField,
         sortOrder: sortOrder,
       });
@@ -183,6 +191,19 @@ export default function SubscriptionsPage() {
 
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleChitIdFilter = (value: string) => {
+    setChitIdFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setStatusFilter('all');
+    setChitIdFilter('all');
+    setSearchInput('');
+    setDebouncedSearch('');
     setCurrentPage(1);
   };
 
@@ -286,6 +307,58 @@ export default function SubscriptionsPage() {
       toast({
         title: 'Error',
         description: 'Failed to delete subscription',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkImport = async () => {
+    try {
+      // Parse subscriber IDs from text area
+      const subscriberIds = bulkImportData.subscriberIds
+        .split('\n')
+        .map(id => id.trim())
+        .filter(id => id.length > 0);
+
+      if (subscriberIds.length === 0) {
+        toast({
+          title: 'Error',
+          description: 'Please enter at least one subscriber ID',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const response = await fetch('/api/subscriptions/bulk-import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: bulkImportData.userId,
+          subscriberIds,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `Successfully imported ${result.success} subscriptions${result.errors > 0 ? ` with ${result.errors} errors` : ''}`,
+        });
+        setShowBulkImportDialog(false);
+        setBulkImportData({ userId: '', subscriberIds: '' });
+        fetchData();
+      } else {
+        throw new Error(result.error || 'Failed to import subscriptions');
+      }
+    } catch (error) {
+      console.error('Error importing subscriptions:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to import subscriptions',
         variant: 'destructive',
       });
     }
@@ -452,16 +525,31 @@ export default function SubscriptionsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Subscriptions</h1>
           <p className="text-muted-foreground">
-            Manage chit fund subscriptions and track member participation
+            {user?.role === 'ADMIN' 
+              ? 'Manage chit fund subscriptions and track member participation'
+              : 'View your chit fund subscriptions'
+            }
           </p>
         </div>
-        <Button 
-          onClick={() => setShowCreateDialog(true)}
-          className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Subscription
-        </Button>
+        {user?.role === 'ADMIN' && (
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowBulkImportDialog(true)}
+              variant="outline"
+              className="hover:shadow-glow transition-all duration-300"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Bulk Import
+            </Button>
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Subscription
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -577,12 +665,34 @@ export default function SubscriptionsPage() {
                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={chitIdFilter} onValueChange={handleChitIdFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by chit ID" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Chit Schemes</SelectItem>
+                {schemes.map((scheme) => (
+                  <SelectItem key={scheme.id} value={scheme.chitId}>
+                    {scheme.chitId} - {scheme.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleClearFilters}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Clear Filters
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Bulk Actions */}
-      {selectedSubscriptions.length > 0 && (
+      {selectedSubscriptions.length > 0 && user?.role === 'ADMIN' && (
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -756,17 +866,19 @@ export default function SubscriptionsPage() {
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditSubscription(subscription)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                        {user?.role === 'ADMIN' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleEditSubscription(subscription)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
                             </DropdownMenuItem>
-                          </AlertDialogTrigger>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
@@ -782,6 +894,8 @@ export default function SubscriptionsPage() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -830,7 +944,8 @@ export default function SubscriptionsPage() {
       </Card>
 
       {/* Create Subscription Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      {user?.role === 'ADMIN' && (
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Subscription</DialogTitle>
@@ -886,6 +1001,7 @@ export default function SubscriptionsPage() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
       {/* View Subscription Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
@@ -968,14 +1084,15 @@ export default function SubscriptionsPage() {
       </Dialog>
 
       {/* Edit Subscription Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Subscription</DialogTitle>
-            <DialogDescription>
-              Update subscription status
-            </DialogDescription>
-          </DialogHeader>
+      {user?.role === 'ADMIN' && (
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Subscription</DialogTitle>
+              <DialogDescription>
+                Update subscription status
+              </DialogDescription>
+            </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label htmlFor="status">Status</Label>
@@ -1001,6 +1118,59 @@ export default function SubscriptionsPage() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
+
+      {/* Bulk Import Dialog */}
+      {user?.role === 'ADMIN' && (
+        <Dialog open={showBulkImportDialog} onOpenChange={setShowBulkImportDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Bulk Import Subscriptions</DialogTitle>
+            <DialogDescription>
+              Import multiple subscriptions using subscriber IDs in SRC format (e.g., SRC01NS/04, SRC03MC/22)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="userId">User *</Label>
+              <Select value={bulkImportData.userId} onValueChange={(value) => setBulkImportData({ ...bulkImportData, userId: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.registrationId} - {user.firstName} {user.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="subscriberIds">Subscriber IDs *</Label>
+              <Textarea
+                id="subscriberIds"
+                value={bulkImportData.subscriberIds}
+                onChange={(e) => setBulkImportData({ ...bulkImportData, subscriberIds: e.target.value })}
+                placeholder="Enter subscriber IDs, one per line:&#10;SRC01NS/04&#10;SRC03MC/22&#10;SRC05CM/05"
+                className="min-h-[200px] font-mono text-sm"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Format: SRCXXYY/ZZ where XX=2-digit number, YY=2-3 letter code, ZZ=2-digit number
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowBulkImportDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkImport}>
+              Import Subscriptions
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      )}
     </div>
   );
 }

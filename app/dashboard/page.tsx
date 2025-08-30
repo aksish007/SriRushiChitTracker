@@ -69,10 +69,35 @@ export default function Dashboard() {
       // Calculate user-specific stats if not admin
       let userStats = undefined;
       if (user?.role !== 'ADMIN') {
+        // Use userId if available, otherwise fall back to filtering by registrationId
         const mySubscriptions = subscriptionsData.subscriptions?.filter((s: any) => 
-          s.subscriberId === user?.registrationId) || [];
+          s.userId === user?.id || s.user?.registrationId === user?.registrationId) || [];
         const myPayouts = payoutsData.payouts?.filter((p: any) => 
-          p.subscription.subscriberId === user?.registrationId) || [];
+          p.userId === user?.id || p.user?.registrationId === user?.registrationId) || [];
+        
+        console.log('User stats calculation:', {
+          userId: user?.id,
+          userRegistrationId: user?.registrationId,
+          totalSubscriptions: subscriptionsData.subscriptions?.length || 0,
+          totalPayouts: payoutsData.payouts?.length || 0,
+          mySubscriptionsCount: mySubscriptions.length,
+          myPayoutsCount: myPayouts.length,
+          myPayouts: myPayouts.map((p: any) => ({
+            id: p.id,
+            amount: p.amount,
+            status: p.status,
+            userId: p.userId,
+            userRegistrationId: p.user?.registrationId,
+            subscriptionId: p.subscriptionId
+          })),
+          allPayouts: payoutsData.payouts?.map((p: any) => ({
+            id: p.id,
+            amount: p.amount,
+            status: p.status,
+            userId: p.userId,
+            userRegistrationId: p.user?.registrationId
+          }))
+        });
         
         userStats = {
           mySubscriptions: mySubscriptions.length,
@@ -99,6 +124,15 @@ export default function Dashboard() {
         { name: 'Completed', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'COMPLETED').length || 0, color: '#3b82f6' },
         { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
       ];
+
+      console.log('Dashboard data:', {
+        subscriptions: subscriptionsData.subscriptions?.length || 0,
+        statusData,
+        userRole: user?.role,
+        userStats,
+        totalPayouts,
+        payoutsCount: payoutsData.payouts?.length || 0
+      });
 
       setStats({
         totalUsers: usersData.pagination?.total || 0,
@@ -274,25 +308,34 @@ export default function Dashboard() {
               <CardDescription className="text-green-100">Distribution of subscription statuses</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={stats?.statusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {stats?.statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              {stats?.statusData && stats.statusData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={stats.statusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {stats.statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  <div className="text-center">
+                    <p>No subscription data available</p>
+                    <p className="text-sm">Create some subscriptions to see the chart</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -399,49 +442,118 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="shadow-glow">
-          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
-            <CardTitle className="text-white">My Activities</CardTitle>
-            <CardDescription className="text-yellow-100">Quick access to your chit fund activities</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Button 
-                variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-blue transition-all duration-300 border-2 hover:border-blue-500 hover:scale-105"
-                onClick={() => handleQuickAction('subscriptions')}
-              >
-                <CreditCard className="h-8 w-8 text-blue-600" />
-                <div className="text-center">
-                  <h3 className="font-semibold">My Subscriptions</h3>
-                  <p className="text-sm text-muted-foreground">View my chits</p>
-                </div>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-green transition-all duration-300 border-2 hover:border-green-500 hover:scale-105"
-                onClick={() => handleQuickAction('payouts')}
-              >
-                <IndianRupee className="h-8 w-8 text-green-600" />
-                <div className="text-center">
-                  <h3 className="font-semibold">My Payouts</h3>
-                  <p className="text-sm text-muted-foreground">Payment history</p>
-                </div>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-purple-500 hover:scale-105"
-                onClick={() => handleQuickAction('referral-tree')}
-              >
-                <TrendingUp className="h-8 w-8 text-purple-600" />
-                <div className="text-center">
-                  <h3 className="font-semibold">My Network</h3>
-                  <p className="text-sm text-muted-foreground">Referral tree</p>
-                </div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          {/* User Stats Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="My Subscriptions"
+              value={stats?.userStats?.mySubscriptions || 0}
+              description="Active chit subscriptions"
+              icon={CreditCard}
+              trend={{ value: 0, isPositive: true }}
+            />
+            <StatsCard
+              title="Total Earned"
+              value={`₹${Number(stats?.userStats?.totalEarned || 0).toLocaleString()}`}
+              description="From completed payouts"
+              icon={IndianRupee}
+              trend={{ value: 0, isPositive: true }}
+            />
+            <StatsCard
+              title="Completed Payouts"
+              value={stats?.userStats?.myPayouts || 0}
+              description="Successfully received"
+              icon={CheckCircle}
+              trend={{ value: 0, isPositive: true }}
+            />
+            <StatsCard
+              title="Next Payout"
+              value={stats?.userStats?.nextPayoutDate ? new Date(stats.userStats.nextPayoutDate).toLocaleDateString() : 'N/A'}
+              description="Expected payment date"
+              icon={Calendar}
+              trend={{ value: 0, isPositive: true }}
+            />
+          </div>
+
+          {/* User Subscription Status Chart */}
+          {(stats?.userStats?.mySubscriptions || 0) > 0 && (
+            <Card className="shadow-glow-green">
+              <CardHeader className="bg-gradient-success text-white rounded-t-lg">
+                <CardTitle className="text-white">My Subscription Status</CardTitle>
+                <CardDescription className="text-green-100">Your subscription overview</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                                         <Pie
+                       data={[
+                         { name: 'Active', value: stats?.userStats?.mySubscriptions || 0, color: '#10b981' },
+                         { name: 'Completed', value: 0, color: '#3b82f6' },
+                         { name: 'Cancelled', value: 0, color: '#ef4444' },
+                       ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#3b82f6" />
+                      <Cell fill="#ef4444" />
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="shadow-glow">
+            <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+              <CardTitle className="text-white">My Activities</CardTitle>
+              <CardDescription className="text-yellow-100">Quick access to your chit fund activities</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-blue transition-all duration-300 border-2 hover:border-blue-500 hover:scale-105"
+                  onClick={() => handleQuickAction('subscriptions')}
+                >
+                  <CreditCard className="h-8 w-8 text-blue-600" />
+                  <div className="text-center">
+                    <h3 className="font-semibold">My Subscriptions</h3>
+                    <p className="text-sm text-muted-foreground">View my chits</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow-green transition-all duration-300 border-2 hover:border-green-500 hover:scale-105"
+                  onClick={() => handleQuickAction('payouts')}
+                >
+                  <IndianRupee className="h-8 w-8 text-green-600" />
+                  <div className="text-center">
+                    <h3 className="font-semibold">My Payouts</h3>
+                    <p className="text-sm text-muted-foreground">Payment history</p>
+                  </div>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto p-4 flex flex-col items-center gap-2 hover:shadow-glow transition-all duration-300 border-2 hover:border-purple-500 hover:scale-105"
+                  onClick={() => handleQuickAction('referral-tree')}
+                >
+                  <TrendingUp className="h-8 w-8 text-purple-600" />
+                  <div className="text-center">
+                    <h3 className="font-semibold">My Network</h3>
+                    <p className="text-sm text-muted-foreground">Referral tree</p>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );

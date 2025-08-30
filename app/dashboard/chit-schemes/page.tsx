@@ -41,7 +41,7 @@ interface ChitScheme {
 }
 
 export default function ChitSchemesPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const [schemes, setSchemes] = useState<ChitScheme[]>([]);
   const [loading, setLoading] = useState(true);
@@ -464,16 +464,20 @@ export default function ChitSchemesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Chit Schemes</h1>
           <p className="text-muted-foreground">
-            Manage chit fund schemes and their subscriptions
+            {user?.role === 'ADMIN' 
+              ? 'Manage chit fund schemes and their subscriptions'
+              : 'View available chit fund schemes'
+            }
           </p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Scheme
-            </Button>
-          </DialogTrigger>
+        {user?.role === 'ADMIN' && (
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Scheme
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Chit Scheme</DialogTitle>
@@ -588,6 +592,7 @@ export default function ChitSchemesPage() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -658,7 +663,7 @@ export default function ChitSchemesPage() {
       </div>
 
       {/* Bulk Actions */}
-      {selectedSchemes.length > 0 && (
+      {selectedSchemes.length > 0 && user?.role === 'ADMIN' && (
         <Card className="shadow-glow border-2 border-primary/20">
           <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
             <CardTitle className="text-white">Bulk Actions</CardTitle>
@@ -944,17 +949,19 @@ export default function ChitSchemesPage() {
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditScheme(scheme)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                        {user?.role === 'ADMIN' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleEditScheme(scheme)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
                             </DropdownMenuItem>
-                          </AlertDialogTrigger>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Chit Scheme</AlertDialogTitle>
@@ -970,6 +977,8 @@ export default function ChitSchemesPage() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -1099,7 +1108,8 @@ export default function ChitSchemesPage() {
       </Dialog>
 
       {/* Edit Scheme Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      {user?.role === 'ADMIN' && (
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Chit Scheme</DialogTitle>
@@ -1191,6 +1201,7 @@ export default function ChitSchemesPage() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   );
 }

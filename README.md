@@ -12,7 +12,8 @@ A comprehensive, production-ready chit fund management system built with Next.js
 
 ### Chit Fund Operations
 - **Chit Scheme Management**: Create and manage multiple chit schemes
-- **Subscription Management**: Unique SubscriberId (SUB-CHITID-XXX) per subscription
+- **Subscription Management**: Unique SubscriberId in SRC format (SRC{XX}{YY}/{ZZ})
+- **Bulk Subscription Import**: Import multiple subscriptions using subscriber IDs
 - **Payout Tracking**: Monthly payout management with status tracking
 - **Interactive Referral Tree**: Visual hierarchy representation
 
@@ -21,6 +22,29 @@ A comprehensive, production-ready chit fund management system built with Next.js
 - **Real-time Dashboard**: Analytics and performance metrics
 - **Comprehensive Reports**: Multiple export formats (Excel/PDF)
 - **Audit Trail**: Complete system activity logging
+
+## 📋 Subscriber ID Format
+
+The system uses a standardized subscriber ID format: `SRC{XX}{YY}/{ZZ}`
+
+### Format Breakdown
+- **SRC**: Fixed prefix for Sri Rushi Chits
+- **{XX}**: 2-digit number (01, 02, 03, 05, 10, etc.)
+- **{YY}**: 2-3 letter code representing chit group (NS, MC, CM, KS, LB, LBS, LAS, JS, DM, BM, LCS, LS, MS, FM, ES)
+- **{ZZ}**: 2-digit subscriber number (01-99)
+
+### Examples
+- `SRC01NS/04` - Chit group SRC01NS, subscriber #04
+- `SRC03MC/22` - Chit group SRC03MC, subscriber #22
+- `SRC10LBS/12` - Chit group SRC10LBS, subscriber #12
+
+### Bulk Import
+You can bulk import subscriptions using the subscriber IDs:
+1. Navigate to Subscriptions page
+2. Click "Bulk Import" button
+3. Select a user
+4. Enter subscriber IDs (one per line)
+5. Click "Import Subscriptions"
 
 ## 🚀 Tech Stack
 

@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
+    const chitId = searchParams.get('chitId') || '';
     const userId = searchParams.get('userId');
     const sortField = searchParams.get('sortField') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
@@ -39,6 +40,12 @@ export async function GET(request: NextRequest) {
 
     if (status && status !== 'all') {
       where.status = status;
+    }
+
+    if (chitId && chitId !== 'all') {
+      where.chitScheme = {
+        chitId: chitId
+      };
     }
 
     // Build orderBy clause
@@ -167,7 +174,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const subscriberId = generateSubscriberId(chitScheme.chitId);
+    const subscriberId = await generateSubscriberIdWithNumber(chitScheme.chitId);
 
     const newSubscription = await prisma.chitSubscription.create({
       data: {

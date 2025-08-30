@@ -1,4 +1,4 @@
-import { prisma, generateRegistrationId, generateSubscriberId } from './lib/database';
+import { prisma, generateRegistrationId, generateSubscriberIdWithNumber } from './lib/database';
 import { hashPassword } from './lib/auth';
 import { USER_ROLES, SUBSCRIPTION_STATUS, PAYOUT_STATUS } from './lib/constants';
 
@@ -65,7 +65,7 @@ async function main() {
   const chitSchemes = await Promise.all([
     prisma.chitScheme.create({
       data: {
-        chitId: 'CHIT001',
+        chitId: 'SRC01NS',
         name: 'Monthly Saver Scheme',
         amount: 50000,
         duration: 12,
@@ -75,7 +75,7 @@ async function main() {
     }),
     prisma.chitScheme.create({
       data: {
-        chitId: 'CHIT002',
+        chitId: 'SRC03MC',
         name: 'Annual Growth Plan',
         amount: 100000,
         duration: 24,
@@ -85,7 +85,7 @@ async function main() {
     }),
     prisma.chitScheme.create({
       data: {
-        chitId: 'CHIT003',
+        chitId: 'SRC05CM',
         name: 'Premium Investment',
         amount: 200000,
         duration: 36,
@@ -95,32 +95,64 @@ async function main() {
     }),
   ]);
 
-  // Create subscriptions
+  // Create subscriptions with specific subscriber IDs
   const subscriptions = [];
-  for (let i = 0; i < chitSchemes.length; i++) {
-    const scheme = chitSchemes[i];
-    
-    // User subscription
+  
+  // SRC01NS subscriptions
+  const src01nsSubscriptions = [
+    { userId: user.id, subscriberNumber: 4 },
+    { userId: referralUsers[0].id, subscriberNumber: 6 },
+    { userId: referralUsers[1].id, subscriberNumber: 13 },
+    { userId: referralUsers[2].id, subscriberNumber: 12 },
+  ];
+  
+  for (const sub of src01nsSubscriptions) {
     const userSub = await prisma.chitSubscription.create({
       data: {
-        subscriberId: generateSubscriberId(scheme.chitId),
-        userId: user.id,
-        chitSchemeId: scheme.id,
+        subscriberId: await generateSubscriberIdWithNumber('SRC01NS', sub.subscriberNumber),
+        userId: sub.userId,
+        chitSchemeId: chitSchemes[0].id,
       },
     });
     subscriptions.push(userSub);
+  }
 
-    // Some referral user subscriptions
-    for (let j = 0; j < Math.min(3, referralUsers.length); j++) {
-      const refSub = await prisma.chitSubscription.create({
-        data: {
-          subscriberId: generateSubscriberId(scheme.chitId),
-          userId: referralUsers[j].id,
-          chitSchemeId: scheme.id,
-        },
-      });
-      subscriptions.push(refSub);
-    }
+  // SRC03MC subscriptions
+  const src03mcSubscriptions = [
+    { userId: user.id, subscriberNumber: 22 },
+    { userId: referralUsers[0].id, subscriberNumber: 9 },
+    { userId: referralUsers[1].id, subscriberNumber: 18 },
+    { userId: referralUsers[2].id, subscriberNumber: 14 },
+    { userId: referralUsers[3].id, subscriberNumber: 25 },
+    { userId: referralUsers[4].id, subscriberNumber: 16 },
+  ];
+  
+  for (const sub of src03mcSubscriptions) {
+    const refSub = await prisma.chitSubscription.create({
+      data: {
+        subscriberId: await generateSubscriberIdWithNumber('SRC03MC', sub.subscriberNumber),
+        userId: sub.userId,
+        chitSchemeId: chitSchemes[1].id,
+      },
+    });
+    subscriptions.push(refSub);
+  }
+
+  // SRC05CM subscriptions
+  const src05cmSubscriptions = [
+    { userId: user.id, subscriberNumber: 5 },
+    { userId: referralUsers[0].id, subscriberNumber: 13 },
+  ];
+  
+  for (const sub of src05cmSubscriptions) {
+    const refSub = await prisma.chitSubscription.create({
+      data: {
+        subscriberId: await generateSubscriberIdWithNumber('SRC05CM', sub.subscriberNumber),
+        userId: sub.userId,
+        chitSchemeId: chitSchemes[2].id,
+      },
+    });
+    subscriptions.push(refSub);
   }
 
   // Create some payouts

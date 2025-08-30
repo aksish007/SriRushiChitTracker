@@ -546,7 +546,10 @@ export default function PayoutsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Payouts</h1>
           <p className="text-muted-foreground">
-            Manage payouts for chit fund subscriptions
+            {user?.role === 'ADMIN' 
+              ? 'Manage payouts for chit fund subscriptions'
+              : 'View your payout history'
+            }
           </p>
         </div>
         {user?.role === 'ADMIN' && (
@@ -808,7 +811,7 @@ export default function PayoutsPage() {
       </Card>
 
       {/* Bulk Actions */}
-      {selectedPayouts.length > 0 && (
+      {selectedPayouts.length > 0 && user?.role === 'ADMIN' && (
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -881,17 +884,19 @@ export default function PayoutsPage() {
       {/* Payouts Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Payouts ({filteredPayouts.length})</CardTitle>
+          <CardTitle>{user?.role === 'ADMIN' ? 'All Payouts' : 'My Payouts'} ({filteredPayouts.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedPayouts.length === payouts.length && payouts.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
+                  {user?.role === 'ADMIN' && (
+                    <Checkbox
+                      checked={selectedPayouts.length === payouts.length && payouts.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  )}
                 </TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Subscription</TableHead>
@@ -899,7 +904,9 @@ export default function PayoutsPage() {
                 <TableHead>Month/Year</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead className="w-24">Mark Paid</TableHead>
+                {user?.role === 'ADMIN' && (
+                  <TableHead className="w-24">Mark Paid</TableHead>
+                )}
                 <TableHead className="w-12">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -907,10 +914,12 @@ export default function PayoutsPage() {
               {filteredPayouts.map((payout) => (
                 <TableRow key={payout.id}>
                   <TableCell>
-                    <Checkbox
-                      checked={selectedPayouts.includes(payout.id)}
-                      onCheckedChange={(checked) => handleSelectPayout(payout.id, checked as boolean)}
-                    />
+                    {user?.role === 'ADMIN' && (
+                      <Checkbox
+                        checked={selectedPayouts.includes(payout.id)}
+                        onCheckedChange={(checked) => handleSelectPayout(payout.id, checked as boolean)}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>
                     <div>
@@ -951,18 +960,20 @@ export default function PayoutsPage() {
                       {new Date(payout.createdAt).toLocaleDateString()}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {payout.status === 'PENDING' && user?.role === 'ADMIN' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkPaidClick(payout.id)}
-                        className="h-8 w-full"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Mark Paid
-                      </Button>
-                    )}
-                  </TableCell>
+                  {user?.role === 'ADMIN' && (
+                    <TableCell>
+                      {payout.status === 'PENDING' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkPaidClick(payout.id)}
+                          className="h-8 w-full"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Mark Paid
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -975,17 +986,19 @@ export default function PayoutsPage() {
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditPayout(payout)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                        {user?.role === 'ADMIN' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleEditPayout(payout)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
                             </DropdownMenuItem>
-                          </AlertDialogTrigger>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Payout</AlertDialogTitle>
@@ -1001,6 +1014,8 @@ export default function PayoutsPage() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

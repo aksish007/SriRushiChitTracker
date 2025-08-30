@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, generateRegistrationId } from '@/lib/database';
+import { prisma, generateRegistrationId, generateSubscriberIdWithNumber } from '@/lib/database';
 import { hashPassword, requireAuth } from '@/lib/auth';
 import { parseExcelFile } from '@/lib/excel-utils';
 
@@ -100,15 +100,20 @@ export async function POST(request: NextRequest) {
 
         // Create subscription if chit ID is provided
         if (chitSchemeId) {
-          const subscriberId = generateRegistrationId();
-          await prisma.chitSubscription.create({
-            data: {
-              subscriberId,
-              userId: newUser.id,
-              chitSchemeId,
-              status: 'ACTIVE',
-            },
+          const chitScheme = await prisma.chitScheme.findUnique({
+            where: { id: chitSchemeId },
           });
+          if (chitScheme) {
+            const subscriberId = await generateSubscriberIdWithNumber(chitScheme.chitId);
+            await prisma.chitSubscription.create({
+              data: {
+                subscriberId,
+                userId: newUser.id,
+                chitSchemeId,
+                status: 'ACTIVE',
+              },
+            });
+          }
         }
 
         results.push({
