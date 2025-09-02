@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Verify current password
-    const isCurrentPasswordValid = currentUser.password === currentPassword; // In production, use bcrypt.compare
+    // Verify current password using bcrypt
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
     
     if (!isCurrentPasswordValid) {
       return NextResponse.json(
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash new password (in production)
-    const hashedPassword = newPassword; // In production: await bcrypt.hash(newPassword, 10);
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password
     await prisma.user.update({

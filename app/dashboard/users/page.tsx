@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Users, UserPlus, Download, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, Lock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { COMPANY_NAME } from '@/lib/constants';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -227,6 +228,7 @@ export default function UsersPage() {
         toast({
           title: 'Success',
           description: 'User updated successfully',
+          variant: 'success',
         });
         setShowEditDialog(false);
         fetchUsers();
@@ -257,6 +259,7 @@ export default function UsersPage() {
         toast({
           title: 'Success',
           description: 'User deleted successfully',
+          variant: 'success',
         });
         fetchUsers();
       } else {
@@ -290,6 +293,7 @@ export default function UsersPage() {
         toast({
           title: 'Success',
           description: `${selectedUsers.length} users deleted successfully`,
+          variant: 'success',
         });
         setSelectedUsers([]);
         fetchUsers();
@@ -324,6 +328,7 @@ export default function UsersPage() {
         toast({
           title: 'Success',
           description: `${selectedUsers.length} users ${isActive ? 'activated' : 'deactivated'} successfully`,
+          variant: 'success',
         });
         setSelectedUsers([]);
         fetchUsers();
@@ -366,6 +371,7 @@ export default function UsersPage() {
         toast({
           title: "Password Reset Success",
           description: data.message,
+          variant: 'success',
         });
         setShowResetPasswordDialog(false);
         setSelectedUser(null);
@@ -408,6 +414,7 @@ export default function UsersPage() {
         toast({
           title: 'Success',
           description: 'Users exported successfully',
+          variant: 'success',
         });
       } else {
         throw new Error('Failed to export users');
@@ -671,6 +678,7 @@ export default function UsersPage() {
                     </Button>
                   </TableHead>
                   <TableHead className="text-white">Phone</TableHead>
+                  <TableHead className="text-white">Referred By</TableHead>
                   <TableHead className="text-white">
                     <Button
                       variant="ghost"
@@ -708,19 +716,22 @@ export default function UsersPage() {
                     {user.registrationId}
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {user.firstName} {user.lastName}
-                      </div>
-                      {user.referrer && (
-                        <div className="text-xs text-muted-foreground">
-                          Referred by: {user.referrer.registrationId}
-                        </div>
-                      )}
+                    <div className="font-medium">
+                      {user.firstName} {user.lastName}
                     </div>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone}</TableCell>
+                  <TableCell>
+                    {user.referrer ? (
+                      <div className="text-sm">
+                        <div className="font-medium">{user.referrer.firstName} {user.referrer.lastName}</div>
+                        <div className="text-xs text-muted-foreground">{user.referrer.registrationId}</div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">{COMPANY_NAME}</div>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge className={getRoleColor(user.role)}>
                       {user.role}

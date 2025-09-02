@@ -128,6 +128,7 @@ export default function RegisterUserPage() {
         toast({
           title: 'Success!',
           description: `User ${data.user.registrationId} has been registered successfully.`,
+          variant: 'success',
         });
         
         // Reset form

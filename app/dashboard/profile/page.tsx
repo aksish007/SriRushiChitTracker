@@ -29,17 +29,24 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('New passwords do not match');
+      toast({
+        title: 'Validation Error',
+        description: 'New passwords do not match',
+        variant: 'warning',
+      });
       setLoading(false);
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      setError('New password must be at least 6 characters long');
+      toast({
+        title: 'Validation Error',
+        description: 'New password must be at least 6 characters long',
+        variant: 'warning',
+      });
       setLoading(false);
       return;
     }
@@ -63,6 +70,7 @@ export default function ProfilePage() {
         toast({
           title: "Success",
           description: "Password changed successfully",
+          variant: 'success',
         });
         
         // Reset form
@@ -72,10 +80,18 @@ export default function ProfilePage() {
           confirmPassword: ''
         });
       } else {
-        setError(data.error || 'Failed to change password');
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to change password',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      setError('An error occurred while changing password');
+      toast({
+        title: 'Error',
+        description: 'An error occurred while changing password',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

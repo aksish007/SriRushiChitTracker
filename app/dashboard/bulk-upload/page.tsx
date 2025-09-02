@@ -104,6 +104,7 @@ export default function BulkUploadPage() {
         toast({
           title: 'Upload completed!',
           description: `Successfully uploaded ${result.success} users with ${result.errors} errors.`,
+          variant: 'success',
         });
       } else {
         toast({
@@ -146,6 +147,7 @@ export default function BulkUploadPage() {
       toast({
         title: 'Template downloaded',
         description: 'Excel template has been downloaded successfully',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Download error:', error);

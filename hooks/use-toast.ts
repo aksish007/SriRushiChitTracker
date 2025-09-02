@@ -5,8 +5,9 @@ import * as React from 'react';
 
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
 
-const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_LIMIT = 5;
+const TOAST_REMOVE_DELAY = 4000;
+const TOAST_DISMISS_DELAY = 3000;
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -69,6 +70,17 @@ const addToRemoveQueue = (toastId: string) => {
   }, TOAST_REMOVE_DELAY);
 
   toastTimeouts.set(toastId, timeout);
+};
+
+const addToDismissQueue = (toastId: string) => {
+  const dismissTimeout = setTimeout(() => {
+    dispatch({
+      type: 'DISMISS_TOAST',
+      toastId: toastId,
+    });
+  }, TOAST_DISMISS_DELAY);
+
+  return dismissTimeout;
 };
 
 export const reducer = (state: State, action: Action): State => {
@@ -161,9 +173,15 @@ function toast({ ...props }: Toast) {
     },
   });
 
+  // Auto-dismiss after 3 seconds
+  const dismissTimeout = addToDismissQueue(id);
+
   return {
     id: id,
-    dismiss,
+    dismiss: () => {
+      clearTimeout(dismissTimeout);
+      dismiss();
+    },
     update,
   };
 }
@@ -179,7 +197,7 @@ function useToast() {
         listeners.splice(index, 1);
       }
     };
-  }, [state]);
+  }, []);
 
   return {
     ...state,

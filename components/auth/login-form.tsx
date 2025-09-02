@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, LogIn, CreditCard } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
 import { loginSchema, LoginData } from '@/lib/validations';
 
 export function LoginForm() {
@@ -18,6 +19,7 @@ export function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
 
   const {
@@ -34,9 +36,20 @@ export function LoginForm() {
       setLoading(true);
       
       await login(data.email, data.password);
+      toast({
+        title: 'Success',
+        description: 'Login successful! Redirecting to dashboard...',
+        variant: 'success',
+      });
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      const errorMessage = err.message || 'Invalid credentials. Please try again.';
+      setError(errorMessage);
+      toast({
+        title: 'Login Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

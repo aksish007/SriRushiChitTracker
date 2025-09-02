@@ -18,6 +18,8 @@ export const PAYOUT_STATUS = {
   CANCELLED: 'CANCELLED',
 } as const;
 
+export const COMPANY_NAME = 'Sri Rushi Chits';
+
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 export type SubscriptionStatus = typeof SUBSCRIPTION_STATUS[keyof typeof SUBSCRIPTION_STATUS];
 export type PayoutStatus = typeof PAYOUT_STATUS[keyof typeof PAYOUT_STATUS];

@@ -158,6 +158,7 @@ export default function ReportsPage() {
       toast({
         title: 'Report Downloaded!',
         description: `${reports.find(r => r.id === reportId)?.title} has been downloaded successfully.`,
+        variant: 'success',
       });
     } catch (error) {
       console.error('Download error:', error);
@@ -192,6 +193,7 @@ export default function ReportsPage() {
       toast({
         title: 'Template Downloaded!',
         description: 'Bulk upload template has been downloaded successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Template download error:', error);

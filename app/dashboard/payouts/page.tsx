@@ -247,6 +247,7 @@ export default function PayoutsPage() {
         toast({
           title: 'Success',
           description: 'Payout updated successfully',
+          variant: 'success',
         });
         setShowEditDialog(false);
         fetchData();
@@ -274,6 +275,7 @@ export default function PayoutsPage() {
         toast({
           title: 'Success',
           description: 'Payout deleted successfully',
+          variant: 'success',
         });
         fetchData();
       } else {
@@ -304,6 +306,7 @@ export default function PayoutsPage() {
         toast({
           title: 'Success',
           description: `${selectedPayouts.length} payouts deleted successfully`,
+          variant: 'success',
         });
         setSelectedPayouts([]);
         fetchData();
@@ -335,6 +338,7 @@ export default function PayoutsPage() {
         toast({
           title: 'Success',
           description: `${selectedPayouts.length} payouts updated to ${status}`,
+          variant: 'success',
         });
         setSelectedPayouts([]);
         fetchData();
@@ -402,6 +406,7 @@ export default function PayoutsPage() {
         toast({
           title: 'Success!',
           description: `Payout created successfully for ${data.payout.subscription.subscriberId}`,
+          variant: 'success',
         });
         
         setShowCreateDialog(false);
@@ -442,6 +447,7 @@ export default function PayoutsPage() {
         toast({
           title: 'Success!',
           description: 'Payout marked as paid successfully',
+          variant: 'success',
         });
         setShowMarkPaidDialog(false);
         setPayoutToMarkPaid(null);

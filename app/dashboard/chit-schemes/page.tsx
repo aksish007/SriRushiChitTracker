@@ -206,6 +206,7 @@ export default function ChitSchemesPage() {
         toast({
           title: 'Success',
           description: 'Chit scheme updated successfully',
+          variant: 'success',
         });
         setShowEditDialog(false);
         fetchSchemes();
@@ -236,6 +237,7 @@ export default function ChitSchemesPage() {
         toast({
           title: 'Success',
           description: 'Chit scheme deleted successfully',
+          variant: 'success',
         });
         fetchSchemes();
       } else {
@@ -269,6 +271,7 @@ export default function ChitSchemesPage() {
         toast({
           title: 'Success',
           description: `${selectedSchemes.length} chit schemes deleted successfully`,
+          variant: 'success',
         });
         setSelectedSchemes([]);
         fetchSchemes();
@@ -303,6 +306,7 @@ export default function ChitSchemesPage() {
         toast({
           title: 'Success',
           description: `${selectedSchemes.length} chit schemes ${isActive ? 'activated' : 'deactivated'} successfully`,
+          variant: 'success',
         });
         setSelectedSchemes([]);
         fetchSchemes();
@@ -378,6 +382,7 @@ export default function ChitSchemesPage() {
         toast({
           title: 'Success!',
           description: `Chit scheme ${data.scheme.chitId} has been created successfully.`,
+          variant: 'success',
         });
         
         setShowCreateDialog(false);

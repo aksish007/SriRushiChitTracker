@@ -270,6 +270,7 @@ export default function SubscriptionsPage() {
         toast({
           title: 'Success',
           description: 'Subscription updated successfully',
+          variant: 'success',
         });
         setShowEditDialog(false);
         fetchData();
@@ -297,6 +298,7 @@ export default function SubscriptionsPage() {
         toast({
           title: 'Success',
           description: 'Subscription deleted successfully',
+          variant: 'success',
         });
         fetchData();
       } else {
@@ -347,6 +349,7 @@ export default function SubscriptionsPage() {
         toast({
           title: 'Success',
           description: `Successfully imported ${result.success} subscriptions${result.errors > 0 ? ` with ${result.errors} errors` : ''}`,
+          variant: 'success',
         });
         setShowBulkImportDialog(false);
         setBulkImportData({ userId: '', subscriberIds: '' });
@@ -379,6 +382,7 @@ export default function SubscriptionsPage() {
         toast({
           title: 'Success',
           description: `${selectedSubscriptions.length} subscriptions deleted successfully`,
+          variant: 'success',
         });
         setSelectedSubscriptions([]);
         fetchData();
@@ -410,6 +414,7 @@ export default function SubscriptionsPage() {
         toast({
           title: 'Success',
           description: `${selectedSubscriptions.length} subscriptions updated to ${status}`,
+          variant: 'success',
         });
         setSelectedSubscriptions([]);
         fetchData();
@@ -455,6 +460,7 @@ export default function SubscriptionsPage() {
         toast({
           title: 'Success',
           description: `Subscription created successfully for ${data.subscription.subscriberId}`,
+          variant: 'success',
         });
         setShowCreateDialog(false);
         setFormData({ userId: '', chitSchemeId: '' });
