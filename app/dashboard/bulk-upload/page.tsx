@@ -15,7 +15,7 @@ interface UploadResult {
   errors: number;
   results: Array<{
     registrationId: string;
-    email: string;
+    email?: string;
     name: string;
   }>;
   errorDetails: string[];
@@ -306,7 +306,9 @@ export default function BulkUploadPage() {
                           <span className="font-mono">{user.registrationId}</span>
                           <span>-</span>
                           <span>{user.name}</span>
-                          <span className="text-muted-foreground">({user.email})</span>
+                          {user.email && (
+                            <span className="text-muted-foreground">({user.email})</span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -370,19 +372,19 @@ export default function BulkUploadPage() {
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="text-sm">
-                    <strong>Required fields:</strong> First Name, Last Name, Email, Phone
+                    <strong>Required fields:</strong> First Name, Last Name, Phone
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="text-sm">
-                    <strong>Optional fields:</strong> Address, Referred By (Registration ID), Chit ID
+                    <strong>Optional fields:</strong> Email, Address, Referred By (Registration ID), Chit ID, Nominee Details
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="text-sm">
-                    <strong>Password:</strong> All users get default password &quot;defaultPassword123&quot;
+                    <strong>Password:</strong> Default password is the last 6 digits of phone number
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -422,7 +424,7 @@ export default function BulkUploadPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-mono">C</span>
-                  <span>Email *</span>
+                  <span>Email (Optional)</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-mono">D</span>
@@ -430,15 +432,31 @@ export default function BulkUploadPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-mono">E</span>
-                  <span>Address</span>
+                  <span>Address (Optional)</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-mono">F</span>
-                  <span>Referred By</span>
+                  <span>Referred By (Optional)</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-mono">G</span>
-                  <span>Chit ID</span>
+                  <span>Chit ID (Optional)</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span className="font-mono">H</span>
+                  <span>Nominee Name (Optional)</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span className="font-mono">I</span>
+                  <span>Nominee Relation (Optional)</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span className="font-mono">J</span>
+                  <span>Nominee Age (Optional)</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span className="font-mono">K</span>
+                  <span>Nominee Date of Birth (Optional)</span>
                 </div>
               </div>
             </CardContent>
@@ -452,11 +470,11 @@ export default function BulkUploadPage() {
             <CardContent className="space-y-3">
               <div className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Ensure email addresses are unique</span>
+                <span>Phone numbers must be unique and 10 digits</span>
               </div>
               <div className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Phone numbers should be 10 digits</span>
+                <span>Email addresses must be unique (if provided)</span>
               </div>
               <div className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
@@ -469,6 +487,14 @@ export default function BulkUploadPage() {
               <div className="flex items-start gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                 <span>Chit ID must be a valid active chit scheme ID</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Nominee relation options: spouse, son, daughter, father, mother, brother, sister, other</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Date format for nominee DOB: YYYY-MM-DD</span>
               </div>
             </CardContent>
           </Card>

@@ -8,11 +8,35 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-// Helper function to generate Registration ID
-export function generateRegistrationId(): string {
-  const timestamp = Date.now().toString();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `REG-${timestamp.slice(-6)}${random}`;
+// Helper function to generate Registration ID in SRC-00000001 format
+export async function generateRegistrationId(): Promise<string> {
+  // Find the highest existing registration ID
+  const existingUsers = await prisma.user.findMany({
+    where: {
+      registrationId: {
+        startsWith: 'SRC-'
+      }
+    },
+    select: {
+      registrationId: true
+    },
+    orderBy: {
+      registrationId: 'desc'
+    }
+  });
+
+  // Extract numbers from existing registration IDs
+  const existingNumbers = existingUsers
+    .map(user => {
+      const match = user.registrationId.match(/^SRC-(\d+)$/);
+      return match ? parseInt(match[1]) : 0;
+    })
+    .filter(num => num > 0);
+
+  // Find the next available number
+  const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+  
+  return `SRC-${nextNumber.toString().padStart(8, '0')}`;
 }
 
 // Helper function to generate Subscriber ID in the new SRC format

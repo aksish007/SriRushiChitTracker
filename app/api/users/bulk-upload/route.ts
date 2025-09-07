@@ -35,26 +35,38 @@ export async function POST(request: NextRequest) {
       const userData = users[i];
       
       try {
-        // Check if email already exists
+        // Check if phone already exists
         const existingUser = await prisma.user.findUnique({
-          where: { email: userData.email },
+          where: { phone: userData.phone },
         });
 
         if (existingUser) {
-          errors.push(`Row ${i + 2}: Email ${userData.email} already exists`);
+          errors.push(`Row ${i + 2}: Phone number ${userData.phone} already exists`);
           continue;
+        }
+
+        // Check if email already exists (if provided)
+        if (userData.email && userData.email.trim()) {
+          const existingEmailUser = await prisma.user.findUnique({
+            where: { email: userData.email },
+          });
+
+          if (existingEmailUser) {
+            errors.push(`Row ${i + 2}: Email ${userData.email} already exists`);
+            continue;
+          }
         }
 
         // Validate referrer if provided
         let referrerId = null;
         if (userData.referredBy) {
           const referrer = await prisma.user.findUnique({
-            where: { registrationId: userData.referredBy },
+            where: { id: userData.referredBy },
             include: { referrals: true },
           });
 
           if (!referrer) {
-            errors.push(`Row ${i + 2}: Invalid referrer registration ID ${userData.referredBy}`);
+            errors.push(`Row ${i + 2}: Invalid referrer ID ${userData.referredBy}`);
             continue;
           }
 
@@ -87,18 +99,26 @@ export async function POST(request: NextRequest) {
         }
 
         const hashedPassword = await hashPassword(String(userData.phone)); // Use mobile number as password
-        const registrationId = generateRegistrationId();
+        const registrationId = await generateRegistrationId();
 
         const newUser = await prisma.user.create({
           data: {
             registrationId,
-            email: userData.email,
+            email: userData.email && userData.email.trim() ? userData.email : null,
             password: hashedPassword,
             firstName: userData.firstName,
             lastName: userData.lastName,
             phone: String(userData.phone), // Ensure phone is always a string
             address: userData.address,
             referredBy: referrerId,
+            nominees: userData.nomineeName && userData.nomineeName.trim() ? {
+              create: {
+                name: userData.nomineeName.trim(),
+                relation: userData.nomineeRelation || '',
+                age: userData.nomineeAge ? parseInt(userData.nomineeAge) : null,
+                dateOfBirth: userData.nomineeDateOfBirth ? new Date(userData.nomineeDateOfBirth) : null,
+              }
+            } : undefined,
           },
         });
 
@@ -122,7 +142,7 @@ export async function POST(request: NextRequest) {
 
         results.push({
           registrationId: newUser.registrationId,
-          email: newUser.email,
+          email: newUser.email || undefined,
           name: `${newUser.firstName} ${newUser.lastName}`,
         });
       } catch (error) {

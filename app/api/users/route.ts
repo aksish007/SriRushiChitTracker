@@ -95,12 +95,26 @@ export async function GET(request: NextRequest) {
               id: true,
               subscriberId: true,
               status: true,
+              joinedAt: true,
               chitScheme: {
                 select: {
+                  id: true,
+                  chitId: true,
                   name: true,
                   amount: true,
+                  duration: true,
+                  totalSlots: true,
                 },
               },
+            },
+          },
+          nominees: {
+            select: {
+              id: true,
+              name: true,
+              relation: true,
+              age: true,
+              dateOfBirth: true,
             },
           },
         },

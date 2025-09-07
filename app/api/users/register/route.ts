@@ -14,29 +14,43 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const userData = registerUserSchema.parse(body);
 
-    // Check if email already exists
+    // Check if phone already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email },
+      where: { phone: userData.phone },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Email already exists' },
+        { error: 'Phone number already exists' },
         { status: 400 }
       );
+    }
+
+    // Check if email already exists (if provided)
+    if (userData.email && userData.email.trim()) {
+      const existingEmailUser = await prisma.user.findUnique({
+        where: { email: userData.email },
+      });
+
+      if (existingEmailUser) {
+        return NextResponse.json(
+          { error: 'Email already exists' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate referrer if provided
     let referrerId = null;
     if (userData.referredBy) {
       const referrer = await prisma.user.findUnique({
-        where: { registrationId: userData.referredBy },
+        where: { id: userData.referredBy },
         include: { referrals: true },
       });
 
       if (!referrer) {
         return NextResponse.json(
-          { error: 'Invalid referrer registration ID' },
+          { error: 'Invalid referrer ID' },
           { status: 400 }
         );
       }
@@ -53,18 +67,26 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = await hashPassword(userData.password);
-    const registrationId = generateRegistrationId();
+    const registrationId = await generateRegistrationId();
 
     const newUser = await prisma.user.create({
       data: {
         registrationId,
-        email: userData.email,
+        email: userData.email && userData.email.trim() ? userData.email : null,
         password: hashedPassword,
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
         address: userData.address,
         referredBy: referrerId,
+        nominees: userData.nominee && userData.nominee.name ? {
+          create: {
+            name: userData.nominee.name,
+            relation: userData.nominee.relation || '',
+            age: userData.nominee.age || null,
+            dateOfBirth: userData.nominee.dateOfBirth ? new Date(userData.nominee.dateOfBirth) : null,
+          }
+        } : undefined,
       },
     });
 
@@ -79,6 +101,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Fetch the created user with nominee data
+    const userWithNominee = await prisma.user.findUnique({
+      where: { id: newUser.id },
+      include: { nominees: true },
+    });
+
     return NextResponse.json({
       user: {
         id: newUser.id,
@@ -88,6 +116,7 @@ export async function POST(request: NextRequest) {
         lastName: newUser.lastName,
         phone: newUser.phone,
         address: newUser.address,
+        nominees: userWithNominee?.nominees || [],
       },
     });
   } catch (error: any) {

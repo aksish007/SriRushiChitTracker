@@ -45,6 +45,7 @@ export default function ChitSchemesPage() {
   const { toast } = useToast();
   const [schemes, setSchemes] = useState<ChitScheme[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -63,8 +64,8 @@ export default function ChitSchemesPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   
   // Sorting state
-  const [sortField, setSortField] = useState<'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId'>('createdAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState<'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId' | 'default'>('default');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   // Filter state
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -136,7 +137,7 @@ export default function ChitSchemesPage() {
     setCurrentPage(1);
   };
 
-  const handleSort = (field: 'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId') => {
+  const handleSort = (field: 'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId' | 'default') => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -146,11 +147,15 @@ export default function ChitSchemesPage() {
     setCurrentPage(1);
   };
 
-  const getSortIcon = (field: 'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId') => {
+  const getSortIcon = (field: 'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId' | 'default') => {
     if (sortField !== field) {
       return <ArrowUpDown className="h-4 w-4" />;
     }
     return sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
+  };
+
+  const isDefaultSort = () => {
+    return sortField === 'default';
   };
 
   const handleSelectScheme = (schemeId: string, checked: boolean) => {
@@ -345,7 +350,7 @@ export default function ChitSchemesPage() {
     }
 
     if (!formData.totalSlots || parseInt(formData.totalSlots) <= 0) {
-      newErrors.totalSlots = 'Total slots must be greater than 0';
+      newErrors.totalSlots = 'Total members must be greater than 0';
     }
 
     setErrors(newErrors);
@@ -359,6 +364,7 @@ export default function ChitSchemesPage() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const response = await fetch('/api/chit-schemes', {
         method: 'POST',
@@ -402,6 +408,8 @@ export default function ChitSchemesPage() {
         description: 'An unexpected error occurred',
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -553,7 +561,7 @@ export default function ChitSchemesPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="totalSlots">Total Slots *</Label>
+                  <Label htmlFor="totalSlots">Total Members *</Label>
                   <Input
                     id="totalSlots"
                     type="number"
@@ -580,8 +588,8 @@ export default function ChitSchemesPage() {
               </div>
 
               <div className="flex gap-4">
-                <Button type="submit" className="flex-1">
-                  Create Scheme
+                <Button type="submit" disabled={submitting} className="flex-1">
+                  {submitting ? 'Creating...' : 'Create Scheme'}
                 </Button>
                 <Button
                   type="button"
@@ -779,6 +787,17 @@ export default function ChitSchemesPage() {
               </SelectContent>
             </Select>
             
+            {!isDefaultSort() && (
+              <Button
+                variant="outline"
+                onClick={() => handleSort('default')}
+                className="border-2 border-primary/20 hover:border-primary hover:bg-primary/10"
+              >
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                Default Sort
+              </Button>
+            )}
+            
             {/* Status Filter */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
@@ -855,7 +874,7 @@ export default function ChitSchemesPage() {
                       className="h-auto p-0 text-white hover:bg-white/20"
                       onClick={() => handleSort('totalSlots')}
                     >
-                      Slots {getSortIcon('totalSlots')}
+                      Total Members {getSortIcon('totalSlots')}
                     </Button>
                   </TableHead>
                   <TableHead className="text-white">Subscriptions</TableHead>
@@ -1163,7 +1182,7 @@ export default function ChitSchemesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-totalSlots">Total Slots *</Label>
+                <Label htmlFor="edit-totalSlots">Total Members *</Label>
                 <Input
                   id="edit-totalSlots"
                   type="number"

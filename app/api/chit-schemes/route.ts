@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
+  let user: any = null;
 
   try {
-    const user = await requireAuth(request);
+    user = await requireAuth(request);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -38,20 +39,27 @@ export async function GET(request: NextRequest) {
       where.isActive = status === 'true';
     }
 
-    // Build orderBy clause
-    const orderBy: any = {};
+    // Build orderBy clause - default to amount asc, then duration asc
+    let orderBy: any[] = [];
+    
     if (sortField === 'name') {
-      orderBy.name = sortOrder;
+      orderBy = [{ name: sortOrder }];
     } else if (sortField === 'amount') {
-      orderBy.amount = sortOrder;
+      orderBy = [{ amount: sortOrder }];
     } else if (sortField === 'duration') {
-      orderBy.duration = sortOrder;
+      orderBy = [{ duration: sortOrder }];
     } else if (sortField === 'totalSlots') {
-      orderBy.totalSlots = sortOrder;
+      orderBy = [{ totalSlots: sortOrder }];
     } else if (sortField === 'chitId') {
-      orderBy.chitId = sortOrder;
+      orderBy = [{ chitId: sortOrder }];
+    } else if (sortField === 'createdAt') {
+      orderBy = [{ createdAt: sortOrder }];
     } else {
-      orderBy.createdAt = sortOrder;
+      // Default sorting: amount asc, then duration asc
+      orderBy = [
+        { amount: 'asc' },
+        { duration: 'asc' }
+      ];
     }
 
     const [schemes, total] = await Promise.all([
@@ -120,9 +128,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
+  let adminUser: any = null;
 
   try {
-    const adminUser = await requireAuth(request, 'ADMIN');
+    adminUser = await requireAuth(request, 'ADMIN');
 
     const body = await request.json();
     const schemeData = chitSchemeSchema.parse(body);

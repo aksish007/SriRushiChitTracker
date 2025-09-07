@@ -1,30 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableUser } from '@/components/ui/searchable-user';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 
-interface Referrer {
-  id: string;
-  registrationId: string;
-  firstName: string;
-  lastName: string;
-  referrals: Array<{ id: string }>;
-}
 
 export default function RegisterUserPage() {
   const { token } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [referrers, setReferrers] = useState<Referrer[]>([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -34,29 +27,14 @@ export default function RegisterUserPage() {
     password: '',
     confirmPassword: '',
     referredBy: 'none',
+    // Nominee details
+    nomineeName: '',
+    nomineeRelation: '',
+    nomineeAge: '',
+    nomineeDateOfBirth: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const fetchReferrers = useCallback(async () => {
-    try {
-      const response = await fetch('/api/users?limit=1000', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Filter users who can refer (have less than 3 referrals)
-        const eligibleReferrers = data.users.filter((user: Referrer) => user.referrals.length < 3);
-        setReferrers(eligibleReferrers);
-      }
-    } catch (error) {
-      console.error('Error fetching referrers:', error);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetchReferrers();
-  }, [fetchReferrers]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -69,9 +47,7 @@ export default function RegisterUserPage() {
       newErrors.lastName = 'Last name is required';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
@@ -119,6 +95,13 @@ export default function RegisterUserPage() {
           address: formData.address.trim() || undefined,
           password: formData.password,
           referredBy: formData.referredBy === 'none' ? undefined : formData.referredBy,
+          // Nominee details
+          nominee: {
+            name: formData.nomineeName.trim() || undefined,
+            relation: formData.nomineeRelation.trim() || undefined,
+            age: formData.nomineeAge ? parseInt(formData.nomineeAge) : undefined,
+            dateOfBirth: formData.nomineeDateOfBirth || undefined,
+          },
         }),
       });
 
@@ -141,11 +124,13 @@ export default function RegisterUserPage() {
           password: '',
           confirmPassword: '',
           referredBy: 'none',
+          // Nominee details
+          nomineeName: '',
+          nomineeRelation: '',
+          nomineeAge: '',
+          nomineeDateOfBirth: '',
         });
         setErrors({});
-        
-        // Refresh referrers list
-        fetchReferrers();
       } else {
         toast({
           title: 'Error',
@@ -241,13 +226,13 @@ export default function RegisterUserPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
+                    <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="Enter email address"
+                      placeholder="Enter email address (optional)"
                       className={errors.email ? 'border-red-500' : ''}
                     />
                     {errors.email && (
@@ -289,23 +274,84 @@ export default function RegisterUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="referredBy">Referred By</Label>
-                  <Select
+                  <SearchableUser
                     value={formData.referredBy}
                     onValueChange={(value) => handleInputChange('referredBy', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select referrer (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No referrer</SelectItem>
-                      {referrers.map((referrer) => (
-                        <SelectItem key={referrer.id} value={referrer.registrationId}>
-                          {referrer.registrationId} - {referrer.firstName} {referrer.lastName} 
-                          ({referrer.referrals.length}/3 referrals)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select referrer (optional)"
+                    showNoOption={true}
+                    noOptionLabel="No referrer"
+                    noOptionValue="none"
+                    showReferralCount={true}
+                  />
+                </div>
+
+                {/* Nominee Details Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <div>
+                    <h3 className="text-lg font-medium">Nominee Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Information about the person who will receive benefits in case of any eventuality
+                    </p>
+                  </div>
+                  
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="nomineeName">Nominee Name</Label>
+                      <Input
+                        id="nomineeName"
+                        value={formData.nomineeName}
+                        onChange={(e) => handleInputChange('nomineeName', e.target.value)}
+                        placeholder="Enter nominee's full name"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="nomineeRelation">Relation with Applicant</Label>
+                      <Select
+                        value={formData.nomineeRelation}
+                        onValueChange={(value) => handleInputChange('nomineeRelation', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select relationship" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="spouse">Spouse</SelectItem>
+                          <SelectItem value="son">Son</SelectItem>
+                          <SelectItem value="daughter">Daughter</SelectItem>
+                          <SelectItem value="father">Father</SelectItem>
+                          <SelectItem value="mother">Mother</SelectItem>
+                          <SelectItem value="brother">Brother</SelectItem>
+                          <SelectItem value="sister">Sister</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="nomineeAge">Age</Label>
+                      <Input
+                        id="nomineeAge"
+                        type="number"
+                        min="0"
+                        max="120"
+                        value={formData.nomineeAge}
+                        onChange={(e) => handleInputChange('nomineeAge', e.target.value)}
+                        placeholder="Enter age"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="nomineeDateOfBirth">Date of Birth</Label>
+                      <Input
+                        id="nomineeDateOfBirth"
+                        type="date"
+                        value={formData.nomineeDateOfBirth}
+                        onChange={(e) => handleInputChange('nomineeDateOfBirth', e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -374,6 +420,14 @@ export default function RegisterUserPage() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Phone number must be unique</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Email address is optional</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>Default role will be set to USER</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -384,38 +438,13 @@ export default function RegisterUserPage() {
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>Referral system supports up to 3 direct referrals</span>
               </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Nominee details are optional but recommended</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Referrers</CardTitle>
-              <CardDescription>
-                Users who can refer new members
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {referrers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No eligible referrers found</p>
-              ) : (
-                <div className="space-y-2">
-                  {referrers.slice(0, 5).map((referrer) => (
-                    <div key={referrer.id} className="flex justify-between items-center text-sm">
-                      <span>{referrer.registrationId}</span>
-                      <span className="text-muted-foreground">
-                        {referrer.referrals.length}/3
-                      </span>
-                    </div>
-                  ))}
-                  {referrers.length > 5 && (
-                    <p className="text-xs text-muted-foreground">
-                      +{referrers.length - 5} more referrers available
-                    </p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import html2canvas from 'html2canvas';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableUser } from '@/components/ui/searchable-user';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Users, Search, TreePine, UserCheck, IndianRupee, Activity, 
+  Users, TreePine, UserCheck, IndianRupee, Activity, 
   ZoomIn, ZoomOut, RotateCcw, ChevronDown, ChevronRight,
-  Star, TrendingUp, Network, Target
+  Star, TrendingUp, Network, Target, Phone, CreditCard, Calendar, Printer
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -21,70 +22,62 @@ interface ReferralNode {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   level: number;
   children: ReferralNode[];
   subscriptionsCount: number;
   totalPayouts: number;
+  chitGroups: Array<{
+    chitId: string;
+    name: string;
+    amount: number;
+    duration: number;
+    status: string;
+  }>;
   isExpanded?: boolean;
   isHighlighted?: boolean;
 }
 
-interface User {
-  id: string;
-  registrationId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-}
 
 export default function ReferralTreePage() {
   const { token, user } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [referralTree, setReferralTree] = useState<ReferralNode | null>(null);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
   const [animationSpeed, setAnimationSpeed] = useState(300);
   const [showConnections, setShowConnections] = useState(true);
+  const [showQuickView, setShowQuickView] = useState(false);
+  const [selectedNodeForView, setSelectedNodeForView] = useState<ReferralNode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      const response = await fetch('/api/users?limit=1000', {
-        headers: { 'Authorization': `Bearer ${token}` }
+  // Function to get all node IDs from the tree recursively
+  const getAllNodeIds = (node: ReferralNode): string[] => {
+    const ids = [node.id];
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(child => {
+        ids.push(...getAllNodeIds(child));
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users);
-        
-        // Auto-select current user if they're not admin
-        if (user?.role !== 'ADMIN' && user?.registrationId) {
-          setSelectedUser(user.registrationId);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
     }
-  }, [token, user]);
+    return ids;
+  };
 
-  const fetchReferralTree = useCallback(async (registrationId: string) => {
+  const fetchReferralTree = useCallback(async (userId: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/referral-tree/${registrationId}`, {
+      const response = await fetch(`/api/referral-tree/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
         const data = await response.json();
         setReferralTree(data.tree);
-        // Expand root node by default
-        setExpandedNodes(new Set([data.tree.id]));
+        // Expand all nodes by default
+        const allNodeIds = getAllNodeIds(data.tree);
+        setExpandedNodes(new Set(allNodeIds));
       } else {
         toast({
           title: 'Error',
@@ -105,10 +98,11 @@ export default function ReferralTreePage() {
   }, [token, toast]);
 
   useEffect(() => {
-    if (token) {
-      fetchUsers();
+    // Auto-select current user if they're not admin
+    if (user?.role !== 'ADMIN' && user?.id) {
+      setSelectedUser(user.id);
     }
-  }, [fetchUsers]);
+  }, [user]);
 
   useEffect(() => {
     if (selectedUser && token) {
@@ -116,11 +110,6 @@ export default function ReferralTreePage() {
     }
   }, [selectedUser, fetchReferralTree]);
 
-  const filteredUsers = users.filter(user =>
-    user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(search.toLowerCase()) ||
-    user.registrationId.toLowerCase().includes(search.toLowerCase())
-  );
 
   const toggleNodeExpansion = (nodeId: string) => {
     const newExpandedNodes = new Set(expandedNodes);
@@ -136,9 +125,208 @@ export default function ReferralTreePage() {
     setHighlightedNode(highlightedNode === nodeId ? null : nodeId);
   };
 
+  const handleNodeClick = (node: ReferralNode) => {
+    setSelectedNodeForView(node);
+    setShowQuickView(true);
+  };
+
   const resetView = () => {
     setZoomLevel(1);
     setHighlightedNode(null);
+  };
+
+  const expandAllNodes = () => {
+    if (referralTree) {
+      const allNodeIds = getAllNodeIds(referralTree);
+      setExpandedNodes(new Set(allNodeIds));
+    }
+  };
+
+  const collapseAllNodes = () => {
+    if (referralTree) {
+      setExpandedNodes(new Set([referralTree.id])); // Only keep root node expanded
+    }
+  };
+
+  const handlePrint = async () => {
+    if (!referralTree) {
+      toast({
+        title: 'No Tree to Print',
+        description: 'Please select a user and load a referral tree first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const treeContainer = document.getElementById('referral-tree-container');
+    if (!treeContainer) {
+      toast({
+        title: 'Print Failed',
+        description: 'Tree container not found',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: 'Generating Print Preview',
+        description: 'Capturing tree screenshot...',
+        variant: 'default',
+      });
+
+      // Temporarily hide controls and other UI elements
+      const controlsCard = treeContainer.closest('.space-y-6')?.querySelector('.shadow-glow');
+      const originalControlsDisplay = controlsCard ? (controlsCard as HTMLElement).style.display : '';
+      if (controlsCard) {
+        (controlsCard as HTMLElement).style.display = 'none';
+      }
+
+      // Reset zoom to 1 for consistent screenshot
+      const originalZoom = zoomLevel;
+      setZoomLevel(1);
+
+      // Wait for zoom to reset
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Capture the tree as a high-quality image
+      const canvas = await html2canvas(treeContainer, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Higher resolution
+        useCORS: true,
+        allowTaint: true,
+        scrollX: 0,
+        scrollY: 0,
+        width: treeContainer.scrollWidth,
+        height: treeContainer.scrollHeight,
+        windowWidth: treeContainer.scrollWidth,
+        windowHeight: treeContainer.scrollHeight,
+      });
+
+      // Restore original zoom
+      setZoomLevel(originalZoom);
+
+      // Restore controls visibility
+      if (controlsCard) {
+        (controlsCard as HTMLElement).style.display = originalControlsDisplay;
+      }
+
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({
+          title: 'Print Failed',
+          description: 'Please allow popups for this site to print',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Create print content with the screenshot
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Referral Tree - ${referralTree.firstName} ${referralTree.lastName}</title>
+            <meta charset="utf-8">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                color: #333;
+                background: white;
+                line-height: 1.4;
+              }
+              
+              .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 3px solid #3b82f6;
+                padding-bottom: 20px;
+                page-break-after: avoid;
+              }
+              
+              .print-header h1 {
+                color: #3b82f6;
+                margin: 0 0 10px 0;
+                font-size: 32px;
+                font-weight: bold;
+              }
+              
+              .print-header p {
+                margin: 5px 0;
+                color: #666;
+                font-size: 16px;
+              }
+              
+              .tree-image {
+                width: 100%;
+                height: auto;
+                max-width: 100%;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              }
+              
+              @media print {
+                body { 
+                  margin: 0; 
+                  padding: 15px;
+                }
+                .print-header { 
+                  page-break-after: avoid; 
+                  margin-bottom: 20px;
+                }
+                .tree-image {
+                  page-break-inside: avoid;
+                  max-width: 100%;
+                  height: auto;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-header">
+              <h1>Referral Tree</h1>
+              <p><strong>User:</strong> ${referralTree.firstName} ${referralTree.lastName} (${referralTree.registrationId})</p>
+              <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <div class="tree-container">
+              <img src="${canvas.toDataURL('image/png')}" alt="Referral Tree" class="tree-image" />
+            </div>
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      
+      // Wait for content to load, then print
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        
+        // Close window after a delay
+        setTimeout(() => {
+          printWindow.close();
+        }, 1000);
+      }, 500);
+
+      toast({
+        title: 'Print Ready',
+        description: 'Print dialog will open shortly',
+        variant: 'default',
+      });
+
+    } catch (error) {
+      console.error('Print error:', error);
+      toast({
+        title: 'Print Failed',
+        description: 'Failed to capture tree screenshot',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getNodeColor = (level: number, isHighlighted: boolean) => {
@@ -172,7 +360,7 @@ export default function ReferralTreePage() {
             className={`w-64 mb-4 cursor-pointer transition-all duration-300 ${
               isHighlighted ? 'ring-4 ring-primary shadow-glow' : 'shadow-glow border-2 border-primary/20'
             } hover:shadow-glow-blue`}
-            onClick={() => highlightNode(node.id)}
+            onClick={() => handleNodeClick(node)}
           >
             <CardContent className="p-4">
               <div className="text-center space-y-3">
@@ -196,7 +384,7 @@ export default function ReferralTreePage() {
                     {node.registrationId}
                   </div>
                   <Badge variant="outline" className="text-xs">
-                    Level {node.level}
+                    Step {node.level}
                   </Badge>
                 </div>
 
@@ -301,28 +489,14 @@ export default function ReferralTreePage() {
         <CardContent className="p-6">
           <div className="flex gap-4">
             <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search users..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+              <SearchableUser
+                value={selectedUser}
+                onValueChange={setSelectedUser}
+                placeholder="Select a user to view referral tree"
+                className="w-full border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                showNoOption={false}
+              />
             </div>
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="w-80 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
-                <SelectValue placeholder="Select a user to view referral tree" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.registrationId}>
-                    {user.registrationId} - {user.firstName} {user.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
@@ -337,6 +511,60 @@ export default function ReferralTreePage() {
               </div>
               
               <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={expandAllNodes}
+                        className="hover:bg-gradient-secondary hover:text-white"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Expand all nodes</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={collapseAllNodes}
+                        className="hover:bg-gradient-secondary hover:text-white"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Collapse all nodes</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePrint}
+                        className="hover:bg-gradient-secondary hover:text-white"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Print referral tree</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -438,6 +666,7 @@ export default function ReferralTreePage() {
           </CardHeader>
           <CardContent className="p-6">
             <div 
+              id="referral-tree-container"
               ref={containerRef}
               className="overflow-auto"
               style={{ 
@@ -481,6 +710,128 @@ export default function ReferralTreePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Quick View Dialog */}
+      <Dialog open={showQuickView} onOpenChange={setShowQuickView}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-primary" />
+              User Details
+            </DialogTitle>
+            <DialogDescription>
+              Quick view of user information and chit group details
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedNodeForView && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <Card className="border-2 border-primary/20">
+                <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
+                  <CardTitle className="text-white text-lg">Basic Information</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Name</label>
+                        <p className="text-lg font-semibold">
+                          {selectedNodeForView.firstName} {selectedNodeForView.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Registration ID</label>
+                        <p className="text-lg font-mono">{selectedNodeForView.registrationId}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Email</label>
+                        <p className="text-lg">{selectedNodeForView.email || 'Not provided'}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                          <Phone className="h-4 w-4" />
+                          Mobile
+                        </label>
+                        <p className="text-lg font-mono">{selectedNodeForView.phone}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Total Payouts</label>
+                        <p className="text-lg font-semibold text-green-600">
+                          ₹{Number(selectedNodeForView.totalPayouts).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Chit Groups */}
+              <Card className="border-2 border-primary/20">
+                <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    <Network className="h-5 w-5" />
+                    Chit Groups ({selectedNodeForView.chitGroups.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  {selectedNodeForView.chitGroups.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedNodeForView.chitGroups.map((group, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Chit ID</label>
+                              <p className="font-mono font-semibold">{group.chitId}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Scheme Name</label>
+                              <p className="font-semibold">{group.name}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground">Status</label>
+                              <Badge 
+                                className={`${
+                                  group.status === 'ACTIVE' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {group.status}
+                              </Badge>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                                <IndianRupee className="h-4 w-4" />
+                                Value
+                              </label>
+                              <p className="font-semibold text-lg">₹{Number(group.amount).toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                Duration
+                              </label>
+                              <p className="font-semibold">{group.duration} months</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Network className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-muted-foreground">No active chit groups found</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableUser } from '@/components/ui/searchable-user';
+import { SearchableChitSchemeSelector } from '@/components/ui/searchable-chit-scheme-selector';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -83,6 +85,7 @@ export default function SubscriptionsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [schemes, setSchemes] = useState<ChitScheme[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -445,6 +448,7 @@ export default function SubscriptionsPage() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const response = await fetch('/api/subscriptions', {
         method: 'POST',
@@ -476,6 +480,8 @@ export default function SubscriptionsPage() {
         description: error instanceof Error ? error.message : 'Failed to create subscription',
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -963,36 +969,27 @@ export default function SubscriptionsPage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="userId">User *</Label>
-              <Select value={formData.userId} onValueChange={(value) => setFormData({ ...formData, userId: value })}>
-                <SelectTrigger className={errors.userId ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.registrationId} - {user.firstName} {user.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableUser
+                value={formData.userId}
+                onValueChange={(value) => setFormData({ ...formData, userId: value })}
+                placeholder="Select a user"
+                error={!!errors.userId}
+                showNoOption={false}
+                showEmail={true}
+              />
               {errors.userId && (
                 <p className="text-sm text-red-500">{errors.userId}</p>
               )}
             </div>
             <div>
               <Label htmlFor="chitSchemeId">Chit Scheme *</Label>
-              <Select value={formData.chitSchemeId} onValueChange={(value) => setFormData({ ...formData, chitSchemeId: value })}>
-                <SelectTrigger className={errors.chitSchemeId ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select a chit scheme" />
-                </SelectTrigger>
-                <SelectContent>
-                  {schemes.filter(scheme => scheme.isActive).map((scheme) => (
-                    <SelectItem key={scheme.id} value={scheme.id}>
-                      {scheme.chitId} - {scheme.name} (₹{Number(scheme.amount).toLocaleString()})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableChitSchemeSelector
+                value={formData.chitSchemeId}
+                onValueChange={(value) => setFormData({ ...formData, chitSchemeId: value })}
+                placeholder="Select a chit scheme"
+                error={!!errors.chitSchemeId}
+                activeOnly={true}
+              />
               {errors.chitSchemeId && (
                 <p className="text-sm text-red-500">{errors.chitSchemeId}</p>
               )}
@@ -1002,8 +999,8 @@ export default function SubscriptionsPage() {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateSubscription}>
-              Create Subscription
+            <Button onClick={handleCreateSubscription} disabled={submitting}>
+              {submitting ? 'Creating...' : 'Create Subscription'}
             </Button>
           </div>
         </DialogContent>
@@ -1140,18 +1137,13 @@ export default function SubscriptionsPage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="userId">User *</Label>
-              <Select value={bulkImportData.userId} onValueChange={(value) => setBulkImportData({ ...bulkImportData, userId: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.registrationId} - {user.firstName} {user.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableUser
+                value={bulkImportData.userId}
+                onValueChange={(value) => setBulkImportData({ ...bulkImportData, userId: value })}
+                placeholder="Select a user"
+                showNoOption={false}
+                showEmail={true}
+              />
             </div>
             <div>
               <Label htmlFor="subscriberIds">Subscriber IDs *</Label>

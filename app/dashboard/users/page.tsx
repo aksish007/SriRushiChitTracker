@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Users, UserPlus, Download, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, Lock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { handleApiError, formatErrorForToast } from '@/lib/error-handler';
 import { COMPANY_NAME } from '@/lib/constants';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -47,10 +48,22 @@ interface User {
     id: string;
     subscriberId: string;
     status: string;
+    joinedAt: string;
     chitScheme: {
+      id: string;
+      chitId: string;
       name: string;
       amount: number;
+      duration: number;
+      totalSlots: number;
     };
+  }>;
+  nominees: Array<{
+    id: string;
+    name: string;
+    relation: string;
+    age: number | null;
+    dateOfBirth: string | null;
   }>;
 }
 
@@ -72,6 +85,7 @@ export default function UsersPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -108,6 +122,14 @@ export default function UsersPage() {
     address: '',
     role: '',
     isActive: true,
+  });
+
+  // Nominee form state
+  const [nomineeForm, setNomineeForm] = useState({
+    name: '',
+    relation: '',
+    age: '',
+    dateOfBirth: '',
   });
 
   const fetchUsers = useCallback(async () => {
@@ -207,21 +229,39 @@ export default function UsersPage() {
       role: user.role,
       isActive: user.isActive,
     });
+    
+    // Set nominee form with first nominee or empty if none
+    const firstNominee = user.nominees && user.nominees.length > 0 ? user.nominees[0] : null;
+    setNomineeForm({
+      name: firstNominee?.name || '',
+      relation: firstNominee?.relation || '',
+      age: firstNominee?.age?.toString() || '',
+      dateOfBirth: firstNominee?.dateOfBirth ? new Date(firstNominee.dateOfBirth).toISOString().split('T')[0] : '',
+    });
+    
     setShowEditDialog(true);
   };
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
+    setSubmitting(true);
     try {
-      setLoading(true);
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          ...editForm,
+          nominee: {
+            name: nomineeForm.name.trim() || undefined,
+            relation: nomineeForm.relation.trim() || undefined,
+            age: nomineeForm.age ? parseInt(nomineeForm.age) : undefined,
+            dateOfBirth: nomineeForm.dateOfBirth || undefined,
+          },
+        }),
       });
 
       if (response.ok) {
@@ -243,7 +283,7 @@ export default function UsersPage() {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -263,7 +303,11 @@ export default function UsersPage() {
         });
         fetchUsers();
       } else {
-        throw new Error('Failed to delete user');
+        // Handle API error with proper error parsing
+        const errorInfo = await handleApiError(response);
+        const toastError = formatErrorForToast(errorInfo);
+        
+        toast(toastError);
       }
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -298,7 +342,11 @@ export default function UsersPage() {
         setSelectedUsers([]);
         fetchUsers();
       } else {
-        throw new Error('Failed to delete users');
+        // Handle API error with proper error parsing
+        const errorInfo = await handleApiError(response);
+        const toastError = formatErrorForToast(errorInfo);
+        
+        toast(toastError);
       }
     } catch (error) {
       console.error('Error deleting users:', error);
@@ -333,7 +381,11 @@ export default function UsersPage() {
         setSelectedUsers([]);
         fetchUsers();
       } else {
-        throw new Error('Failed to update users');
+        // Handle API error with proper error parsing
+        const errorInfo = await handleApiError(response);
+        const toastError = formatErrorForToast(errorInfo);
+        
+        toast(toastError);
       }
     } catch (error) {
       console.error('Error updating users:', error);
@@ -691,6 +743,7 @@ export default function UsersPage() {
                   <TableHead className="text-white">Status</TableHead>
                   <TableHead className="text-white">Referrals</TableHead>
                   <TableHead className="text-white">Subscriptions</TableHead>
+                  <TableHead className="text-white">Nominee</TableHead>
                   <TableHead className="text-white">
                     <Button
                       variant="ghost"
@@ -757,6 +810,21 @@ export default function UsersPage() {
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="text-center">
+                      {user.nominees && user.nominees.length > 0 ? (
+                        <Badge className="bg-gradient-success text-white">
+                          <Check className="h-3 w-3 mr-1" />
+                          Yes
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          <X className="h-3 w-3 mr-1" />
+                          No
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </div>
@@ -771,11 +839,11 @@ export default function UsersPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleViewUser(user)}>
                           <Eye className="h-4 w-4 mr-2" />
-                          View
+                          View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditUser(user)}>
                           <Edit className="h-4 w-4 mr-2" />
-                          Edit
+                          Edit User
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleResetPasswordConfirm(user)}>
                           <Lock className="h-4 w-4 mr-2" />
@@ -862,15 +930,15 @@ export default function UsersPage() {
 
       {/* View User Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>User Details</DialogTitle>
             <DialogDescription>
               View detailed information about the user
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Registration ID</Label>
@@ -925,6 +993,99 @@ export default function UsersPage() {
                 <Label>Active Subscriptions</Label>
                 <p>{selectedUser.subscriptions.filter(s => s.status === 'ACTIVE').length} subscriptions</p>
               </div>
+              
+              {/* Group Details */}
+              <div className="border-t pt-4">
+                <Label className="text-lg font-semibold">Group Memberships</Label>
+                {selectedUser.subscriptions && selectedUser.subscriptions.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    <div className="text-sm text-muted-foreground mb-3">
+                      Member of {selectedUser.subscriptions.length} group(s)
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedUser.subscriptions.map((subscription) => (
+                        <div key={subscription.id} className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium text-blue-900 text-sm">{subscription.chitScheme.name}</h4>
+                              <Badge className={subscription.status === 'ACTIVE' ? 'bg-green-100 text-green-800 text-xs' : 'bg-gray-100 text-gray-800 text-xs'}>
+                                {subscription.status}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-blue-600 font-medium">ID:</span>
+                                <span className="text-blue-900 ml-1 font-mono">{subscription.chitScheme.chitId}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-600 font-medium">Amount:</span>
+                                <span className="text-blue-900 ml-1">₹{subscription.chitScheme.amount.toLocaleString()}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-600 font-medium">Duration:</span>
+                                <span className="text-blue-900 ml-1">{subscription.chitScheme.duration}m</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-600 font-medium">Slots:</span>
+                                <span className="text-blue-900 ml-1">{subscription.chitScheme.totalSlots}</span>
+                              </div>
+                            </div>
+                            <div className="pt-1 border-t border-blue-200">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-blue-600">
+                                  <span className="font-medium">Sub ID:</span> {subscription.subscriberId}
+                                </span>
+                                <span className="text-blue-600">
+                                  <span className="font-medium">Joined:</span> {new Date(subscription.joinedAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">No group memberships found</p>
+                )}
+              </div>
+
+              {/* Nominee Details */}
+              <div className="border-t pt-4">
+                <Label className="text-lg font-semibold">Nominee Details</Label>
+                {selectedUser.nominees && selectedUser.nominees.length > 0 ? (
+                  <div className="mt-2 space-y-3">
+                    {selectedUser.nominees.map((nominee) => (
+                      <div key={nominee.id} className="bg-gray-50 p-3 rounded-lg">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-600">Name</Label>
+                            <p className="font-medium">{nominee.name}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-600">Relation</Label>
+                            <p className="capitalize">{nominee.relation}</p>
+                          </div>
+                          {nominee.age && (
+                            <div>
+                              <Label className="text-sm font-medium text-gray-600">Age</Label>
+                              <p>{nominee.age} years</p>
+                            </div>
+                          )}
+                          {nominee.dateOfBirth && (
+                            <div>
+                              <Label className="text-sm font-medium text-gray-600">Date of Birth</Label>
+                              <p>{new Date(nominee.dateOfBirth).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">No nominee details available</p>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
@@ -932,84 +1093,151 @@ export default function UsersPage() {
 
       {/* Edit User Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user information
+              Update user information and nominee details
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-6">
+            {/* User Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">User Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  />
+                </div>
+              </div>
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="firstName"
-                  value={editForm.firstName}
-                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  id="email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  placeholder="Enter email address (optional)"
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
-                  id="lastName"
-                  value={editForm.lastName}
-                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  id="phone"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                 />
               </div>
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Textarea
+                  id="address"
+                  value={editForm.address}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="role">Role</Label>
+                  <Select value={editForm.role} onValueChange={(value) => setEditForm({ ...editForm, role: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USER">User</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2 pt-6">
+                  <Checkbox
+                    id="isActive"
+                    checked={editForm.isActive}
+                    onCheckedChange={(checked) => setEditForm({ ...editForm, isActive: checked as boolean })}
+                  />
+                  <Label htmlFor="isActive">Active</Label>
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={editForm.phone}
-                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={editForm.address}
-                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <Select value={editForm.role} onValueChange={(value) => setEditForm({ ...editForm, role: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USER">User</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isActive"
-                checked={editForm.isActive}
-                onCheckedChange={(checked) => setEditForm({ ...editForm, isActive: checked as boolean })}
-              />
-              <Label htmlFor="isActive">Active</Label>
+
+            {/* Nominee Details */}
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="text-lg font-semibold">Nominee Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nomineeName">Nominee Name</Label>
+                  <Input
+                    id="nomineeName"
+                    value={nomineeForm.name}
+                    onChange={(e) => setNomineeForm({ ...nomineeForm, name: e.target.value })}
+                    placeholder="Enter nominee's full name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nomineeRelation">Relation with Applicant</Label>
+                  <Select
+                    value={nomineeForm.relation}
+                    onValueChange={(value) => setNomineeForm({ ...nomineeForm, relation: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select relationship" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="spouse">Spouse</SelectItem>
+                      <SelectItem value="son">Son</SelectItem>
+                      <SelectItem value="daughter">Daughter</SelectItem>
+                      <SelectItem value="father">Father</SelectItem>
+                      <SelectItem value="mother">Mother</SelectItem>
+                      <SelectItem value="brother">Brother</SelectItem>
+                      <SelectItem value="sister">Sister</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nomineeAge">Age</Label>
+                  <Input
+                    id="nomineeAge"
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={nomineeForm.age}
+                    onChange={(e) => setNomineeForm({ ...nomineeForm, age: e.target.value })}
+                    placeholder="Enter age"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nomineeDateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="nomineeDateOfBirth"
+                    type="date"
+                    value={nomineeForm.dateOfBirth}
+                    onChange={(e) => setNomineeForm({ ...nomineeForm, dateOfBirth: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateUser}>
-              Update User
+            <Button onClick={handleUpdateUser} disabled={submitting}>
+              {submitting ? 'Updating...' : 'Update User'}
             </Button>
           </div>
         </DialogContent>

@@ -14,12 +14,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email, password } = loginSchema.parse(body);
+    const { username, password } = loginSchema.parse(body);
 
-
-
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // Find user by email, phone, or registration ID
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: username },
+          { phone: username },
+          { registrationId: username },
+        ],
+      },
     });
 
     if (!user || !user.isActive) {
@@ -27,7 +32,7 @@ export async function POST(request: NextRequest) {
         action: 'LOGIN_FAILED',
         ipAddress,
         userAgent,
-        metadata: { email, userExists: !!user, isActive: user?.isActive }
+        metadata: { username, userExists: !!user, isActive: user?.isActive }
       });
       
       return NextResponse.json(
@@ -44,7 +49,7 @@ export async function POST(request: NextRequest) {
         registrationId: user.registrationId,
         ipAddress,
         userAgent,
-        metadata: { email }
+        metadata: { username }
       });
       
       return NextResponse.json(
@@ -55,7 +60,9 @@ export async function POST(request: NextRequest) {
 
     const token = generateToken({
       userId: user.id,
-      email: user.email,
+      email: user.email || undefined,
+      phone: user.phone,
+      registrationId: user.registrationId,
       role: user.role,
     });
 

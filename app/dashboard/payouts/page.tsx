@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSubscriptionSelector } from '@/components/ui/searchable-subscription-selector';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -65,6 +66,7 @@ export default function PayoutsPage() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -385,6 +387,7 @@ export default function PayoutsPage() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const response = await fetch('/api/payouts', {
         method: 'POST',
@@ -426,6 +429,8 @@ export default function PayoutsPage() {
         description: 'An unexpected error occurred',
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -576,21 +581,13 @@ export default function PayoutsPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="subscriptionId">Select Subscription *</Label>
-                  <Select
+                  <SearchableSubscriptionSelector
                     value={formData.subscriptionId}
                     onValueChange={(value) => handleInputChange('subscriptionId', value)}
-                  >
-                    <SelectTrigger className={errors.subscriptionId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Choose a subscription" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subscriptions.filter(sub => sub.status === 'ACTIVE').map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.subscriberId} - {sub.user.firstName} {sub.user.lastName} ({sub.chitScheme.chitId})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Choose a subscription"
+                    error={!!errors.subscriptionId}
+                    activeOnly={true}
+                  />
                   {errors.subscriptionId && (
                     <p className="text-sm text-red-500">{errors.subscriptionId}</p>
                   )}
@@ -653,8 +650,8 @@ export default function PayoutsPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button type="submit" className="flex-1">
-                    Create Payout
+                  <Button type="submit" disabled={submitting} className="flex-1">
+                    {submitting ? 'Creating...' : 'Create Payout'}
                   </Button>
                   <Button
                     type="button"

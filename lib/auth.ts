@@ -8,7 +8,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export interface JWTPayload {
   userId: string;
-  email: string;
+  email?: string;
+  phone?: string;
+  registrationId?: string;
   role: string;
 }
 
@@ -76,6 +78,7 @@ export async function authenticateRequest(request: NextRequest) {
         id: true,
         registrationId: true,
         email: true,
+        phone: true,
         firstName: true,
         lastName: true,
         role: true,

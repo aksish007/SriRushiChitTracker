@@ -11,10 +11,18 @@ interface ReferralNode {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   level: number;
   children: ReferralNode[];
   subscriptionsCount: number;
   totalPayouts: number;
+  chitGroups: Array<{
+    chitId: string;
+    name: string;
+    amount: number;
+    duration: number;
+    status: string;
+  }>;
 }
 
 async function buildReferralTree(userId: string, level: number = 0, maxLevel: number = 5): Promise<ReferralNode[]> {
@@ -28,9 +36,21 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
       firstName: true,
       lastName: true,
       email: true,
+      phone: true,
       subscriptions: {
         where: { status: 'ACTIVE' },
-        select: { id: true },
+        select: { 
+          id: true,
+          chitScheme: {
+            select: {
+              chitId: true,
+              name: true,
+              amount: true,
+              duration: true,
+            }
+          },
+          status: true,
+        },
       },
       payouts: {
         where: { status: 'PAID' },
@@ -44,6 +64,13 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
   for (const user of users) {
     const children = await buildReferralTree(user.id, level + 1, maxLevel);
     const totalPayouts = user.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
+    const chitGroups = user.subscriptions.map(sub => ({
+      chitId: sub.chitScheme.chitId,
+      name: sub.chitScheme.name,
+      amount: Number(sub.chitScheme.amount),
+      duration: sub.chitScheme.duration,
+      status: sub.status,
+    }));
 
     nodes.push({
       id: user.id,
@@ -51,10 +78,12 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      phone: user.phone,
       level: level + 1,
       children,
       subscriptionsCount: user.subscriptions.length,
       totalPayouts,
+      chitGroups,
     });
   }
 
@@ -69,19 +98,31 @@ export async function GET(
     const currentUser = await requireAuth(request);
     const { registrationId } = await params;
 
-    // Find the target user
+    // Find the target user by ID (since SearchableUser now sends user IDs)
     const targetUser = await prisma.user.findUnique({
-      where: { registrationId },
+      where: { id: registrationId },
       select: {
         id: true,
         registrationId: true,
         firstName: true,
         lastName: true,
         email: true,
+        phone: true,
         role: true,
         subscriptions: {
           where: { status: 'ACTIVE' },
-          select: { id: true },
+          select: { 
+            id: true,
+            chitScheme: {
+              select: {
+                chitId: true,
+                name: true,
+                amount: true,
+                duration: true,
+              }
+            },
+            status: true,
+          },
         },
         payouts: {
           where: { status: 'PAID' },
@@ -98,7 +139,7 @@ export async function GET(
     }
 
     // Check permissions - admin can view any tree, users can only view their own
-    if (currentUser.role !== 'ADMIN' && currentUser.registrationId !== registrationId) {
+    if (currentUser.role !== 'ADMIN' && currentUser.id !== registrationId) {
       return NextResponse.json(
         { error: 'Permission denied' },
         { status: 403 }
@@ -107,6 +148,13 @@ export async function GET(
 
     const children = await buildReferralTree(targetUser.id);
     const totalPayouts = targetUser.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
+    const chitGroups = targetUser.subscriptions.map(sub => ({
+      chitId: sub.chitScheme.chitId,
+      name: sub.chitScheme.name,
+      amount: Number(sub.chitScheme.amount),
+      duration: sub.chitScheme.duration,
+      status: sub.status,
+    }));
 
     const rootNode: ReferralNode = {
       id: targetUser.id,
@@ -114,10 +162,12 @@ export async function GET(
       firstName: targetUser.firstName,
       lastName: targetUser.lastName,
       email: targetUser.email,
+      phone: targetUser.phone,
       level: 0,
       children,
       subscriptionsCount: targetUser.subscriptions.length,
       totalPayouts,
+      chitGroups,
     };
 
     return NextResponse.json({ tree: rootNode });

@@ -3,11 +3,15 @@ import * as xlsx from 'node-xlsx';
 export interface ExcelUserData {
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone: string;
   address?: string;
   referredBy?: string;
   chitId?: string;
+  nomineeName?: string;
+  nomineeRelation?: string;
+  nomineeAge?: string;
+  nomineeDateOfBirth?: string;
 }
 
 export function parseExcelFile(file: ArrayBuffer): ExcelUserData[] {
@@ -22,21 +26,37 @@ export function parseExcelFile(file: ArrayBuffer): ExcelUserData[] {
     const user: ExcelUserData = {
       firstName: row[0] || '',
       lastName: row[1] || '',
-      email: row[2] || '',
+      email: row[2] || undefined,
       phone: String(row[3] || ''), // Ensure phone is always a string
-      address: row[4] || '',
-      referredBy: row[5] || '',
-      chitId: row[6] || '',
+      address: row[4] || undefined,
+      referredBy: row[5] || undefined,
+      chitId: row[6] || undefined,
+      nomineeName: row[7] || undefined,
+      nomineeRelation: row[8] || undefined,
+      nomineeAge: row[9] ? String(row[9]) : undefined,
+      nomineeDateOfBirth: row[10] || undefined,
     };
     return user;
-  }).filter(user => user.email && user.firstName);
+  }).filter(user => user.firstName && user.lastName && user.phone);
 }
 
 export function generateExcelTemplate(): ArrayBuffer {
-  const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'Referred By (Registration ID)', 'Chit ID'];
+  const headers = [
+    'First Name', 
+    'Last Name', 
+    'Email (Optional)', 
+    'Phone', 
+    'Address (Optional)', 
+    'Referred By (Registration ID)', 
+    'Chit ID (Optional)',
+    'Nominee Name (Optional)',
+    'Nominee Relation (Optional)',
+    'Nominee Age (Optional)',
+    'Nominee Date of Birth (Optional)'
+  ];
   const sampleData = [
-    ['John', 'Doe', 'john.doe@example.com', '9876543210', '123 Main St', 'REG-123456', 'CHIT001'],
-    ['Jane', 'Smith', 'jane.smith@example.com', '9876543211', '456 Oak Ave', '', ''],
+    ['John', 'Doe', 'john.doe@example.com', '9876543210', '123 Main St', 'REG-123456', 'SRC01NS', 'Jane Doe', 'spouse', '25', '1998-05-15'],
+    ['Jane', 'Smith', '', '9876543211', '456 Oak Ave', '', '', 'Bob Smith', 'father', '55', '1968-12-10'],
   ];
   
   const sheetData = [headers, ...sampleData];

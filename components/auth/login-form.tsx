@@ -35,7 +35,7 @@ export function LoginForm() {
       setError('');
       setLoading(true);
       
-      await login(data.email, data.password);
+      await login(data.username, data.password);
       toast({
         title: 'Success',
         description: 'Login successful! Redirecting to dashboard...',
@@ -78,18 +78,18 @@ export function LoginForm() {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-primary font-medium">Email Address</Label>
+              <Label htmlFor="username" className="text-primary font-medium">Username (Email, Phone, or Registration ID)</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                {...register('email')}
+                id="username"
+                type="text"
+                placeholder="Enter email, phone, or registration ID"
+                {...register('username')}
                 className={`border-2 transition-all duration-300 focus:ring-2 focus:ring-primary/20 ${
-                  errors.email ? 'border-red-500 focus:border-red-500' : 'border-primary/20 focus:border-primary'
+                  errors.username ? 'border-red-500 focus:border-red-500' : 'border-primary/20 focus:border-primary'
                 }`}
               />
-              {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
+              {errors.username && (
+                <p className="text-sm text-red-600">{errors.username.message}</p>
               )}
             </div>
             
