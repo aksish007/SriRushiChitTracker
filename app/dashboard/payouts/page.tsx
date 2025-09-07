@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown, Calculator } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface Payout {
@@ -57,6 +57,26 @@ interface Subscription {
     chitId: string;
     name: string;
     amount: number;
+    duration: number;
+  };
+}
+
+interface PayoutCalculationData {
+  subscription: Subscription;
+  referralStats: {
+    directReferralCount: number;
+    totalDownlineCount: number;
+  };
+  clubTier: string;
+  baseRate: number;
+  calculatedPayout: {
+    totalPayout: number;
+    stepDetails: Array<{
+      step: number;
+      downlineCount: number;
+      ratePerHead: number;
+      stepPayout: number;
+    }>;
   };
 }
 
@@ -99,6 +119,8 @@ export default function PayoutsPage() {
     month: '',
     year: '',
   });
+  const [payoutCalculationData, setPayoutCalculationData] = useState<PayoutCalculationData | null>(null);
+  const [calculatingPayout, setCalculatingPayout] = useState(false);
   const [editForm, setEditForm] = useState({
     amount: '',
     month: '',
@@ -483,12 +505,53 @@ export default function PayoutsPage() {
       year: '',
     });
     setErrors({});
+    setPayoutCalculationData(null);
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleSubscriptionSelect = async (subscription: Subscription) => {
+    setCalculatingPayout(true);
+    try {
+      const response = await fetch('/api/payouts/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ subscriptionId: subscription.id }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPayoutCalculationData(data);
+        // Auto-fill the amount with calculated payout
+        setFormData(prev => ({ 
+          ...prev, 
+          amount: data.calculatedPayout.totalPayout.toString() 
+        }));
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: 'Error',
+          description: errorData.error || 'Failed to calculate payout',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error calculating payout:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to calculate payout',
+        variant: 'destructive',
+      });
+    } finally {
+      setCalculatingPayout(false);
     }
   };
 
@@ -584,6 +647,7 @@ export default function PayoutsPage() {
                   <SearchableSubscriptionSelector
                     value={formData.subscriptionId}
                     onValueChange={(value) => handleInputChange('subscriptionId', value)}
+                    onSubscriptionSelect={handleSubscriptionSelect}
                     placeholder="Choose a subscription"
                     error={!!errors.subscriptionId}
                     activeOnly={true}
@@ -592,6 +656,51 @@ export default function PayoutsPage() {
                     <p className="text-sm text-red-500">{errors.subscriptionId}</p>
                   )}
                 </div>
+
+                {/* Payout Calculation Info */}
+                {payoutCalculationData && (
+                  <div className="space-y-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="h-4 w-4 text-blue-600" />
+                      <Label className="text-blue-800 font-medium">Payout Calculation</Label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Club Tier:</span>
+                        <span className="ml-2 font-medium text-blue-700">{payoutCalculationData.clubTier}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Base Rate:</span>
+                        <span className="ml-2 font-medium text-blue-700">₹{payoutCalculationData.baseRate}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Direct Referrals:</span>
+                        <span className="ml-2 font-medium text-blue-700">{payoutCalculationData.referralStats.directReferralCount}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Total Downline:</span>
+                        <span className="ml-2 font-medium text-blue-700">{payoutCalculationData.referralStats.totalDownlineCount}</span>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-blue-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Calculated Payout:</span>
+                        <span className="text-lg font-bold text-green-600">
+                          ₹{payoutCalculationData.calculatedPayout.totalPayout.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {calculatingPayout && (
+                  <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      <span className="text-sm text-muted-foreground">Calculating payout...</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="amount">Amount (₹) *</Label>
@@ -945,6 +1054,11 @@ export default function PayoutsPage() {
                   <TableCell>
                     <div className="font-medium">
                       ₹{Number(payout.amount).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {payout.subscription.chitScheme.amount && (
+                        <span>Chit: ₹{Number(payout.subscription.chitScheme.amount).toLocaleString()}</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

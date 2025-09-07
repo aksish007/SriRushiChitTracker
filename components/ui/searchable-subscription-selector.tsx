@@ -31,12 +31,15 @@ interface Subscription {
   chitScheme: {
     chitId: string;
     name: string;
+    amount: number;
+    duration: number;
   };
 }
 
 interface SearchableSubscriptionSelectorProps {
   value?: string;
   onValueChange?: (value: string) => void;
+  onSubscriptionSelect?: (subscription: Subscription) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -47,6 +50,7 @@ interface SearchableSubscriptionSelectorProps {
 export function SearchableSubscriptionSelector({
   value,
   onValueChange,
+  onSubscriptionSelect,
   placeholder = "Choose a subscription",
   className,
   disabled = false,
@@ -117,6 +121,9 @@ export function SearchableSubscriptionSelector({
     onValueChange?.(subscriptionId);
     const subscription = subscriptions.find(s => s.id === subscriptionId);
     setSelectedSubscription(subscription || null);
+    if (subscription && onSubscriptionSelect) {
+      onSubscriptionSelect(subscription);
+    }
     setOpen(false);
   };
 
@@ -180,7 +187,7 @@ export function SearchableSubscriptionSelector({
                       {subscription.subscriberId} - {subscription.user.firstName} {subscription.user.lastName}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {subscription.chitScheme.chitId} - {subscription.chitScheme.name}
+                      {subscription.chitScheme.chitId} - {subscription.chitScheme.name} (₹{subscription.chitScheme.amount.toLocaleString()}, {subscription.chitScheme.duration} months)
                       <span className={cn(
                         "ml-2 px-2 py-0.5 rounded text-xs",
                         subscription.status === 'ACTIVE' ? "bg-green-100 text-green-800" :

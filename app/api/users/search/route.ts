@@ -50,10 +50,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Filter users who can refer (have less than 3 referrals)
-    const eligibleReferrers = users.filter(user => user.referrals.length < 3);
-
-    return NextResponse.json({ users: eligibleReferrers });
+    return NextResponse.json({ users });
   } catch (error: any) {
     logger.error('User search error', error instanceof Error ? error : new Error(String(error)), {
       action: 'USER_SEARCH_ERROR',
