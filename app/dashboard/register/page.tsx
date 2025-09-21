@@ -279,7 +279,7 @@ export default function RegisterUserPage() {
                     onValueChange={(value) => handleInputChange('referredBy', value)}
                     placeholder="Select referrer (optional)"
                     showNoOption={true}
-                    noOptionLabel="No referrer"
+                    noOptionLabel="Sri Rushi Chits"
                     noOptionValue="none"
                     showReferralCount={true}
                   />
@@ -319,6 +319,7 @@ export default function RegisterUserPage() {
                           <SelectItem value="son">Son</SelectItem>
                           <SelectItem value="daughter">Daughter</SelectItem>
                           <SelectItem value="father">Father</SelectItem>
+                          <SelectItem value="father">Guardian</SelectItem>
                           <SelectItem value="mother">Mother</SelectItem>
                           <SelectItem value="brother">Brother</SelectItem>
                           <SelectItem value="sister">Sister</SelectItem>

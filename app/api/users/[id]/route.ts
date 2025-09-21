@@ -153,12 +153,12 @@ export async function PUT(
           where: { userId: id },
         });
 
-        // Create new nominee if data is provided
-        if (nominee.name && nominee.name.trim()) {
+        // Create new nominee if any data is provided
+        if (nominee.name || nominee.relation || nominee.age || nominee.dateOfBirth) {
           await tx.nominee.create({
             data: {
               userId: id,
-              name: nominee.name.trim(),
+              name: nominee.name ? nominee.name.trim() : '',
               relation: nominee.relation || '',
               age: nominee.age || null,
               dateOfBirth: nominee.dateOfBirth ? new Date(nominee.dateOfBirth) : null,

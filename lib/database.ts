@@ -36,11 +36,11 @@ export async function generateRegistrationId(): Promise<string> {
   // Find the next available number
   const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
   
-  return `SRC-${nextNumber.toString().padStart(8, '0')}`;
+  return `SRC-${nextNumber.toString().padStart(5, '0')}`;
 }
 
 // Helper function to generate Subscriber ID in the new SRC format
-export function generateSubscriberId(chitId: string): string {
+export async function generateSubscriberId(chitId: string): Promise<string> {
   // Get the next available subscriber number for this chit scheme
   return generateSubscriberIdWithNumber(chitId);
 }

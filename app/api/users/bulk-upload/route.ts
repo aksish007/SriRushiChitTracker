@@ -111,9 +111,9 @@ export async function POST(request: NextRequest) {
             phone: String(userData.phone), // Ensure phone is always a string
             address: userData.address,
             referredBy: referrerId,
-            nominees: userData.nomineeName && userData.nomineeName.trim() ? {
+            nominees: (userData.nomineeName && userData.nomineeName.trim()) || userData.nomineeRelation || userData.nomineeAge || userData.nomineeDateOfBirth ? {
               create: {
-                name: userData.nomineeName.trim(),
+                name: userData.nomineeName ? userData.nomineeName.trim() : '',
                 relation: userData.nomineeRelation || '',
                 age: userData.nomineeAge ? parseInt(userData.nomineeAge) : null,
                 dateOfBirth: userData.nomineeDateOfBirth ? new Date(userData.nomineeDateOfBirth) : null,

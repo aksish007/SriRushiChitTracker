@@ -50,7 +50,7 @@ export function SearchableUser({
   disabled = false,
   error = false,
   showNoOption = false,
-  noOptionLabel = "No referrer",
+  noOptionLabel = "Sri Rushi Chits",
   noOptionValue = "none",
   showReferralCount = false,
   showEmail = false,
