@@ -79,12 +79,13 @@ export async function POST(request: NextRequest) {
         phone: userData.phone,
         address: userData.address,
         referredBy: referrerId,
-        nominees: userData.nominee && (userData.nominee.name || userData.nominee.relation || userData.nominee.age || userData.nominee.dateOfBirth) ? {
+        nominees: userData.nominee && (userData.nominee.name || userData.nominee.relation || userData.nominee.age || userData.nominee.dateOfBirth || userData.nominee.guardian) ? {
           create: {
             name: userData.nominee.name || '',
             relation: userData.nominee.relation || '',
             age: userData.nominee.age || null,
             dateOfBirth: userData.nominee.dateOfBirth ? new Date(userData.nominee.dateOfBirth) : null,
+            guardian: userData.nominee.guardian || null,
           }
         } : undefined,
       },

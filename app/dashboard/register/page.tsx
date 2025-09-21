@@ -15,7 +15,7 @@ import Link from 'next/link';
 
 
 export default function RegisterUserPage() {
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,6 +32,7 @@ export default function RegisterUserPage() {
     nomineeRelation: '',
     nomineeAge: '',
     nomineeDateOfBirth: '',
+    guardian: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -81,11 +82,10 @@ export default function RegisterUserPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/users/register', {
+      const response = await makeAuthenticatedRequest('/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           firstName: formData.firstName.trim(),
@@ -101,6 +101,7 @@ export default function RegisterUserPage() {
             relation: formData.nomineeRelation.trim() || undefined,
             age: formData.nomineeAge ? parseInt(formData.nomineeAge) : undefined,
             dateOfBirth: formData.nomineeDateOfBirth || undefined,
+            guardian: formData.guardian.trim() || undefined,
           },
         }),
       });
@@ -129,6 +130,7 @@ export default function RegisterUserPage() {
           nomineeRelation: '',
           nomineeAge: '',
           nomineeDateOfBirth: '',
+          guardian: '',
         });
         setErrors({});
       } else {
@@ -352,6 +354,16 @@ export default function RegisterUserPage() {
                         onChange={(e) => handleInputChange('nomineeDateOfBirth', e.target.value)}
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="guardian">Guardian</Label>
+                    <Input
+                      id="guardian"
+                      value={formData.guardian}
+                      onChange={(e) => handleInputChange('guardian', e.target.value)}
+                      placeholder="Enter guardian's name (optional)"
+                    />
                   </div>
                 </div>
 

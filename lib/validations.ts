@@ -18,6 +18,7 @@ export const registerUserSchema = z.object({
     relation: z.string().optional(),
     age: z.number().min(0).max(120).optional(),
     dateOfBirth: z.string().optional(),
+    guardian: z.string().optional(),
   }).optional(),
 });
 

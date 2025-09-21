@@ -120,6 +120,7 @@ model Nominee {
   relation     String
   age          Int?
   dateOfBirth  DateTime?
+  guardian     String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

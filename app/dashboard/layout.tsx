@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { Sidebar } from '@/components/dashboard/sidebar';
@@ -11,14 +11,46 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading, token, handleAuthFailure } = useAuth();
   const router = useRouter();
+  const validationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  // Set up periodic token validation
+  useEffect(() => {
+    if (user && token) {
+      // Validate token every 5 minutes
+      validationIntervalRef.current = setInterval(async () => {
+        try {
+          const response = await fetch('/api/auth/validate', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            console.log('Token validation failed during periodic check');
+            await handleAuthFailure();
+          }
+        } catch (error) {
+          console.log('Token validation error during periodic check:', error);
+          await handleAuthFailure();
+        }
+      }, 5 * 60 * 1000); // 5 minutes
+    }
+
+    return () => {
+      if (validationIntervalRef.current) {
+        clearInterval(validationIntervalRef.current);
+      }
+    };
+  }, [user, token, handleAuthFailure]);
 
   if (loading) {
     return (

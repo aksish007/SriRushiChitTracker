@@ -87,15 +87,42 @@ export default function Dashboard() {
             };
           }
 
-          // Generate monthly data (mock data for demo)
-          const monthlyData = [
-            { month: 'Jan', users: 45, payouts: 125000 },
-            { month: 'Feb', users: 52, payouts: 145000 },
-            { month: 'Mar', users: 48, payouts: 135000 },
-            { month: 'Apr', users: 61, payouts: 165000 },
-            { month: 'May', users: 55, payouts: 155000 },
-            { month: 'Jun', users: 67, payouts: 185000 },
-          ];
+          // Generate monthly data from real data
+          const generateMonthlyData = () => {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const currentDate = new Date();
+            const monthlyData = [];
+            
+            // Get data for the last 6 months
+            for (let i = 5; i >= 0; i--) {
+              const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+              const monthName = months[date.getMonth()];
+              const year = date.getFullYear();
+              
+              // Count users registered in this month
+              const usersInMonth = usersData.users?.filter((user: any) => {
+                const userDate = new Date(user.createdAt);
+                return userDate.getMonth() === date.getMonth() && userDate.getFullYear() === year;
+              }).length || 0;
+              
+              // Calculate payouts for this month
+              const payoutsInMonth = payoutsData.payouts?.filter((payout: any) => {
+                if (!payout.paidAt) return false;
+                const payoutDate = new Date(payout.paidAt);
+                return payoutDate.getMonth() === date.getMonth() && payoutDate.getFullYear() === year;
+              }).reduce((sum: number, payout: any) => sum + Number(payout.amount), 0) || 0;
+              
+              monthlyData.push({
+                month: monthName,
+                users: usersInMonth,
+                payouts: payoutsInMonth
+              });
+            }
+            
+            return monthlyData;
+          };
+          
+          const monthlyData = generateMonthlyData();
 
           // Status data for pie chart
           const statusData = [
@@ -199,28 +226,24 @@ export default function Dashboard() {
               value={stats?.totalUsers || 0}
               description="Registered members"
               icon={Users}
-              trend={{ value: 12, isPositive: true }}
             />
             <StatsCard
               title="Active Subscriptions"
               value={stats?.totalSubscriptions || 0}
               description="Current chit subscriptions"
               icon={CreditCard}
-              trend={{ value: 8, isPositive: true }}
             />
             <StatsCard
               title="Total Payouts"
               value={`₹${Number(stats?.totalPayouts || 0).toLocaleString()}`}
               description="Amount distributed"
               icon={IndianRupee}
-              trend={{ value: 15, isPositive: true }}
             />
             <StatsCard
               title="Active Schemes"
               value={stats?.activeSchemes || 0}
               description="Running chit schemes"
               icon={Activity}
-              trend={{ value: 3, isPositive: true }}
             />
           </>
         ) : (
@@ -260,7 +283,7 @@ export default function Dashboard() {
           <Card className="shadow-glow-blue">
             <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
               <CardTitle className="text-white">Monthly Activity</CardTitle>
-              <CardDescription className="text-blue-100">User registrations and payouts over time</CardDescription>
+              <CardDescription className="text-blue-100">New user registrations over time</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <ResponsiveContainer width="100%" height={300}>
@@ -424,28 +447,24 @@ export default function Dashboard() {
               value={stats?.userStats?.mySubscriptions || 0}
               description="Active chit subscriptions"
               icon={CreditCard}
-              trend={{ value: 0, isPositive: true }}
             />
             <StatsCard
               title="Total Earned"
               value={`₹${Number(stats?.userStats?.totalEarned || 0).toLocaleString()}`}
               description="From completed payouts"
               icon={IndianRupee}
-              trend={{ value: 0, isPositive: true }}
             />
             <StatsCard
               title="Completed Payouts"
               value={stats?.userStats?.myPayouts || 0}
               description="Successfully received"
               icon={CheckCircle}
-              trend={{ value: 0, isPositive: true }}
             />
             <StatsCard
               title="Next Payout"
               value={stats?.userStats?.nextPayoutDate ? new Date(stats.userStats.nextPayoutDate).toLocaleDateString() : 'N/A'}
               description="Expected payment date"
               icon={Calendar}
-              trend={{ value: 0, isPositive: true }}
             />
           </div>
 
@@ -459,12 +478,12 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
-                                         <Pie
-                       data={[
-                         { name: 'Active', value: stats?.userStats?.mySubscriptions || 0, color: '#10b981' },
-                         { name: 'Completed', value: 0, color: '#3b82f6' },
-                         { name: 'Cancelled', value: 0, color: '#ef4444' },
-                       ]}
+                    <Pie
+                      data={[
+                        { name: 'Active', value: stats?.userStats?.mySubscriptions || 0, color: '#10b981' },
+                        { name: 'Completed', value: 0, color: '#3b82f6' },
+                        { name: 'Cancelled', value: 0, color: '#ef4444' },
+                      ]}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
