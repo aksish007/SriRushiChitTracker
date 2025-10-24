@@ -14,7 +14,7 @@ datasource db {
 model User {
   id             String   @id @default(cuid())
   registrationId String   @unique
-  email          String?  @unique
+  email          String?  // Removed @unique to allow multiple NULL values in SQL Server
   password       String
   firstName      String
   lastName       String
@@ -64,7 +64,7 @@ model ChitScheme {
 
 model ChitSubscription {
   id           String   @id @default(cuid())
-  subscriberId String   @unique
+  subscriberId String
   userId       String
   chitSchemeId String
   status       String   @default("ACTIVE") // Changed from SubscriptionStatus enum
@@ -77,6 +77,7 @@ model ChitSubscription {
   chitScheme ChitScheme @relation(fields: [chitSchemeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payouts    Payout[]
 
+  @@unique([chitSchemeId, subscriberId])
   @@map("chit_subscriptions")
 }
 

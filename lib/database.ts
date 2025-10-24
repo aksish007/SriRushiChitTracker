@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { ORGANIZATION_REGISTRATION_ID, USER_ROLES, COMPANY_NAME } from './constants';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -96,4 +97,34 @@ export function extractChitIdFromSubscriberId(subscriberId: string): string | nu
 export function extractSubscriberNumberFromSubscriberId(subscriberId: string): number | null {
   const match = subscriberId.match(/\/\d{2}$/);
   return match ? parseInt(match[0].substring(1)) : null;
+}
+
+// Helper function to get or create the organization user
+export async function getOrCreateOrganizationUser() {
+  // Try to find the organization user
+  let orgUser = await prisma.user.findUnique({
+    where: { registrationId: ORGANIZATION_REGISTRATION_ID },
+  });
+
+  // If organization user doesn't exist, create it
+  if (!orgUser) {
+    const { hashPassword } = await import('./auth');
+    const orgPassword = await hashPassword('Org@2025!');
+    
+    orgUser = await prisma.user.create({
+      data: {
+        registrationId: ORGANIZATION_REGISTRATION_ID,
+        email: null, // Organization doesn't need an email - multiple NULLs now allowed
+        password: orgPassword,
+        firstName: COMPANY_NAME,
+        lastName: 'Organization',
+        phone: '0000000000', // Placeholder phone
+        address: 'Organization Office',
+        role: USER_ROLES.ADMIN,
+        isActive: true,
+      },
+    });
+  }
+
+  return orgUser;
 }

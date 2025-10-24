@@ -12,7 +12,10 @@ A comprehensive, production-ready chit fund management system built with Next.js
 
 ### Chit Fund Operations
 - **Chit Scheme Management**: Create and manage multiple chit schemes
-- **Subscription Management**: Unique SubscriberId in SRC format (SRC{XX}{YY}/{ZZ})
+- **Automatic Organization Subscription**: Organization user automatically assigned to slot 01 when creating a chit scheme
+- **Manual Subscription Management**: All other subscriptions are manually created with unique SubscriberIds
+- **Unique Subscriber IDs**: Each subscriber ID in SRC format (SRC{XX}{YY}/{ZZ}) is unique per chit scheme
+- **Organization User Support**: Dedicated organization user (SRC-00000) for company subscriptions
 - **Bulk Subscription Import**: Import multiple subscriptions using subscriber IDs
 - **Payout Tracking**: Monthly payout management with status tracking
 - **Interactive Referral Tree**: Visual hierarchy representation
@@ -45,6 +48,24 @@ You can bulk import subscriptions using the subscriber IDs:
 3. Select a user
 4. Enter subscriber IDs (one per line)
 5. Click "Import Subscriptions"
+
+### Organization User
+The system creates an organization user with registration ID `SRC-00000` that is automatically subscribed to new chit schemes:
+- **Purpose**: Dedicated user for company/organization subscriptions
+- **Automatic Assignment**: When a chit scheme is created, the organization is automatically subscribed to slot 01
+- **Default Name**: "Sri Rushi Chits Organization"
+- **Registration ID**: `SRC-00000` (fixed identifier)
+- **Email**: NULL (optional email field)
+- **Subscriber ID Format**: `{ChitID}/01` (e.g., `SRC01NS/01`, `EXC01-20M/01`)
+- **Benefits**: Ensures organization always has first slot in every scheme
+
+### Subscription Uniqueness
+Each subscriber ID is **unique per chit scheme**:
+- Within a chit scheme, each subscriber ID must be unique (e.g., only one `SRC01NS/01` in scheme SRC01NS)
+- Different chit schemes can have the same slot numbers (e.g., `SRC01NS/01` and `SRC03MC/01` can both exist)
+- Database enforces composite unique constraint on `(chitSchemeId, subscriberId)`
+- Manual entry allows flexible slot assignment
+- Prevents duplicate subscriptions within the same chit scheme
 
 ## 🚀 Tech Stack
 
@@ -336,7 +357,8 @@ After running the seed script, use these credentials:
 #### ✅ COMPLETED FEATURES
 - [x] User Management (CRUD, bulk upload, referral system)
 - [x] Basic Chit Scheme Management
-- [x] Subscription Management
+- [x] Organization User for Company Subscriptions
+- [x] Manual Subscription Management with Unique IDs
 - [x] Basic Payout Tracking
 - [x] Referral Tree Visualization
 - [x] Excel Export for basic reports

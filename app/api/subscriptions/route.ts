@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, generateSubscriberIdWithNumber } from '@/lib/database';
+import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { subscriptionSchema } from '@/lib/validations';
 import logger from '@/lib/logger';
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     const adminUser = await requireAuth(request, 'ADMIN');
 
     const body = await request.json();
-    const { userId, chitSchemeId } = subscriptionSchema.parse(body);
+    const { userId, chitSchemeId, subscriberId } = subscriptionSchema.parse(body);
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -159,7 +159,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Note: Users can now subscribe to the same chit scheme multiple times
+    // Check if subscriber ID already exists for this chit scheme
+    const existingSubscription = await prisma.chitSubscription.findFirst({
+      where: {
+        chitSchemeId,
+        subscriberId,
+      },
+    });
+
+    if (existingSubscription) {
+      return NextResponse.json(
+        { error: `Subscriber ID ${subscriberId} already exists in this chit scheme` },
+        { status: 400 }
+      );
+    }
 
     // Check if scheme has available slots
     const activeSubscriptions = await prisma.chitSubscription.count({
@@ -175,8 +188,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const subscriberId = await generateSubscriberIdWithNumber(chitScheme.chitId);
 
     const newSubscription = await prisma.chitSubscription.create({
       data: {

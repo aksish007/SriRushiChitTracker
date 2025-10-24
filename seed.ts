@@ -1,9 +1,13 @@
-import { prisma, generateRegistrationId, generateSubscriberIdWithNumber } from './lib/database';
+import { prisma, generateRegistrationId, generateSubscriberIdWithNumber, getOrCreateOrganizationUser } from './lib/database';
 import { hashPassword } from './lib/auth';
 import { USER_ROLES, SUBSCRIPTION_STATUS, PAYOUT_STATUS } from './lib/constants';
 
 async function main() {
   console.log('🌱 Starting seed...');
+
+  // Create organization user first (for automatic chit scheme subscriptions)
+  const orgUser = await getOrCreateOrganizationUser();
+  console.log(`✅ Organization user ready: ${orgUser.registrationId}`);
 
   // Create admin user
   const adminPassword = await hashPassword('admin123');
@@ -98,6 +102,17 @@ async function main() {
   // Create subscriptions with specific subscriber IDs
   const subscriptions = [];
   
+  // Organization subscription for SRC01NS at slot 1
+  const orgSub1 = await prisma.chitSubscription.create({
+    data: {
+      subscriberId: await generateSubscriberIdWithNumber('SRC01NS', 1),
+      userId: orgUser.id,
+      chitSchemeId: chitSchemes[0].id,
+      status: 'ACTIVE',
+    },
+  });
+  subscriptions.push(orgSub1);
+  
   // SRC01NS subscriptions
   const src01nsSubscriptions = [
     { userId: user.id, subscriberNumber: 4 },
@@ -117,6 +132,17 @@ async function main() {
     subscriptions.push(userSub);
   }
 
+  // Organization subscription for SRC03MC at slot 1
+  const orgSub2 = await prisma.chitSubscription.create({
+    data: {
+      subscriberId: await generateSubscriberIdWithNumber('SRC03MC', 1),
+      userId: orgUser.id,
+      chitSchemeId: chitSchemes[1].id,
+      status: 'ACTIVE',
+    },
+  });
+  subscriptions.push(orgSub2);
+  
   // SRC03MC subscriptions
   const src03mcSubscriptions = [
     { userId: user.id, subscriberNumber: 22 },
@@ -138,6 +164,17 @@ async function main() {
     subscriptions.push(refSub);
   }
 
+  // Organization subscription for SRC05CM at slot 1
+  const orgSub3 = await prisma.chitSubscription.create({
+    data: {
+      subscriberId: await generateSubscriberIdWithNumber('SRC05CM', 1),
+      userId: orgUser.id,
+      chitSchemeId: chitSchemes[2].id,
+      status: 'ACTIVE',
+    },
+  });
+  subscriptions.push(orgSub3);
+  
   // SRC05CM subscriptions
   const src05cmSubscriptions = [
     { userId: user.id, subscriberNumber: 5 },

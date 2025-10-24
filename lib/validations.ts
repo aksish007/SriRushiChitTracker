@@ -34,6 +34,7 @@ export const chitSchemeSchema = z.object({
 export const subscriptionSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   chitSchemeId: z.string().min(1, 'Chit scheme ID is required'),
+  subscriberId: z.string().min(1, 'Subscriber ID is required'),
 });
 
 export const payoutSchema = z.object({

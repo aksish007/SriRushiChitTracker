@@ -114,6 +114,7 @@ export default function SubscriptionsPage() {
   const [formData, setFormData] = useState({
     userId: '',
     chitSchemeId: '',
+    subscriberId: '',
   });
   const [editForm, setEditForm] = useState({
     status: '',
@@ -442,6 +443,7 @@ export default function SubscriptionsPage() {
     const newErrors: Record<string, string> = {};
     if (!formData.userId) newErrors.userId = 'User is required';
     if (!formData.chitSchemeId) newErrors.chitSchemeId = 'Chit scheme is required';
+    if (!formData.subscriberId) newErrors.subscriberId = 'Subscriber ID is required';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -467,7 +469,7 @@ export default function SubscriptionsPage() {
           variant: 'success',
         });
         setShowCreateDialog(false);
-        setFormData({ userId: '', chitSchemeId: '' });
+        setFormData({ userId: '', chitSchemeId: '', subscriberId: '' });
         fetchData();
       } else {
         const errorData = await response.json();
@@ -993,6 +995,22 @@ export default function SubscriptionsPage() {
               {errors.chitSchemeId && (
                 <p className="text-sm text-red-500">{errors.chitSchemeId}</p>
               )}
+            </div>
+            <div>
+              <Label htmlFor="subscriberId">Subscriber ID *</Label>
+              <Input
+                id="subscriberId"
+                value={formData.subscriberId}
+                onChange={(e) => setFormData({ ...formData, subscriberId: e.target.value })}
+                placeholder="e.g., SRC01NS/01"
+                className={errors.subscriberId ? 'border-red-500' : ''}
+              />
+              {errors.subscriberId && (
+                <p className="text-sm text-red-500">{errors.subscriberId}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Format: {'{'}ChitID{'}'}/{'{'}SlotNumber{'}'} (e.g., SRC01NS/01, SRC03MC/15)
+              </p>
             </div>
           </div>
           <div className="flex justify-end gap-2">

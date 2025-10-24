@@ -1,9 +1,13 @@
-import { prisma, generateRegistrationId } from './lib/database';
+import { prisma, generateRegistrationId, getOrCreateOrganizationUser, generateSubscriberIdWithNumber } from './lib/database';
 import { hashPassword } from './lib/auth';
 import { USER_ROLES } from './lib/constants';
 
 async function main() {
   console.log('🌱 Starting production seed...');
+
+  // Create organization user first (for automatic chit scheme subscriptions)
+  const orgUser = await getOrCreateOrganizationUser();
+  console.log(`✅ Organization user ready: ${orgUser.registrationId}`);
 
   let admin: any = null;
 
@@ -214,12 +218,18 @@ async function main() {
   console.log(`📧 Email: ${admin?.email || 'admin@sriruschichits.com'}`);
   console.log(`🔑 Password: Admin@2025!`);
   console.log(`🆔 Registration ID: ${admin?.registrationId || 'N/A'}`);
+  console.log('\n📋 Organization User:');
+  console.log(`🏢 Name: ${orgUser.firstName} ${orgUser.lastName}`);
+  console.log(`🆔 Registration ID: ${orgUser.registrationId}`);
+  console.log('📝 Note: Organization user available for manual subscription assignment');
   console.log('\n📊 Created:');
   console.log(`- 1 admin user`);
+  console.log(`- 1 organization user`);
   console.log(`- 15 chit schemes (All Club Member types)`);
   console.log(`- 1 audit log entry`);
   console.log('\n⚠️  IMPORTANT:');
   console.log('- Change the admin password immediately after first login');
+  console.log('- Manually create subscriptions as needed (including for organization)');
   console.log('- Store credentials securely');
   console.log('- Remove or secure this seed file after deployment');
 }

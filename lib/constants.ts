@@ -20,6 +20,10 @@ export const PAYOUT_STATUS = {
 
 export const COMPANY_NAME = 'Sri Rushi Chits';
 
+// Organization user registration ID - the first user created for the system
+// This user will automatically get the first subscription slot in every chit scheme
+export const ORGANIZATION_REGISTRATION_ID = 'SRC-00000';
+
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 export type SubscriptionStatus = typeof SUBSCRIPTION_STATUS[keyof typeof SUBSCRIPTION_STATUS];
 export type PayoutStatus = typeof PAYOUT_STATUS[keyof typeof PAYOUT_STATUS];

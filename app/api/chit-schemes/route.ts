@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/database';
+import { prisma, getOrCreateOrganizationUser } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { chitSchemeSchema } from '@/lib/validations';
 import logger from '@/lib/logger';
@@ -159,12 +159,26 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Get or create organization user
+    const orgUser = await getOrCreateOrganizationUser();
+
+    // Automatically create subscription for organization at slot 01
+    const orgSubscriberId = `${newScheme.chitId}/01`;
+    await prisma.chitSubscription.create({
+      data: {
+        subscriberId: orgSubscriberId,
+        userId: orgUser.id,
+        chitSchemeId: newScheme.id,
+        status: 'ACTIVE',
+      },
+    });
+
     // Create audit log
     await prisma.auditLog.create({
       data: {
         userId: adminUser.id,
         action: 'CHIT_SCHEME_CREATE',
-        details: `Created chit scheme: ${newScheme.chitId}`,
+        details: `Created chit scheme: ${newScheme.chitId} with organization subscription ${orgSubscriberId}`,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       },
