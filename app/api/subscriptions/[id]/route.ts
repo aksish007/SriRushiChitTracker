@@ -67,18 +67,73 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { status } = body;
+    const { status, subscriberId } = body;
 
-    if (!status || !['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(status)) {
+    // Validate status if provided
+    if (status && !['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    // Validate subscriber ID if provided
+    if (subscriberId !== undefined) {
+      if (!subscriberId || !subscriberId.trim()) {
+        return NextResponse.json({ error: 'Subscriber ID cannot be empty' }, { status: 400 });
+      }
+
+      const { id } = await params;
+      
+      // Get the current subscription to check the chit scheme
+      const currentSubscription = await prisma.chitSubscription.findUnique({
+        where: { id },
+        select: { chitSchemeId: true, subscriberId: true },
+      });
+
+      if (!currentSubscription) {
+        return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+      }
+
+      // Check if new subscriber ID already exists in the same chit scheme (excluding current subscription)
+      const existingSubscription = await prisma.chitSubscription.findFirst({
+        where: {
+          chitSchemeId: currentSubscription.chitSchemeId,
+          subscriberId: subscriberId.trim(),
+          id: { not: id },
+        },
+      });
+
+      if (existingSubscription) {
+        return NextResponse.json(
+          { error: `Subscriber ID ${subscriberId} already exists in this chit scheme` },
+          { status: 400 }
+        );
+      }
+    }
+
     const { id } = await params;
+    
+    // Build update data
+    const updateData: any = {};
+    if (status) {
+      updateData.status = status;
+      updateData.completedAt = status === 'COMPLETED' ? new Date() : null;
+    }
+    if (subscriberId !== undefined) {
+      updateData.subscriberId = subscriberId.trim();
+    }
+
     const updatedSubscription = await prisma.chitSubscription.update({
       where: { id },
-      data: {
-        status,
-        completedAt: status === 'COMPLETED' ? new Date() : null,
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            registrationId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        chitScheme: true,
       },
     });
 

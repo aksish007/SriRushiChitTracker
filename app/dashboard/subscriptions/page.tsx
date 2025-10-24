@@ -118,6 +118,7 @@ export default function SubscriptionsPage() {
   });
   const [editForm, setEditForm] = useState({
     status: '',
+    subscriberId: '',
   });
   const [bulkImportData, setBulkImportData] = useState({
     userId: '',
@@ -253,12 +254,23 @@ export default function SubscriptionsPage() {
     setSelectedSubscription(subscription);
     setEditForm({
       status: subscription.status,
+      subscriberId: subscription.subscriberId,
     });
     setShowEditDialog(true);
   };
 
   const handleUpdateSubscription = async () => {
     if (!selectedSubscription) return;
+
+    // Validate subscriber ID
+    if (!editForm.subscriberId || !editForm.subscriberId.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Subscriber ID is required',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       const response = await fetch(`/api/subscriptions/${selectedSubscription.id}`, {
@@ -1112,10 +1124,22 @@ export default function SubscriptionsPage() {
             <DialogHeader>
               <DialogTitle>Edit Subscription</DialogTitle>
               <DialogDescription>
-                Update subscription status
+                Update subscription details
               </DialogDescription>
             </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="subscriberId">Subscriber ID *</Label>
+              <Input
+                id="subscriberId"
+                value={editForm.subscriberId}
+                onChange={(e) => setEditForm({ ...editForm, subscriberId: e.target.value })}
+                placeholder="e.g., SRC01NS/01"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Format: {'{'}ChitID{'}'}/{'{'}SlotNumber{'}'} (e.g., SRC01NS/01)
+              </p>
+            </div>
             <div>
               <Label htmlFor="status">Status</Label>
               <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
