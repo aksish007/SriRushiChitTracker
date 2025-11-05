@@ -52,7 +52,9 @@ interface Subscription {
   id: string;
   subscriberId: string;
   status: string;
+  userId?: string;
   user: {
+    id?: string;
     registrationId: string;
     firstName: string;
     lastName: string;
@@ -106,7 +108,26 @@ export default function PayoutsPage() {
   const [referralInfo, setReferralInfo] = useState<{
     directReferralCount: number;
     totalDownlineCount: number;
-    directReferrals: Array<{ id: string; registrationId: string; firstName: string; lastName: string; }>;
+    directReferrals: Array<{
+      id: string;
+      registrationId: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      subscriptions: Array<{
+        id: string;
+        subscriberId: string;
+        status: string;
+        joinedAt: string;
+        chitScheme: {
+          chitId: string;
+          name: string;
+          amount: number;
+          duration: number;
+        };
+      }>;
+    }>;
     downlineByLevel: Array<{ level: number; count: number; }>;
   } | null>(null);
   const [loadingReferralInfo, setLoadingReferralInfo] = useState(false);
@@ -541,12 +562,29 @@ export default function PayoutsPage() {
       
       const countData = await countResponse.json();
       
-      // Fetch direct referrals list - we'll get them from the user's referrals relationship
-      // For now, we'll just show the count. If needed, we can fetch the full user list and filter client-side
-      let directReferrals: Array<{ id: string; registrationId: string; firstName: string; lastName: string; }> = [];
+      // Fetch direct referrals with detailed information including subscriptions
+      let directReferrals: Array<{
+        id: string;
+        registrationId: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        subscriptions: Array<{
+          id: string;
+          subscriberId: string;
+          status: string;
+          joinedAt: string;
+          chitScheme: {
+            chitId: string;
+            name: string;
+            amount: number;
+            duration: number;
+          };
+        }>;
+      }> = [];
       
-      // Fetch all users and filter for direct referrals (client-side filtering)
-      // Note: In a production app, you'd want a dedicated API endpoint for this
+      // Fetch all users with subscriptions and filter for direct referrals
       try {
         const allUsersResponse = await fetch(`/api/users?limit=1000`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -554,7 +592,7 @@ export default function PayoutsPage() {
         
         if (allUsersResponse.ok) {
           const allUsersData = await allUsersResponse.json();
-          // Filter for direct referrals (users whose referredBy matches this userId)
+          // Filter for direct referrals and map with subscription details
           directReferrals = allUsersData.users
             ?.filter((u: any) => u.referredBy === userId)
             ?.map((u: any) => ({
@@ -562,6 +600,20 @@ export default function PayoutsPage() {
               registrationId: u.registrationId,
               firstName: u.firstName,
               lastName: u.lastName,
+              email: u.email || 'N/A',
+              phone: u.phone || 'N/A',
+              subscriptions: (u.subscriptions || []).map((sub: any) => ({
+                id: sub.id,
+                subscriberId: sub.subscriberId,
+                status: sub.status,
+                joinedAt: sub.joinedAt,
+                chitScheme: {
+                  chitId: sub.chitScheme.chitId,
+                  name: sub.chitScheme.name,
+                  amount: Number(sub.chitScheme.amount),
+                  duration: sub.chitScheme.duration,
+                },
+              })),
             })) || [];
         }
       } catch (err) {
@@ -761,8 +813,15 @@ export default function PayoutsPage() {
                           size="sm"
                           className="h-6 w-6 p-0 hover:bg-blue-100"
                           onClick={() => {
-                            if (payoutCalculationData.subscription.user?.id) {
-                              fetchReferralInfo(payoutCalculationData.subscription.user.id);
+                            const userId = payoutCalculationData.subscription.userId || payoutCalculationData.subscription.user?.id;
+                            if (userId) {
+                              fetchReferralInfo(userId);
+                            } else {
+                              toast({
+                                title: 'Error',
+                                description: 'Unable to fetch user ID for referral information',
+                                variant: 'destructive',
+                              });
                             }
                           }}
                           title="View detailed referral information"
@@ -779,8 +838,15 @@ export default function PayoutsPage() {
                           size="sm"
                           className="h-6 w-6 p-0 hover:bg-blue-100"
                           onClick={() => {
-                            if (payoutCalculationData.subscription.user?.id) {
-                              fetchReferralInfo(payoutCalculationData.subscription.user.id);
+                            const userId = payoutCalculationData.subscription.userId || payoutCalculationData.subscription.user?.id;
+                            if (userId) {
+                              fetchReferralInfo(userId);
+                            } else {
+                              toast({
+                                title: 'Error',
+                                description: 'Unable to fetch user ID for referral information',
+                                variant: 'destructive',
+                              });
                             }
                           }}
                           title="View detailed referral information"
@@ -1491,16 +1557,74 @@ export default function PayoutsPage() {
               {referralInfo.directReferrals.length > 0 && (
                 <div>
                   <Label className="text-lg font-semibold mb-3">Direct Referrals ({referralInfo.directReferrals.length})</Label>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
                     {referralInfo.directReferrals.map((referral) => (
-                      <div key={referral.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{referral.firstName} {referral.lastName}</div>
-                            <div className="text-sm text-muted-foreground font-mono">{referral.registrationId}</div>
+                      <Card key={referral.id} className="border-2 border-gray-200">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            {/* User Basic Info */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Name</Label>
+                                <div className="font-medium text-sm">{referral.firstName} {referral.lastName}</div>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Registration ID</Label>
+                                <div className="text-sm font-mono">{referral.registrationId}</div>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Email</Label>
+                                <div className="text-sm">{referral.email}</div>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Phone</Label>
+                                <div className="text-sm font-mono">{referral.phone}</div>
+                              </div>
+                            </div>
+
+                            {/* Subscriptions */}
+                            <div>
+                              <Label className="text-xs text-muted-foreground mb-2 block">
+                                Subscriptions ({referral.subscriptions.length})
+                              </Label>
+                              {referral.subscriptions.length > 0 ? (
+                                <div className="space-y-2">
+                                  {referral.subscriptions.map((subscription) => (
+                                    <div key={subscription.id} className="p-2 bg-blue-50 rounded border border-blue-200">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <div className="font-medium text-sm text-blue-900">{subscription.chitScheme.name}</div>
+                                        <Badge className={subscription.status === 'ACTIVE' ? 'bg-green-100 text-green-800 text-xs' : 'bg-gray-100 text-gray-800 text-xs'}>
+                                          {subscription.status}
+                                        </Badge>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                          <span className="text-blue-600 font-medium">Chit ID:</span>
+                                          <span className="ml-1 text-blue-900 font-mono">{subscription.chitScheme.chitId}</span>
+                                        </div>
+                                        <div>
+                                          <span className="text-blue-600 font-medium">Sub ID:</span>
+                                          <span className="ml-1 text-blue-900 font-mono">{subscription.subscriberId}</span>
+                                        </div>
+                                        <div>
+                                          <span className="text-blue-600 font-medium">Amount:</span>
+                                          <span className="ml-1 text-blue-900">₹{subscription.chitScheme.amount.toLocaleString()}</span>
+                                        </div>
+                                        <div>
+                                          <span className="text-blue-600 font-medium">Joined:</span>
+                                          <span className="ml-1 text-blue-900">{new Date(subscription.joinedAt).toLocaleDateString()}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-muted-foreground italic">No active subscriptions</div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 </div>

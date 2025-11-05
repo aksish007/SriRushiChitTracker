@@ -24,6 +24,7 @@ interface Subscription {
   subscriberId: string;
   status: string;
   user: {
+    id?: string;
     firstName: string;
     lastName: string;
     registrationId: string;

@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       subscription: {
         id: subscription.id,
         subscriberId: subscription.subscriberId,
+        userId: subscription.userId,
         user: subscription.user,
         chitScheme: subscription.chitScheme,
       },

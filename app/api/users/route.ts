@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
           role: true,
           isActive: true,
           createdAt: true,
+          referredBy: true,
           referrals: {
             select: {
               id: true,
