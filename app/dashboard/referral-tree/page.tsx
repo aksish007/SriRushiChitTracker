@@ -24,6 +24,12 @@ interface ReferralNode {
   email: string;
   phone: string;
   level: number;
+  referredBy?: {
+    id: string;
+    registrationId: string;
+    firstName: string;
+    lastName: string;
+  };
   children: ReferralNode[];
   subscriptionsCount: number;
   totalPayouts: number;
@@ -201,6 +207,8 @@ export default function ReferralTreePage() {
         height: treeContainer.scrollHeight,
         windowWidth: treeContainer.scrollWidth,
         windowHeight: treeContainer.scrollHeight,
+        logging: false,
+        removeContainer: false,
       });
 
       // Restore original zoom
@@ -230,10 +238,16 @@ export default function ReferralTreePage() {
             <title>Referral Tree - ${referralTree.firstName} ${referralTree.lastName}</title>
             <meta charset="utf-8">
             <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
               body {
                 font-family: Arial, sans-serif;
                 margin: 0;
-                padding: 20px;
+                padding: 0;
                 color: #333;
                 background: white;
                 line-height: 1.4;
@@ -241,47 +255,77 @@ export default function ReferralTreePage() {
               
               .print-header {
                 text-align: center;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
                 border-bottom: 3px solid #3b82f6;
-                padding-bottom: 20px;
+                padding: 15px 20px;
                 page-break-after: avoid;
+                page-break-inside: avoid;
               }
               
               .print-header h1 {
                 color: #3b82f6;
                 margin: 0 0 10px 0;
-                font-size: 32px;
+                font-size: 28px;
                 font-weight: bold;
               }
               
               .print-header p {
-                margin: 5px 0;
+                margin: 3px 0;
                 color: #666;
-                font-size: 16px;
+                font-size: 14px;
+              }
+              
+              .tree-container {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                page-break-inside: avoid;
               }
               
               .tree-image {
                 width: 100%;
                 height: auto;
                 max-width: 100%;
+                display: block;
                 border: 1px solid #e5e7eb;
                 border-radius: 8px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                page-break-inside: avoid;
+                page-break-after: auto;
               }
               
               @media print {
+                @page {
+                  size: A4 landscape;
+                  margin: 10mm;
+                }
+                
                 body { 
                   margin: 0; 
-                  padding: 15px;
+                  padding: 0;
+                  width: 100%;
                 }
+                
                 .print-header { 
                   page-break-after: avoid; 
-                  margin-bottom: 20px;
+                  page-break-inside: avoid;
+                  margin-bottom: 15px;
+                  padding: 10px 0;
                 }
+                
+                .tree-container {
+                  page-break-inside: avoid;
+                  width: 100%;
+                  overflow: visible;
+                }
+                
                 .tree-image {
                   page-break-inside: avoid;
+                  page-break-after: auto;
                   max-width: 100%;
                   height: auto;
+                  width: 100%;
+                  object-fit: contain;
                 }
               }
             </style>
@@ -383,6 +427,13 @@ export default function ReferralTreePage() {
                   <div className="text-xs text-muted-foreground font-mono">
                     {node.registrationId}
                   </div>
+                  {node.referredBy && (
+                    <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">
+                      <span className="font-medium">Referred by:</span> {node.referredBy.firstName} {node.referredBy.lastName}
+                      <br />
+                      <span className="text-[10px] font-mono text-blue-600">({node.referredBy.registrationId})</span>
+                    </div>
+                  )}
                   <Badge variant="outline" className="text-xs">
                     Step {node.level}
                   </Badge>
@@ -422,16 +473,25 @@ export default function ReferralTreePage() {
         {/* Children with Proper Tree Layout */}
         {node.children.length > 0 && isExpanded && (
           <div className="relative w-full">
-            {/* Vertical connection line from parent to children */}
+            {/* Vertical connection line from parent to children with arrow */}
             {showConnections && (
-              <div className="absolute top-0 left-1/2 w-px h-4 bg-gradient-to-b from-primary to-transparent transform -translate-x-1/2"></div>
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                <div className="w-px h-4 bg-gradient-to-b from-primary to-primary/50"></div>
+                {/* Arrow pointing down */}
+                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-primary"></div>
+              </div>
             )}
             
             {/* Children Container */}
             <div className="mt-4 relative">
               {node.children.length === 1 ? (
                 // Single child - center alignment
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center">
+                  {showConnections && (
+                    <div className="text-xs text-primary font-medium mb-1 px-2 py-0.5 bg-primary/10 rounded">
+                      ↓ Referred
+                    </div>
+                  )}
                   {renderTreeNode(node.children[0], level + 1)}
                 </div>
               ) : (
@@ -445,10 +505,13 @@ export default function ReferralTreePage() {
                   {/* Children flex container with responsive wrapping */}
                   <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-4">
                     {node.children.map((child, index) => (
-                      <div key={child.id} className="relative flex-shrink-0" style={{ minWidth: '200px', maxWidth: '280px' }}>
-                        {/* Vertical connection line from horizontal line to each child */}
+                      <div key={child.id} className="relative flex-shrink-0 flex flex-col items-center" style={{ minWidth: '200px', maxWidth: '280px' }}>
+                        {/* Vertical connection line from horizontal line to each child with arrow */}
                         {showConnections && (
-                          <div className="absolute top-0 left-1/2 w-px h-4 bg-gradient-to-b from-primary to-transparent transform -translate-x-1/2"></div>
+                          <>
+                            <div className="absolute top-0 left-1/2 w-px h-4 bg-gradient-to-b from-primary to-primary/50 transform -translate-x-1/2"></div>
+                            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-primary"></div>
+                          </>
                         )}
                         {renderTreeNode(child, level + 1)}
                       </div>

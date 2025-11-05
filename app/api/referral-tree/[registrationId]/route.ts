@@ -13,6 +13,12 @@ interface ReferralNode {
   email: string;
   phone: string;
   level: number;
+  referredBy?: {
+    id: string;
+    registrationId: string;
+    firstName: string;
+    lastName: string;
+  };
   children: ReferralNode[];
   subscriptionsCount: number;
   totalPayouts: number;
@@ -37,6 +43,15 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
       lastName: true,
       email: true,
       phone: true,
+      referredBy: true,
+      referrer: {
+        select: {
+          id: true,
+          registrationId: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
       subscriptions: {
         where: { status: 'ACTIVE' },
         select: { 
@@ -80,6 +95,12 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
       email: user.email,
       phone: user.phone,
       level: level + 1,
+      referredBy: user.referrer ? {
+        id: user.referrer.id,
+        registrationId: user.referrer.registrationId,
+        firstName: user.referrer.firstName,
+        lastName: user.referrer.lastName,
+      } : undefined,
       children,
       subscriptionsCount: user.subscriptions.length,
       totalPayouts,
