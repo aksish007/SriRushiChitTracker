@@ -34,6 +34,10 @@ interface Subscription {
     firstName: string;
     lastName: string;
     email: string;
+    nominees?: Array<{
+      age: number | null;
+      dateOfBirth: string | null;
+    }>;
   };
   chitScheme: {
     chitId: string;
@@ -1065,6 +1069,18 @@ export default function SubscriptionsPage() {
                   <Label>Registration ID</Label>
                   <p className="font-mono text-sm">{selectedSubscription.user.registrationId}</p>
                 </div>
+                {selectedSubscription.user.nominees && selectedSubscription.user.nominees.length > 0 && selectedSubscription.user.nominees[0].age && (
+                  <div>
+                    <Label>Age</Label>
+                    <p>{selectedSubscription.user.nominees[0].age} years</p>
+                  </div>
+                )}
+                {selectedSubscription.user.nominees && selectedSubscription.user.nominees.length > 0 && selectedSubscription.user.nominees[0].dateOfBirth && (
+                  <div>
+                    <Label>Date of Birth</Label>
+                    <p>{new Date(selectedSubscription.user.nominees[0].dateOfBirth).toLocaleDateString()}</p>
+                  </div>
+                )}
                 <div>
                   <Label>Chit Scheme</Label>
                   <p>{selectedSubscription.chitScheme.name} ({selectedSubscription.chitScheme.chitId})</p>

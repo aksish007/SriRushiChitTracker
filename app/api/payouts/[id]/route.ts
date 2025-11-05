@@ -30,6 +30,12 @@ export async function GET(
             firstName: true,
             lastName: true,
             email: true,
+            nominees: {
+              select: {
+                age: true,
+                dateOfBirth: true,
+              },
+            },
           },
         },
         subscription: {

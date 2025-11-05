@@ -357,7 +357,7 @@ export default function ReferralTreePage() {
         {/* Node Card */}
         <div className={`relative transition-all duration-${animationSpeed} transform hover:scale-105`}>
           <Card 
-            className={`w-64 mb-4 cursor-pointer transition-all duration-300 ${
+            className={`w-full max-w-[280px] min-w-[200px] mb-4 cursor-pointer transition-all duration-300 ${
               isHighlighted ? 'ring-4 ring-primary shadow-glow' : 'shadow-glow border-2 border-primary/20'
             } hover:shadow-glow-blue`}
             onClick={() => handleNodeClick(node)}
@@ -435,17 +435,17 @@ export default function ReferralTreePage() {
                   {renderTreeNode(node.children[0], level + 1)}
                 </div>
               ) : (
-                // Multiple children - horizontal layout with proper connections
+                // Multiple children - responsive flex layout with wrapping
                 <div className="relative">
                   {/* Horizontal connection line connecting all children */}
                   {showConnections && node.children.length > 1 && (
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary/30 via-primary to-primary/30"></div>
                   )}
                   
-                  {/* Children grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                  {/* Children flex container with responsive wrapping */}
+                  <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-4">
                     {node.children.map((child, index) => (
-                      <div key={child.id} className="relative">
+                      <div key={child.id} className="relative flex-shrink-0" style={{ minWidth: '200px', maxWidth: '280px' }}>
                         {/* Vertical connection line from horizontal line to each child */}
                         {showConnections && (
                           <div className="absolute top-0 left-1/2 w-px h-4 bg-gradient-to-b from-primary to-transparent transform -translate-x-1/2"></div>
@@ -668,15 +668,17 @@ export default function ReferralTreePage() {
             <div 
               id="referral-tree-container"
               ref={containerRef}
-              className="overflow-auto"
+              className="overflow-auto max-h-[calc(100vh-300px)]"
               style={{ 
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'top center',
                 transition: 'transform 0.3s ease'
               }}
             >
-              <div className="min-w-max p-4">
-                {renderTreeNode(referralTree)}
+              <div className="p-4 w-full flex justify-center">
+                <div className="w-full max-w-full">
+                  {renderTreeNode(referralTree)}
+                </div>
               </div>
             </div>
           </CardContent>

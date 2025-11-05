@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown, Calculator } from 'lucide-react';
+import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown, Calculator, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface Payout {
@@ -33,6 +33,10 @@ interface Payout {
     firstName: string;
     lastName: string;
     email: string;
+    nominees?: Array<{
+      age: number | null;
+      dateOfBirth: string | null;
+    }>;
   };
   subscription: {
     subscriberId: string;
@@ -98,6 +102,14 @@ export default function PayoutsPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMarkPaidDialog, setShowMarkPaidDialog] = useState(false);
   const [payoutToMarkPaid, setPayoutToMarkPaid] = useState<string | null>(null);
+  const [showReferralInfoDialog, setShowReferralInfoDialog] = useState(false);
+  const [referralInfo, setReferralInfo] = useState<{
+    directReferralCount: number;
+    totalDownlineCount: number;
+    directReferrals: Array<{ id: string; registrationId: string; firstName: string; lastName: string; }>;
+    downlineByLevel: Array<{ level: number; count: number; }>;
+  } | null>(null);
+  const [loadingReferralInfo, setLoadingReferralInfo] = useState(false);
   const [showBulkMarkPaidDialog, setShowBulkMarkPaidDialog] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState<Payout | null>(null);
   const [pagination, setPagination] = useState({
@@ -515,6 +527,73 @@ export default function PayoutsPage() {
     }
   };
 
+  const fetchReferralInfo = async (userId: string) => {
+    setLoadingReferralInfo(true);
+    try {
+      // Fetch referral count
+      const countResponse = await fetch(`/api/users/${userId}/referral-count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!countResponse.ok) {
+        throw new Error('Failed to fetch referral count');
+      }
+      
+      const countData = await countResponse.json();
+      
+      // Fetch direct referrals list - we'll get them from the user's referrals relationship
+      // For now, we'll just show the count. If needed, we can fetch the full user list and filter client-side
+      let directReferrals: Array<{ id: string; registrationId: string; firstName: string; lastName: string; }> = [];
+      
+      // Fetch all users and filter for direct referrals (client-side filtering)
+      // Note: In a production app, you'd want a dedicated API endpoint for this
+      try {
+        const allUsersResponse = await fetch(`/api/users?limit=1000`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (allUsersResponse.ok) {
+          const allUsersData = await allUsersResponse.json();
+          // Filter for direct referrals (users whose referredBy matches this userId)
+          directReferrals = allUsersData.users
+            ?.filter((u: any) => u.referredBy === userId)
+            ?.map((u: any) => ({
+              id: u.id,
+              registrationId: u.registrationId,
+              firstName: u.firstName,
+              lastName: u.lastName,
+            })) || [];
+        }
+      } catch (err) {
+        // If fetching all users fails, just show count without list
+        console.warn('Could not fetch direct referrals list:', err);
+      }
+      
+      // Calculate downline by level (simplified - we'll show total and direct only)
+      const downlineByLevel = [
+        { level: 1, count: countData.directReferralCount },
+        { level: 2, count: Math.max(0, countData.totalDownlineCount - countData.directReferralCount) },
+      ];
+      
+      setReferralInfo({
+        directReferralCount: countData.directReferralCount,
+        totalDownlineCount: countData.totalDownlineCount,
+        directReferrals,
+        downlineByLevel,
+      });
+      setShowReferralInfoDialog(true);
+    } catch (error) {
+      console.error('Error fetching referral info:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch referral information',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingReferralInfo(false);
+    }
+  };
+
   const handleSubscriptionSelect = async (subscription: Subscription) => {
     setCalculatingPayout(true);
     try {
@@ -673,13 +752,41 @@ export default function PayoutsPage() {
                         <span className="text-muted-foreground">Base Rate:</span>
                         <span className="ml-2 font-medium text-blue-700">₹{payoutCalculationData.baseRate}</span>
                       </div>
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Direct Referrals:</span>
-                        <span className="ml-2 font-medium text-blue-700">{payoutCalculationData.referralStats.directReferralCount}</span>
+                        <span className="font-medium text-blue-700">{payoutCalculationData.referralStats.directReferralCount}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-blue-100"
+                          onClick={() => {
+                            if (payoutCalculationData.subscription.user?.id) {
+                              fetchReferralInfo(payoutCalculationData.subscription.user.id);
+                            }
+                          }}
+                          title="View detailed referral information"
+                        >
+                          <Info className="h-4 w-4 text-blue-600" />
+                        </Button>
                       </div>
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Total Downline:</span>
-                        <span className="ml-2 font-medium text-blue-700">{payoutCalculationData.referralStats.totalDownlineCount}</span>
+                        <span className="font-medium text-blue-700">{payoutCalculationData.referralStats.totalDownlineCount}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-blue-100"
+                          onClick={() => {
+                            if (payoutCalculationData.subscription.user?.id) {
+                              fetchReferralInfo(payoutCalculationData.subscription.user.id);
+                            }
+                          }}
+                          title="View detailed referral information"
+                        >
+                          <Info className="h-4 w-4 text-blue-600" />
+                        </Button>
                       </div>
                     </div>
                     <div className="pt-2 border-t border-blue-200">
@@ -1204,6 +1311,18 @@ export default function PayoutsPage() {
                   <Label>Email</Label>
                   <p>{selectedPayout.user.email}</p>
                 </div>
+                {selectedPayout.user.nominees && selectedPayout.user.nominees.length > 0 && selectedPayout.user.nominees[0].age && (
+                  <div>
+                    <Label>Age</Label>
+                    <p>{selectedPayout.user.nominees[0].age} years</p>
+                  </div>
+                )}
+                {selectedPayout.user.nominees && selectedPayout.user.nominees.length > 0 && selectedPayout.user.nominees[0].dateOfBirth && (
+                  <div>
+                    <Label>Date of Birth</Label>
+                    <p>{new Date(selectedPayout.user.nominees[0].dateOfBirth).toLocaleDateString()}</p>
+                  </div>
+                )}
                 <div>
                   <Label>Amount</Label>
                   <p>₹{Number(selectedPayout.amount).toLocaleString()}</p>
@@ -1328,6 +1447,85 @@ export default function PayoutsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Referral Info Dialog */}
+      <Dialog open={showReferralInfoDialog} onOpenChange={setShowReferralInfoDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Detailed Referral Information
+            </DialogTitle>
+            <DialogDescription>
+              View comprehensive referral statistics and downline details
+            </DialogDescription>
+          </DialogHeader>
+          {loadingReferralInfo ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-2">Loading referral information...</span>
+            </div>
+          ) : referralInfo ? (
+            <div className="space-y-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="border-2 border-primary/20">
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-primary">{referralInfo.directReferralCount}</div>
+                      <div className="text-sm text-muted-foreground mt-1">Direct Referrals</div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-2 border-success/20">
+                  <CardContent className="p-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-success">{referralInfo.totalDownlineCount}</div>
+                      <div className="text-sm text-muted-foreground mt-1">Total Downline</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Direct Referrals List */}
+              {referralInfo.directReferrals.length > 0 && (
+                <div>
+                  <Label className="text-lg font-semibold mb-3">Direct Referrals ({referralInfo.directReferrals.length})</Label>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {referralInfo.directReferrals.map((referral) => (
+                      <div key={referral.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{referral.firstName} {referral.lastName}</div>
+                            <div className="text-sm text-muted-foreground font-mono">{referral.registrationId}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Downline by Level */}
+              <div>
+                <Label className="text-lg font-semibold mb-3">Downline Breakdown</Label>
+                <div className="space-y-2">
+                  {referralInfo.downlineByLevel.map((level) => (
+                    <div key={level.level} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <span className="font-medium">Level {level.level}</span>
+                      <Badge className="bg-blue-600 text-white">{level.count} {level.count === 1 ? 'user' : 'users'}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-8 text-muted-foreground">
+              No referral information available
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Mark as Paid Confirmation Dialog */}
       <AlertDialog open={showBulkMarkPaidDialog} onOpenChange={setShowBulkMarkPaidDialog}>

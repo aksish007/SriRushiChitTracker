@@ -956,6 +956,18 @@ export default function UsersPage() {
                   <Label>Phone</Label>
                   <p>{selectedUser.phone}</p>
                 </div>
+                {selectedUser.nominees && selectedUser.nominees.length > 0 && selectedUser.nominees[0].age && (
+                  <div>
+                    <Label>Age</Label>
+                    <p>{selectedUser.nominees[0].age} years</p>
+                  </div>
+                )}
+                {selectedUser.nominees && selectedUser.nominees.length > 0 && selectedUser.nominees[0].dateOfBirth && (
+                  <div>
+                    <Label>Date of Birth</Label>
+                    <p>{new Date(selectedUser.nominees[0].dateOfBirth).toLocaleDateString()}</p>
+                  </div>
+                )}
                 <div>
                   <Label>Role</Label>
                   <Badge className={getRoleColor(selectedUser.role)}>

@@ -55,14 +55,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if referrer has less than 3 direct referrals
-      if (referrer.referrals.length >= 3) {
-        return NextResponse.json(
-          { error: 'Referrer has reached maximum referral limit (3)' },
-          { status: 400 }
-        );
-      }
-
       referrerId = referrer.id;
     }
 

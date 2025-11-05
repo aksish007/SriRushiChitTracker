@@ -70,11 +70,6 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          if (referrer.referrals.length >= 3) {
-            errors.push(`Row ${i + 2}: Referrer ${userData.referredBy} has reached maximum referral limit`);
-            continue;
-          }
-
           referrerId = referrer.id;
         }
 

@@ -30,6 +30,12 @@ export async function GET(
             firstName: true,
             lastName: true,
             email: true,
+            nominees: {
+              select: {
+                age: true,
+                dateOfBirth: true,
+              },
+            },
           },
         },
         chitScheme: true,
@@ -131,6 +137,12 @@ export async function PUT(
             firstName: true,
             lastName: true,
             email: true,
+            nominees: {
+              select: {
+                age: true,
+                dateOfBirth: true,
+              },
+            },
           },
         },
         chitScheme: true,
