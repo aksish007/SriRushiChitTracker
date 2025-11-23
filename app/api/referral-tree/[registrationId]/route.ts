@@ -92,7 +92,7 @@ async function buildReferralTree(userId: string, level: number = 0, maxLevel: nu
       registrationId: user.registrationId,
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email,
+      email: user.email || '',
       phone: user.phone,
       level: level + 1,
       referredBy: user.referrer ? {
@@ -182,7 +182,7 @@ export async function GET(
       registrationId: targetUser.registrationId,
       firstName: targetUser.firstName,
       lastName: targetUser.lastName,
-      email: targetUser.email,
+      email: targetUser.email || '',
       phone: targetUser.phone,
       level: 0,
       children,

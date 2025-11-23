@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
         lastName: user.lastName,
         role: user.role,
         phone: user.phone,
-        address: user.address,
       },
     });
   } catch (error: any) {

@@ -24,6 +24,9 @@ const nextConfig = {
     // Disable features that require server-side rendering
   },
   
+  // Transpile d3 for Next.js compatibility
+  transpilePackages: ['d3'],
+  
   // Configure for IIS hosting (root deployment)
   // assetPrefix: process.env.NODE_ENV === 'production' ? '/ChitReferralTracker' : '',
   // basePath: process.env.NODE_ENV === 'production' ? '/ChitReferralTracker' : '',
@@ -42,6 +45,14 @@ const nextConfig = {
         net: false,
         tls: false,
       };
+    }
+    // Ensure d3 is properly resolved
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    };
+    // Externalize d3 for client-side only (if needed)
+    if (!isServer) {
+      config.externals = config.externals || [];
     }
     return config;
   },
