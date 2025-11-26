@@ -31,7 +31,9 @@ interface ReferralNode {
   }>;
 }
 
-async function buildReferralTree(userId: string, level: number = 0, maxLevel: number = 5): Promise<ReferralNode[]> {
+async function buildReferralTree(userId: string, level: number = 0, maxLevel: number = 1000): Promise<ReferralNode[]> {
+  // Safety limit to prevent infinite loops (1000 levels should be more than enough)
+  // The function will naturally stop when there are no more children
   if (level > maxLevel) return [];
 
   const users = await prisma.user.findMany({
@@ -167,7 +169,8 @@ export async function GET(
       );
     }
 
-    const children = await buildReferralTree(targetUser.id);
+    // Build tree with no artificial limit - will traverse all levels dynamically
+    const children = await buildReferralTree(targetUser.id, 0, 1000);
     const totalPayouts = targetUser.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
     const chitGroups = targetUser.subscriptions.map(sub => ({
       chitId: sub.chitScheme.chitId,
