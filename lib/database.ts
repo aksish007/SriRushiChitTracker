@@ -128,3 +128,93 @@ export async function getOrCreateOrganizationUser() {
 
   return orgUser;
 }
+
+/**
+ * Builds search conditions for user queries that support full names with spaces
+ * @param searchQuery - The search query string (can contain spaces for full names)
+ * @param includeEmail - Whether to include email in the search (default: false)
+ * @returns An array of Prisma where conditions for OR clause
+ */
+export async function buildUserSearchConditions(
+  searchQuery: string,
+  includeEmail: boolean = false
+): Promise<any[]> {
+  if (!searchQuery || searchQuery.trim().length < 2) {
+    return [];
+  }
+
+  const trimmedQuery = searchQuery.trim();
+  const queryParts = trimmedQuery.split(/\s+/).filter(part => part.length > 0);
+  
+  // Build base search conditions
+  const searchConditions: any[] = [
+    { registrationId: { contains: trimmedQuery } },
+    { firstName: { contains: trimmedQuery } },
+    { lastName: { contains: trimmedQuery } },
+  ];
+
+  if (includeEmail) {
+    searchConditions.push({ email: { contains: trimmedQuery } });
+  }
+
+  // If query has multiple parts (spaces), check for full name matches
+  if (queryParts.length > 1) {
+    // Check if first part matches firstName and remaining parts match lastName
+    const firstNamePart = queryParts[0];
+    const lastNamePart = queryParts.slice(1).join(' ');
+    
+    searchConditions.push({
+      AND: [
+        { firstName: { contains: firstNamePart } },
+        { lastName: { contains: lastNamePart } },
+      ]
+    });
+
+    // Also check if query matches lastName + firstName (reverse order) for 2-part queries
+    if (queryParts.length === 2) {
+      searchConditions.push({
+        AND: [
+          { firstName: { contains: queryParts[1] } },
+          { lastName: { contains: queryParts[0] } },
+        ]
+      });
+    }
+
+    // For queries with 3+ parts, check if first part matches firstName and last part matches lastName
+    if (queryParts.length >= 3) {
+      searchConditions.push({
+        AND: [
+          { firstName: { contains: queryParts[0] } },
+          { lastName: { contains: queryParts[queryParts.length - 1] } },
+        ]
+      });
+    }
+
+    // Use raw SQL to search for concatenated firstName + ' ' + lastName
+    // This handles cases where the full name is stored across both fields
+    try {
+      const searchPattern = `%${trimmedQuery}%`;
+      const rawResults = await prisma.$queryRaw<Array<{
+        id: string;
+      }>>`
+        SELECT id
+        FROM users
+        WHERE LTRIM(RTRIM(firstName)) + ' ' + LTRIM(RTRIM(lastName)) LIKE ${searchPattern}
+        OR LTRIM(RTRIM(lastName)) + ' ' + LTRIM(RTRIM(firstName)) LIKE ${searchPattern}
+      ` as any;
+      
+      // If we found results from raw query, add them to search conditions
+      if (rawResults.length > 0) {
+        const rawUserIds = rawResults.map((r: { id: string }) => r.id);
+        searchConditions.push({
+          id: { in: rawUserIds }
+        });
+      }
+    } catch (rawError) {
+      // If raw query fails, continue with regular search
+      console.error('Raw query error (falling back to regular search):', rawError);
+    }
+  }
+
+  return searchConditions;
+}

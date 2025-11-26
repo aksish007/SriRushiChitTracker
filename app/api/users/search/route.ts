@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/database';
+import { prisma, buildUserSearchConditions } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import logger from '@/lib/logger';
 
@@ -24,14 +24,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ users: [] });
     }
 
-    // Search users by registration ID, first name, or last name
+    // Build search conditions using centralized function
+    const searchConditions = await buildUserSearchConditions(query, false);
+    
+    if (searchConditions.length === 0) {
+      return NextResponse.json({ users: [] });
+    }
+
+    // Search users by registration ID, first name, last name, or full name
     const users = await prisma.user.findMany({
       where: {
-        OR: [
-          { registrationId: { contains: query } },
-          { firstName: { contains: query } },
-          { lastName: { contains: query } },
-        ],
+        OR: searchConditions,
       },
       select: {
         id: true,

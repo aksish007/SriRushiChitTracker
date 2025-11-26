@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/database';
+import { prisma, buildUserSearchConditions } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import logger from '@/lib/logger';
 
@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
   const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
+  let user;
   try {
-    const user = await requireAuth(request);
+    user = await requireAuth(request);
     
 
     const { searchParams } = new URL(request.url);
@@ -30,12 +31,10 @@ export async function GET(request: NextRequest) {
     const where: any = {};
     
     if (search) {
-      where.OR = [
-        { firstName: { contains: search } },
-        { lastName: { contains: search } },
-        { email: { contains: search } },
-        { registrationId: { contains: search } },
-      ];
+      const searchConditions = await buildUserSearchConditions(search, true);
+      if (searchConditions.length > 0) {
+        where.OR = searchConditions;
+      }
     }
 
     if (role && role !== 'all') {

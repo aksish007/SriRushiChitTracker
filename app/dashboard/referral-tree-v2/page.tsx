@@ -215,11 +215,14 @@ export default function ReferralTreeV2Page() {
     setHighlightedNode(null);
     setScrollPosition({ left: 0, top: 0 });
     if (containerRef.current) {
-      // Scroll to center horizontally
+      // Scroll to center both horizontally and vertically
       const scrollWidth = containerRef.current.scrollWidth;
       const clientWidth = containerRef.current.clientWidth;
+      const scrollHeight = containerRef.current.scrollHeight;
+      const clientHeight = containerRef.current.clientHeight;
       const scrollLeft = (scrollWidth - clientWidth) / 2;
-      containerRef.current.scrollTo({ top: 0, left: scrollLeft, behavior: 'smooth' });
+      const scrollTop = (scrollHeight - clientHeight) / 2;
+      containerRef.current.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'smooth' });
     }
   };
 
@@ -685,8 +688,11 @@ export default function ReferralTreeV2Page() {
         if (containerRef.current) {
           const scrollWidth = containerRef.current.scrollWidth;
           const clientWidth = containerRef.current.clientWidth;
+          const scrollHeight = containerRef.current.scrollHeight;
+          const clientHeight = containerRef.current.clientHeight;
           const scrollLeft = (scrollWidth - clientWidth) / 2;
-          containerRef.current.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+          const scrollTop = (scrollHeight - clientHeight) / 2;
+          containerRef.current.scrollTo({ top: scrollTop, left: scrollLeft, behavior: 'smooth' });
         }
       }, 100);
     }
@@ -1076,7 +1082,7 @@ export default function ReferralTreeV2Page() {
           <CardContent className="p-6 w-full max-w-full overflow-hidden" style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}>
             <div 
               ref={containerRef}
-              className="overflow-x-auto overflow-y-hidden"
+              className="overflow-x-auto overflow-y-auto"
               style={{ 
                 width: '100%',
                 maxWidth: '100%',
