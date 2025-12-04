@@ -5,7 +5,7 @@ import { PayoutCalculator } from '@/lib/payout-calculator';
 import logger from '@/lib/logger';
 
 // Function to calculate actual referral counts by step
-async function calculateActualReferralCountsByStep(userId: string, maxSteps: number = 9): Promise<number[]> {
+async function calculateActualReferralCountsByStep(userId: string, maxSteps: number = 100): Promise<number[]> {
   const counts: number[] = [];
   let currentLevelUsers = [userId];
   
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     user = await requireAuth(request, 'ADMIN');
 
     const body = await request.json();
-    const { subscriptionId } = body;
+    const { subscriptionId, maxSteps } = body;
 
     if (!subscriptionId) {
       return NextResponse.json(
@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Use provided maxSteps or default to 100
+    const stepsToCalculate = maxSteps && maxSteps > 0 ? maxSteps : 100;
 
     // Get subscription details with user and chit scheme
     const subscription = await prisma.chitSubscription.findUnique({
@@ -98,7 +101,7 @@ export async function POST(request: NextRequest) {
     const totalDownlineCount = await countTotalDownline(subscription.userId);
 
     // Calculate actual referral counts by step
-    const actualReferralCounts = await calculateActualReferralCountsByStep(subscription.userId);
+    const actualReferralCounts = await calculateActualReferralCountsByStep(subscription.userId, stepsToCalculate);
 
     // Determine club tier based on chit scheme amount (as per PDF)
     const chitAmount = Number(subscription.chitScheme.amount);

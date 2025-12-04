@@ -5,7 +5,7 @@
 
 export interface PayoutCalculationInput {
   clubBaseRate: number; // B - club base rate per head
-  maxSteps?: number;    // Maximum steps to calculate (default: 9)
+  maxSteps?: number;    // Maximum steps to calculate (default: 100)
 }
 
 export interface StepPayout {
@@ -59,15 +59,17 @@ export class PayoutCalculator {
   /**
    * Calculate rate per head for a given step and club base rate
    * If 1 <= s <= 5: R_s = B * (s + 1) / 2
-   * If 6 <= s <= 9: R_s = B
+   * If s >= 6: R_s = B (same as level 9)
    */
   static calculateRatePerHead(step: number, clubBaseRate: number): number {
+    if (step < 1) {
+      throw new Error(`Invalid step: ${step}. Steps must be >= 1.`);
+    }
     if (step >= 1 && step <= 5) {
       return clubBaseRate * (step + 1) / 2;
-    } else if (step >= 6 && step <= 9) {
-      return clubBaseRate;
     } else {
-      throw new Error(`Invalid step: ${step}. Steps must be between 1 and 9.`);
+      // For steps >= 6, use the same rate as level 9 (B)
+      return clubBaseRate;
     }
   }
 
@@ -85,14 +87,14 @@ export class PayoutCalculator {
    * Calculate complete payout structure
    */
   static calculatePayout(input: PayoutCalculationInput): PayoutCalculationResult {
-    const { clubBaseRate, maxSteps = 9 } = input;
+    const { clubBaseRate, maxSteps = 100 } = input;
     
     if (clubBaseRate <= 0) {
       throw new Error('Club base rate must be positive');
     }
 
-    if (maxSteps < 1 || maxSteps > 9) {
-      throw new Error('Max steps must be between 1 and 9');
+    if (maxSteps < 1) {
+      throw new Error('Max steps must be >= 1');
     }
 
     const steps: StepPayout[] = [];
@@ -177,7 +179,7 @@ export class PayoutCalculator {
     return `
       Stepwise Payout Formula:
       - N_s = 3^s (downline count at step s)
-      - R_s = B * (s + 1) / 2 for steps 1-5, R_s = B for steps 6-9
+      - R_s = B * (s + 1) / 2 for steps 1-5, R_s = B for steps >= 6
       - P_s = R_s * N_s (step payout)
       - P_total = sum of all P_s
     `.trim();
@@ -191,8 +193,8 @@ export class PayoutCalculator {
     startStep: number,
     endStep: number
   ): StepPayout[] {
-    if (startStep < 1 || endStep > 9 || startStep > endStep) {
-      throw new Error('Invalid step range. Steps must be between 1-9 and start <= end.');
+    if (startStep < 1 || startStep > endStep) {
+      throw new Error('Invalid step range. Start step must be >= 1 and start <= end.');
     }
 
     const steps: StepPayout[] = [];
@@ -395,7 +397,7 @@ export class PayoutCache {
   /**
    * Get cached result
    */
-  static get(clubBaseRate: number, maxSteps: number = 9): PayoutCalculationResult | null {
+  static get(clubBaseRate: number, maxSteps: number = 100): PayoutCalculationResult | null {
     const key = this.generateKey(clubBaseRate, maxSteps);
     const cached = this.cache.get(key);
     

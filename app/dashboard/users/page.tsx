@@ -20,6 +20,7 @@ import { handleApiError, formatErrorForToast } from '@/lib/error-handler';
 import { COMPANY_NAME } from '@/lib/constants';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SearchableUser } from '@/components/ui/searchable-user';
 
 interface User {
   id: string;
@@ -122,6 +123,7 @@ export default function UsersPage() {
     address: '',
     role: '',
     isActive: true,
+    referredBy: '',
   });
 
   // Nominee form state
@@ -228,6 +230,7 @@ export default function UsersPage() {
       address: user.address || '',
       role: user.role,
       isActive: user.isActive,
+      referredBy: user.referrer?.id || '',
     });
     
     // Set nominee form with first nominee or empty if none
@@ -255,6 +258,7 @@ export default function UsersPage() {
         },
         body: JSON.stringify({
           ...editForm,
+          referredBy: editForm.referredBy === 'self' ? selectedUser.id : (editForm.referredBy || null),
           nominee: {
             name: nomineeForm.name.trim() || undefined,
             relation: nomineeForm.relation.trim() || undefined,
@@ -1181,6 +1185,27 @@ export default function UsersPage() {
                   />
                   <Label htmlFor="isActive">Active</Label>
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="referredBy">Referrer</Label>
+                <SearchableUser
+                  value={editForm.referredBy}
+                  onValueChange={(value) => setEditForm({ ...editForm, referredBy: value })}
+                  placeholder="Select a referrer"
+                  showNoOption={true}
+                  noOptionLabel="Clear Referrer"
+                  noOptionValue=""
+                />
+                {selectedUser && selectedUser.referrals && selectedUser.referrals.length >= 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={() => setEditForm({ ...editForm, referredBy: 'self' })}
+                  >
+                    Set Self-Referral
+                  </Button>
+                )}
               </div>
             </div>
 

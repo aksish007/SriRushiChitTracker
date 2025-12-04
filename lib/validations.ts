@@ -44,8 +44,13 @@ export const payoutSchema = z.object({
   year: z.number().min(2020),
 });
 
+export const updateReferrerSchema = z.object({
+  referredBy: z.string().nullable().optional(),
+});
+
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterUserData = z.infer<typeof registerUserSchema>;
 export type ChitSchemeData = z.infer<typeof chitSchemeSchema>;
 export type SubscriptionData = z.infer<typeof subscriptionSchema>;
 export type PayoutData = z.infer<typeof payoutSchema>;
+export type UpdateReferrerData = z.infer<typeof updateReferrerSchema>;

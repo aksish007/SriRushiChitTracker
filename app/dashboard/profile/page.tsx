@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { SearchableUser } from '@/components/ui/searchable-user';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { User, Lock, Eye, EyeOff, Calendar, Phone, Mail, MapPin } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Calendar, Phone, Mail, MapPin, Users, RefreshCw } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, token } = useAuth();
@@ -20,12 +22,125 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [referralCount, setReferralCount] = useState<number>(0);
+  const [loadingReferral, setLoadingReferral] = useState(false);
+  const [updatingReferrer, setUpdatingReferrer] = useState(false);
+  const [selectedReferrer, setSelectedReferrer] = useState<string>('');
+  const [userReferrer, setUserReferrer] = useState<{ id: string; registrationId: string; firstName: string; lastName: string } | null>(null);
   
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Fetch user referral count and referrer info
+  const fetchReferralInfo = async () => {
+    if (!user?.id || !token) return;
+    
+    setLoadingReferral(true);
+    try {
+      // Fetch referral count
+      const countResponse = await fetch(`/api/users/${user.id}/referral-count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (countResponse.ok) {
+        const countData = await countResponse.json();
+        setReferralCount(countData.directReferralCount || 0);
+      }
+
+      // Fetch user details with referrer - try the update-referrer endpoint or check if user can access their own data
+      // Since GET /api/users/[id] requires ADMIN, we'll fetch from a different source or check the user object
+      // For now, let's check if user.referredBy exists in the auth context or fetch it differently
+      // Actually, we can use the referral-count endpoint which allows users to view their own data
+      // But it doesn't return referrer info. Let's check the user object from auth context first
+      
+      // Check if user has referrer info in auth context (might not be there)
+      // We'll need to make a separate call or modify the approach
+      // For now, let's set it based on whether we can determine it
+      // We'll handle this by checking the user's referredBy field if available
+      
+      // Since regular users can't access /api/users/[id], we'll need to handle this differently
+      // Let's check if the user object from auth has referrer info, or we'll need a new endpoint
+      // For now, we'll set it to empty and let the user update it
+      setUserReferrer(null);
+      setSelectedReferrer('');
+    } catch (error) {
+      console.error('Error fetching referral info:', error);
+    } finally {
+      setLoadingReferral(false);
+    }
+  };
+
+  // Fetch referral info on mount
+  React.useEffect(() => {
+    if (user?.id) {
+      fetchReferralInfo();
+    }
+  }, [user?.id, token]);
+
+  const handleUpdateReferrer = async () => {
+    if (!user?.id || !token) return;
+
+    setUpdatingReferrer(true);
+    try {
+      const referrerId = selectedReferrer === 'self' ? user.id : (selectedReferrer || null);
+      
+      const response = await fetch(`/api/users/${user.id}/update-referrer`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          referredBy: referrerId
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update referrer info from response
+        if (data.user?.referrer) {
+          setUserReferrer(data.user.referrer);
+          setSelectedReferrer(data.user.referrer.id);
+        } else if (referrerId === user.id) {
+          // Self-referral - set referrer to self
+          setUserReferrer({
+            id: user.id,
+            registrationId: user.registrationId,
+            firstName: user.firstName,
+            lastName: user.lastName
+          });
+          setSelectedReferrer('self');
+        } else {
+          setUserReferrer(null);
+          setSelectedReferrer('');
+        }
+        
+        toast({
+          title: "Success",
+          description: referrerId === user.id ? "Self-referral updated successfully" : referrerId ? "Referrer updated successfully" : "Referrer cleared successfully",
+          variant: 'success',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to update referrer',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An error occurred while updating referrer',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdatingReferrer(false);
+    }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,6 +419,104 @@ export default function ProfilePage() {
                 )}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Referrer Management */}
+        <Card className="shadow-glow border-2 border-primary/20">
+          <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Users className="h-5 w-5" />
+              Referrer Management
+            </CardTitle>
+            <CardDescription className="text-yellow-100">
+              Manage your referral relationship
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            {loadingReferral ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-primary font-medium">Current Referrer</Label>
+                  {userReferrer ? (
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="font-medium">{userReferrer.firstName} {userReferrer.lastName}</p>
+                      <p className="text-sm text-muted-foreground font-mono">{userReferrer.registrationId}</p>
+                      {(userReferrer.id === user.id || selectedReferrer === 'self') && (
+                        <Badge className="mt-2 bg-blue-100 text-blue-800">Self-Referral</Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-muted-foreground">
+                      No referrer assigned
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-primary font-medium">Your Referrals</Label>
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="font-medium text-lg">{referralCount}</p>
+                    <p className="text-sm text-muted-foreground">direct referrals</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-primary font-medium">Change Referrer</Label>
+                  <SearchableUser
+                    value={selectedReferrer}
+                    onValueChange={setSelectedReferrer}
+                    placeholder="Select a referrer or choose self-referral"
+                    showNoOption={true}
+                    noOptionLabel="Clear Referrer"
+                    noOptionValue=""
+                  />
+                  
+                  {referralCount >= 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => setSelectedReferrer('self')}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Set Self-Referral
+                    </Button>
+                  )}
+
+                  {referralCount < 1 && (
+                    <Alert>
+                      <AlertDescription className="text-sm">
+                        You need at least one referral before you can self-refer.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                  onClick={handleUpdateReferrer}
+                  disabled={updatingReferrer || loadingReferral}
+                >
+                  {updatingReferrer ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Updating...
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 mr-2" />
+                      Update Referrer
+                    </div>
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

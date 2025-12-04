@@ -90,19 +90,20 @@ export async function PUT(
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || decoded.role !== 'ADMIN') {
+    const { id } = await params;
+    
+    // Allow admin to update any user, or user to update their own account
+    if (!decoded || (decoded.role !== 'ADMIN' && decoded.userId !== id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { firstName, lastName, email, phone, address, role, isActive, nominee } = body;
+    const { firstName, lastName, email, phone, address, role, isActive, nominee, referredBy } = body;
 
     // Validate required fields
     if (!firstName || !lastName || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    const { id } = await params;
 
     // Check if phone is already taken by another user
     const existingPhoneUser = await prisma.user.findFirst({
@@ -130,20 +131,57 @@ export async function PUT(
       }
     }
 
+    // Validate and process referredBy if provided
+    let referrerId = null;
+    if (referredBy !== undefined) {
+      if (referredBy === null || referredBy === '') {
+        // Allow clearing referrer
+        referrerId = null;
+      } else if (referredBy === id) {
+        // Self-referral: allow without restriction
+        referrerId = id;
+      } else {
+        // Validate that the referrer exists
+        const referrer = await prisma.user.findUnique({
+          where: { id: referredBy },
+        });
+
+        if (!referrer) {
+          return NextResponse.json(
+            { error: 'Invalid referrer ID' },
+            { status: 400 }
+          );
+        }
+        referrerId = referredBy;
+      }
+    }
+
     // Update user and handle nominee data
     const updatedUser = await prisma.$transaction(async (tx) => {
+      // Prepare update data
+      const updateData: any = {
+        firstName,
+        lastName,
+        email: email && email.trim() ? email : null,
+        phone,
+        address,
+      };
+
+      // Only allow admin to update role and isActive
+      if (decoded.role === 'ADMIN') {
+        updateData.role = role;
+        updateData.isActive = isActive;
+      }
+
+      // Update referredBy if provided
+      if (referredBy !== undefined) {
+        updateData.referredBy = referrerId;
+      }
+
       // Update user basic information
       const user = await tx.user.update({
         where: { id },
-        data: {
-          firstName,
-          lastName,
-          email: email && email.trim() ? email : null,
-          phone,
-          address,
-          role,
-          isActive,
-        },
+        data: updateData,
       });
 
       // Handle nominee data
@@ -167,7 +205,7 @@ export async function PUT(
         }
       }
 
-      // Return user with nominee data
+      // Return user with nominee data and referrer info
       return await tx.user.findUnique({
         where: { id },
         include: {
@@ -178,6 +216,14 @@ export async function PUT(
               relation: true,
               age: true,
               dateOfBirth: true,
+            },
+          },
+          referrer: {
+            select: {
+              id: true,
+              registrationId: true,
+              firstName: true,
+              lastName: true,
             },
           },
         },
