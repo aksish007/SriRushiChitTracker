@@ -12,6 +12,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "import:referral-tree": "tsx import-referral-tree.ts",
     "prepare-deploy": "node prepare-deploy.js"
   },
   "dependencies": {
@@ -45,12 +46,14 @@
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
+    "@types/cheerio": "^0.22.35",
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^2.4.3",
+    "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -80,6 +83,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.5"
+    "@types/jsonwebtoken": "^9.0.5",
+    "tsx": "^4.21.0"
   }
 }
