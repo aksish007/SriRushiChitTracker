@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const adminUser = await requireAuth(request, 'ADMIN');
 
     const body = await request.json();
-    const { userId, chitSchemeId, subscriberId } = subscriptionSchema.parse(body);
+    const { userId, chitSchemeId, subscriberId, selfRefer } = subscriptionSchema.parse(body);
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -214,12 +214,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Handle self-referral if requested
+    if (selfRefer === true) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { referredBy: userId },
+      });
+    }
+
     // Create audit log
     await prisma.auditLog.create({
       data: {
         userId: adminUser.id,
         action: 'SUBSCRIPTION_CREATE',
-        details: `Created subscription: ${newSubscription.subscriberId} for user: ${user.registrationId}`,
+        details: `Created subscription: ${newSubscription.subscriberId} for user: ${user.registrationId}${selfRefer ? ' (self-referred)' : ''}`,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       },

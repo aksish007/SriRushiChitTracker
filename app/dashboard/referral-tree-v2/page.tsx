@@ -19,7 +19,7 @@ import {
   TreePine, UserCheck, IndianRupee,
   ZoomIn, ZoomOut, RotateCcw, ChevronDown, ChevronRight,
   Star, TrendingUp, Network, Target, Phone, CreditCard, Calendar, Printer,
-  Download, Maximize, Minimize, Move
+  Download, Maximize, Minimize, Move, FileText
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -469,6 +469,51 @@ export default function ReferralTreeV2Page() {
         </body>
       </html>
     `;
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!referralTree || !selectedUser) {
+      toast({
+        title: 'No Tree to Export',
+        description: 'Please select a user and load the referral tree first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/reports/export-referral-tree-pdf?registrationId=${selectedUser}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `referral-tree-${referralTree.registrationId}-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'PDF Export Complete',
+        description: 'Referral tree PDF downloaded successfully',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      toast({
+        title: 'PDF Export Failed',
+        description: error.message || 'Failed to export referral tree as PDF',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDownload = () => {
@@ -972,6 +1017,17 @@ export default function ReferralTreeV2Page() {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent><p>Download as HTML list</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Export as PDF</p></TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 

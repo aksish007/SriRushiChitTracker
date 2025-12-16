@@ -140,3 +140,75 @@ Validation Error Count: 1
     at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:58:108)
     at async POST (webpack-internal:///(rsc)/./app/api/auth/logout/route.ts:16:22)
     at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+[2025-12-16T22:39:31.590Z] [ERROR] Token verification failed [Action:TOKEN_VERIFICATION]
+  Error: JsonWebTokenError: jwt malformed
+  Stack: JsonWebTokenError: jwt malformed
+    at module.exports [as verify] (webpack-internal:///(rsc)/./node_modules/jsonwebtoken/verify.js:70:17)
+    at verifyToken (webpack-internal:///(rsc)/./lib/auth.ts:29:68)
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:65:21)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:121:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/reports/export-user-payout-pdf/route.ts:23:29)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+  Metadata: {
+  "tokenLength": 4
+}
+[2025-12-16T22:39:31.590Z] [ERROR] Authentication failed - Invalid token [Action:AUTHENTICATION|IP:::1]
+  Error: Error: Invalid authentication token
+  Stack: Error: Invalid authentication token
+    at authenticateRequest (webpack-internal:///(rsc)/./lib/auth.ts:67:104)
+    at async requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:121:18)
+    at async GET (webpack-internal:///(rsc)/./app/api/reports/export-user-payout-pdf/route.ts:23:29)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+[2025-12-16T22:39:31.590Z] [ERROR] Authentication required but not provided [Action:AUTHENTICATION_REQUIRED|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:123:107)
+    at async GET (webpack-internal:///(rsc)/./app/api/reports/export-user-payout-pdf/route.ts:23:29)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&page=%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&page=%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&page=%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+[2025-12-16T22:39:31.591Z] [ERROR] Export user payout PDF error [Action:EXPORT_USER_PAYOUT_PDF_ERROR|IP:::1]
+  Error: Error: Authentication required
+  Stack: Error: Authentication required
+    at requireAuth (webpack-internal:///(rsc)/./lib/auth.ts:128:15)
+    at async GET (webpack-internal:///(rsc)/./app/api/reports/export-user-payout-pdf/route.ts:23:29)
+    at async AppRouteRouteModule.do (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&page=%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&page=%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&page=%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Freports%2Fexport-user-payout-pdf%2Froute.ts&appDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fsubhadip%2FDevelopment%2FSriRushiChitTracker&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1422:9)
+    at async DevServer.renderPageComponent (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1474:24)
+    at async DevServer.renderToResponseImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/base-server.js:916:17)
+    at async /Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+    at async Span.traceAsyncFn (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+    at async invokeRender (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (/Users/subhadip/Development/SriRushiChitTracker/node_modules/next/dist/server/lib/start-server.js:226:13)
+  Metadata: {
+  "endpoint": "/api/reports/export-user-payout-pdf",
+  "method": "GET",
+  "errorMessage": "Authentication required"
+}

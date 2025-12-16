@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Download, Users, TrendingUp, IndianRupee, Calendar, BarChart3, PieChart, Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
@@ -12,6 +16,20 @@ export default function ReportsPage() {
   const { token } = useAuth();
   const { toast } = useToast();
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [showCompanyPayoutDialog, setShowCompanyPayoutDialog] = useState(false);
+  const [companyPayoutMonth, setCompanyPayoutMonth] = useState<string>('');
+  const [companyPayoutYear, setCompanyPayoutYear] = useState<string>('');
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1] || '';
+  };
+
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
 
   const reports = [
     {
@@ -97,6 +115,20 @@ export default function ReportsPage() {
         'Financial metrics',
         'Trend analysis'
       ]
+    },
+    {
+      id: 'company-payout-pdf',
+      title: 'Company Payout Report (PDF)',
+      description: 'Consolidated monthly payout report with TDS',
+      icon: FileText,
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-50',
+      features: [
+        'All users payout data',
+        'TDS calculations',
+        'Net amount summaries',
+        'Company-wide analysis'
+      ]
     }
   ];
 
@@ -132,6 +164,21 @@ export default function ReportsPage() {
           endpoint = '/api/reports/export-financial';
           filename = `financial-report-${new Date().toISOString().split('T')[0]}.xlsx`;
           break;
+        case 'user-payout-pdf':
+          // This requires userId and month/year - redirect to payouts page
+          toast({
+            title: 'Info',
+            description: 'Please use the Export User Report option from the Payouts page for a specific user.',
+            variant: 'default',
+          });
+          return;
+        case 'company-payout-pdf':
+          // Show dialog for month/year selection
+          setShowCompanyPayoutDialog(true);
+          setCompanyPayoutMonth(currentMonth.toString());
+          setCompanyPayoutYear(currentYear.toString());
+          setDownloading(null);
+          return;
         default:
           throw new Error('Unknown report type');
       }
@@ -160,6 +207,57 @@ export default function ReportsPage() {
         description: `${reports.find(r => r.id === reportId)?.title} has been downloaded successfully.`,
         variant: 'success',
       });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: 'Download Failed',
+        description: error instanceof Error ? error.message : 'Failed to download report',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleCompanyPayoutDownload = async () => {
+    if (!companyPayoutMonth || !companyPayoutYear) {
+      toast({
+        title: 'Error',
+        description: 'Please select both month and year',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDownloading('company-payout-pdf');
+    try {
+      const endpoint = `/api/reports/export-company-payout-pdf?month=${companyPayoutMonth}&year=${companyPayoutYear}`;
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `company-payout-${companyPayoutYear}-${companyPayoutMonth.padStart(2, '0')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'Report Downloaded!',
+        description: 'Company Payout Report has been downloaded successfully.',
+        variant: 'success',
+      });
+
+      setShowCompanyPayoutDialog(false);
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -428,6 +526,55 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Company Payout PDF Dialog */}
+      <Dialog open={showCompanyPayoutDialog} onOpenChange={setShowCompanyPayoutDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Company Payout Report</DialogTitle>
+            <DialogDescription>
+              Select the month and year for the company payout report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="month">Month</Label>
+              <Select value={companyPayoutMonth} onValueChange={setCompanyPayoutMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <SelectItem key={month} value={month.toString()}>
+                      {getMonthName(month)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="year">Year</Label>
+              <Input
+                id="year"
+                type="number"
+                value={companyPayoutYear}
+                onChange={(e) => setCompanyPayoutYear(e.target.value)}
+                placeholder={currentYear.toString()}
+                min="2020"
+                max={currentYear + 5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCompanyPayoutDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCompanyPayoutDownload} disabled={downloading === 'company-payout-pdf'}>
+              {downloading === 'company-payout-pdf' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

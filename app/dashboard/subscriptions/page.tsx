@@ -119,6 +119,7 @@ export default function SubscriptionsPage() {
     userId: '',
     chitSchemeId: '',
     subscriberId: '',
+    selfRefer: false,
   });
   const [editForm, setEditForm] = useState({
     status: '',
@@ -485,7 +486,7 @@ export default function SubscriptionsPage() {
           variant: 'success',
         });
         setShowCreateDialog(false);
-        setFormData({ userId: '', chitSchemeId: '', subscriberId: '' });
+        setFormData({ userId: '', chitSchemeId: '', subscriberId: '', selfRefer: false });
         fetchData();
       } else {
         const errorData = await response.json();
@@ -1027,6 +1028,16 @@ export default function SubscriptionsPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 Format: {'{'}ChitID{'}'}/{'{'}SlotNumber{'}'} (e.g., SRC01NS/01, SRC03MC/15)
               </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="selfRefer"
+                checked={formData.selfRefer}
+                onCheckedChange={(checked) => setFormData({ ...formData, selfRefer: checked === true })}
+              />
+              <Label htmlFor="selfRefer" className="text-sm font-normal cursor-pointer">
+                Set as self-referrer (user will refer themselves)
+              </Label>
             </div>
           </div>
           <div className="flex justify-end gap-2">

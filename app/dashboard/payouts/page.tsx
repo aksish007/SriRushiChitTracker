@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown, Calculator, Info } from 'lucide-react';
+import { FileText, Plus, IndianRupee, Calendar, Activity, Search, Filter, CheckCircle, Clock, Edit, Trash2, Eye, MoreHorizontal, Check, X, ArrowUpDown, ArrowUp, ArrowDown, Calculator, Info, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 interface Payout {
@@ -96,8 +96,7 @@ export default function PayoutsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [monthFilter, setMonthFilter] = useState('all');
-  const [yearFilter, setYearFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<string>('all'); // Format: "YYYY-MM" or "all"
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPayouts, setSelectedPayouts] = useState<string[]>([]);
   const [showViewDialog, setShowViewDialog] = useState(false);
@@ -170,8 +169,10 @@ export default function PayoutsPage() {
         limit: pageSize.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(monthFilter !== 'all' && { month: monthFilter }),
-        ...(yearFilter !== 'all' && { year: yearFilter }),
+        ...(dateFilter !== 'all' && (() => {
+          const [year, month] = dateFilter.split('-');
+          return { month, year };
+        })()),
         sortField: sortField,
         sortOrder: sortOrder,
       });
@@ -205,7 +206,7 @@ export default function PayoutsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, debouncedSearch, statusFilter, monthFilter, yearFilter, pageSize, sortField, sortOrder, token, toast]);
+  }, [currentPage, debouncedSearch, statusFilter, dateFilter, pageSize, sortField, sortOrder, token, toast]);
 
   useEffect(() => {
     fetchData();
@@ -228,14 +229,87 @@ export default function PayoutsPage() {
     setCurrentPage(1);
   };
 
-  const handleMonthFilter = (value: string) => {
-    setMonthFilter(value);
+  const handleDateFilter = (value: string) => {
+    setDateFilter(value);
     setCurrentPage(1);
   };
 
-  const handleYearFilter = (value: string) => {
-    setYearFilter(value);
-    setCurrentPage(1);
+  const handleExportUserReport = async (payout: Payout) => {
+    try {
+      // Export user report with last 1 year data (no month/year filter)
+      const response = await fetch(`/api/reports/export-user-payout-pdf?userId=${payout.userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `user-payout-${payout.user.registrationId}-all-data.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'PDF Export Complete',
+        description: 'User payout report (all data) downloaded successfully',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      toast({
+        title: 'PDF Export Failed',
+        description: error.message || 'Failed to export user payout report',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportCompanyReport = async () => {
+    try {
+      const [year, month] = dateFilter !== 'all' ? dateFilter.split('-') : [
+        new Date().getFullYear().toString(),
+        (new Date().getMonth() + 1).toString().padStart(2, '0')
+      ];
+      
+      const response = await fetch(`/api/reports/export-company-payout-pdf?month=${month}&year=${year}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `company-payout-${year}-${month}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'PDF Export Complete',
+        description: 'Company payout report downloaded successfully',
+        variant: 'success',
+      });
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      toast({
+        title: 'PDF Export Failed',
+        description: error.message || 'Failed to export company payout report',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSort = (field: 'amount' | 'month' | 'year' | 'status' | 'createdAt' | 'paidAt') => {
@@ -716,10 +790,14 @@ export default function PayoutsPage() {
       payout.subscription.subscriberId.toLowerCase().includes(searchLower);
     
     const matchesStatus = statusFilter === '' || statusFilter === 'all' || payout.status === statusFilter;
-    const matchesMonth = monthFilter === '' || monthFilter === 'all' || payout.month.toString() === monthFilter;
-    const matchesYear = yearFilter === '' || yearFilter === 'all' || payout.year.toString() === yearFilter;
     
-    return matchesSearch && matchesStatus && matchesMonth && matchesYear;
+    let matchesDate = true;
+    if (dateFilter !== 'all' && dateFilter !== '') {
+      const [year, month] = dateFilter.split('-');
+      matchesDate = payout.year.toString() === year && payout.month.toString() === month;
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const currentYear = new Date().getFullYear();
@@ -1065,32 +1143,37 @@ export default function PayoutsPage() {
                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={monthFilter} onValueChange={handleMonthFilter}>
-              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
-                <SelectValue placeholder="Month" />
+            <Select value={dateFilter} onValueChange={handleDateFilter}>
+              <SelectTrigger className="w-48 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectValue placeholder="Select Month/Year" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Months</SelectItem>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                  <SelectItem key={month} value={month.toString()}>
-                    {getMonthName(month)}
+                {Array.from({ length: 24 }, (_, i) => {
+                  const date = new Date(currentYear, currentMonth - 1 - i, 1);
+                  const year = date.getFullYear();
+                  const month = date.getMonth() + 1;
+                  const value = `${year}-${month.toString().padStart(2, '0')}`;
+                  const label = `${getMonthName(month)} ${year}`;
+                  return { value, label, year, month };
+                }).map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={yearFilter} onValueChange={handleYearFilter}>
-              <SelectTrigger className="w-32 border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20">
-                <SelectValue placeholder="Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {Array.from({ length: 5 }, (_, i) => currentYear - 2 + i).map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {user?.role === 'ADMIN' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCompanyReport}
+                className="border-2 border-primary/20"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Export Company Report
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1275,6 +1358,10 @@ export default function PayoutsPage() {
                         <DropdownMenuItem onClick={() => handleViewPayout(payout)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportUserReport(payout)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Export User Report
                         </DropdownMenuItem>
                         {user?.role === 'ADMIN' && (
                           <>
