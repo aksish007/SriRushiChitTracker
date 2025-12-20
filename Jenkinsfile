@@ -81,53 +81,104 @@ pipeline {
                         Write-Host "   Continuing with file deployment..." -ForegroundColor Yellow
                     }
                     
-                    # Backup current deployment
+                    # Get current user for permissions
+                    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+                    Write-Host "Current user: $currentUser" -ForegroundColor Cyan
+                    
+                    # Ensure deployment directory exists and set permissions FIRST
+                    Write-Host "Preparing deployment directory..." -ForegroundColor Yellow
+                    if (-not (Test-Path $DeployPath)) {
+                        try {
+                            New-Item -Path $DeployPath -ItemType Directory -Force | Out-Null
+                            Write-Host "✅ Deployment directory created" -ForegroundColor Green
+                        } catch {
+                            Write-Host "❌ Failed to create deployment directory: $_" -ForegroundColor Red
+                            Write-Host "   Make sure Jenkins user has permissions to create directories in C:\\inetpub\\wwwroot\\" -ForegroundColor Yellow
+                            exit 1
+                        }
+                    }
+                    
+                    # Grant Jenkins user full control to deployment directory BEFORE operations
+                    Write-Host "Setting permissions for Jenkins user..." -ForegroundColor Yellow
+                    try {
+                        icacls $DeployPath /grant "${currentUser}:(OI)(CI)(F)" /T /Q 2>&1 | Out-Null
+                        Write-Host "✅ Permissions granted to $currentUser" -ForegroundColor Green
+                    } catch {
+                        Write-Host "⚠️  Could not set permissions for Jenkins user (may need admin): $_" -ForegroundColor Yellow
+                        Write-Host "   You may need to run: icacls `"$DeployPath`" /grant `"${currentUser}:(OI)(CI)(F)`" /T" -ForegroundColor Yellow
+                    }
+                    
+                    # Backup current deployment (only if directory has content)
                     Write-Host "Backing up current deployment..." -ForegroundColor Yellow
                     $backupPath = "$DeployPath-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
                     if (Test-Path $DeployPath) {
-                        try {
-                            Copy-Item -Path $DeployPath -Destination $backupPath -Recurse -Force -ErrorAction Stop
-                            Write-Host "✅ Backup created: $backupPath" -ForegroundColor Green
-                        } catch {
-                            Write-Host "⚠️  Backup failed (may need permissions): $_" -ForegroundColor Yellow
+                        $hasContent = (Get-ChildItem -Path $DeployPath -Force | Measure-Object).Count -gt 0
+                        if ($hasContent) {
+                            try {
+                                # Create backup directory first
+                                New-Item -Path $backupPath -ItemType Directory -Force | Out-Null
+                                icacls $backupPath /grant "${currentUser}:(OI)(CI)(F)" /T /Q 2>&1 | Out-Null
+                                
+                                # Copy files
+                                Copy-Item -Path "$DeployPath\*" -Destination $backupPath -Recurse -Force -ErrorAction Stop
+                                Write-Host "✅ Backup created: $backupPath" -ForegroundColor Green
+                            } catch {
+                                Write-Host "⚠️  Backup failed (continuing anyway): $_" -ForegroundColor Yellow
+                            }
+                        } else {
+                            Write-Host "   No existing content to backup" -ForegroundColor Yellow
                         }
-                    } else {
-                        Write-Host "   No existing deployment to backup" -ForegroundColor Yellow
                     }
                     
-                    # Clean deployment directory
+                    # Clean deployment directory (preserve iisnode and logs)
                     Write-Host "Cleaning deployment directory..." -ForegroundColor Yellow
                     if (Test-Path $DeployPath) {
                         try {
-                            Get-ChildItem -Path $DeployPath -Exclude 'iisnode', 'logs', '*.log' | Remove-Item -Recurse -Force -ErrorAction Stop
+                            $itemsToKeep = @('iisnode', 'logs')
+                            Get-ChildItem -Path $DeployPath -Force | Where-Object {
+                                $item = $_
+                                $shouldKeep = $itemsToKeep | ForEach-Object { $item.Name -eq $_ } | Where-Object { $_ -eq $true }
+                                -not $shouldKeep
+                            } | Remove-Item -Recurse -Force -ErrorAction Stop
                             Write-Host "✅ Deployment directory cleaned" -ForegroundColor Green
                         } catch {
                             Write-Host "⚠️  Some files could not be deleted: $_" -ForegroundColor Yellow
-                            Write-Host "   Continuing anyway..." -ForegroundColor Yellow
+                            Write-Host "   Attempting to continue..." -ForegroundColor Yellow
                         }
-                    } else {
-                        New-Item -Path $DeployPath -ItemType Directory -Force | Out-Null
-                        Write-Host "✅ Deployment directory created" -ForegroundColor Green
                     }
                     
                     # Copy new files
                     Write-Host "Copying new files..." -ForegroundColor Yellow
                     try {
-                        Copy-Item -Path ".deploy\\*" -Destination $DeployPath -Recurse -Force -ErrorAction Stop
-                        Write-Host "✅ Files copied successfully" -ForegroundColor Green
+                        # Use robocopy for better reliability with permissions
+                        $robocopyExitCode = 0
+                        $robocopyOutput = & robocopy ".deploy" $DeployPath /E /COPYALL /R:3 /W:5 /NP /NDL /NFL 2>&1
+                        $robocopyExitCode = $LASTEXITCODE
+                        
+                        # Robocopy exit codes: 0-7 are success, 8+ are errors
+                        if ($robocopyExitCode -le 7) {
+                            Write-Host "✅ Files copied successfully using robocopy" -ForegroundColor Green
+                        } else {
+                            Write-Host "⚠️  Robocopy completed with warnings (exit code: $robocopyExitCode)" -ForegroundColor Yellow
+                            Write-Host "   Attempting standard copy as fallback..." -ForegroundColor Yellow
+                            Copy-Item -Path ".deploy\*" -Destination $DeployPath -Recurse -Force -ErrorAction Stop
+                            Write-Host "✅ Files copied successfully" -ForegroundColor Green
+                        }
                     } catch {
                         Write-Host "❌ Failed to copy files: $_" -ForegroundColor Red
+                        Write-Host "   Make sure Jenkins user has write permissions to: $DeployPath" -ForegroundColor Yellow
+                        Write-Host "   Run as admin: icacls `"$DeployPath`" /grant `"${currentUser}:(OI)(CI)(F)`" /T" -ForegroundColor Yellow
                         exit 1
                     }
                     
-                    # Set permissions (try, but don't fail if it doesn't work)
-                    Write-Host "Setting permissions..." -ForegroundColor Yellow
+                    # Set IIS permissions (after files are copied)
+                    Write-Host "Setting IIS permissions..." -ForegroundColor Yellow
                     try {
                         icacls $DeployPath /grant "IIS_IUSRS:(OI)(CI)(RX)" /T /Q 2>&1 | Out-Null
                         icacls $DeployPath /grant "IUSR:(OI)(CI)(RX)" /T /Q 2>&1 | Out-Null
-                        Write-Host "✅ Permissions set" -ForegroundColor Green
+                        Write-Host "✅ IIS permissions set" -ForegroundColor Green
                     } catch {
-                        Write-Host "⚠️  Could not set all permissions (may need admin rights): $_" -ForegroundColor Yellow
+                        Write-Host "⚠️  Could not set IIS permissions (may need admin rights): $_" -ForegroundColor Yellow
                     }
                     
                     # Try to start app pool and website
