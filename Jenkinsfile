@@ -120,7 +120,7 @@ pipeline {
                                 icacls $backupPath /grant "${currentUser}:(OI)(CI)(F)" /T /Q 2>&1 | Out-Null
                                 
                                 # Copy files
-                                Copy-Item -Path "$DeployPath\*" -Destination $backupPath -Recurse -Force -ErrorAction Stop
+                                Copy-Item -Path "$DeployPath\\*" -Destination $backupPath -Recurse -Force -ErrorAction Stop
                                 Write-Host "✅ Backup created: $backupPath" -ForegroundColor Green
                             } catch {
                                 Write-Host "⚠️  Backup failed (continuing anyway): $_" -ForegroundColor Yellow
@@ -161,7 +161,7 @@ pipeline {
                         } else {
                             Write-Host "⚠️  Robocopy completed with warnings (exit code: $robocopyExitCode)" -ForegroundColor Yellow
                             Write-Host "   Attempting standard copy as fallback..." -ForegroundColor Yellow
-                            Copy-Item -Path ".deploy\*" -Destination $DeployPath -Recurse -Force -ErrorAction Stop
+                            Copy-Item -Path ".deploy\\*" -Destination $DeployPath -Recurse -Force -ErrorAction Stop
                             Write-Host "✅ Files copied successfully" -ForegroundColor Green
                         }
                     } catch {
