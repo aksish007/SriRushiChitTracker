@@ -27,7 +27,7 @@ async function main() {
 
   // Create admin user with secure credentials
   const adminPassword = await hashPassword('Admin@2025!');
-  const adminRegId = generateRegistrationId();
+  const adminRegId = await generateRegistrationId();
   
   const admin = await prisma.user.create({
     data: {

@@ -13,6 +13,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "import:referral-tree": "tsx import-referral-tree.ts",
+    "import:users:production": "tsx import-users-production.ts",
     "prepare-deploy": "node prepare-deploy.js"
   },
   "dependencies": {
