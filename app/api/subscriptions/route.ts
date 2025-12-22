@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build orderBy clause
+    // Note: Organization subscriptions (with /01 subscriber IDs) are included in results
     const orderBy: any = {};
     if (sortField === 'status') {
       orderBy.status = sortOrder;
