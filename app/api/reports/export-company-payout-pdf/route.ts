@@ -3,7 +3,7 @@ import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { generateCompanyPayoutReport } from '@/lib/pdf-generator';
 import logger from '@/lib/logger';
-import { COMPANY_NAME } from '@/lib/constants';
+import { COMPANY_NAME, COMPANY_ADDRESS } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,62 +66,30 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Group payouts by user and aggregate data
-    const userPayoutMap = new Map<string, {
-      user: typeof payouts[0]['user'];
-      chitValues: Array<{ value: number; subscriberId?: string }>;
-      referrerIdentifier: string;
-      totalIncentive: number;
-    }>();
-
-    payouts.forEach((payout) => {
-      const userId = payout.userId;
-      const chitAmount = Number(payout.subscription.chitScheme.amount);
+    // Format payouts as individual rows (matching sample format)
+    // Each payout is a separate row in the report
+    const payoutRows = payouts.map((payout, index) => {
+      const referrerIdentifier = payout.user.referrer
+        ? `${payout.user.referrer.firstName} ${payout.user.referrer.lastName} (${payout.user.referrer.registrationId})`
+        : '';
       
-      if (!userPayoutMap.has(userId)) {
-        userPayoutMap.set(userId, {
-          user: payout.user,
-          chitValues: [],
-          referrerIdentifier: payout.user.referrer
-            ? `${payout.user.referrer.firstName} ${payout.user.referrer.lastName} (${payout.user.referrer.registrationId})`
-            : '',
-          totalIncentive: 0,
-        });
-      }
-
-      const userData = userPayoutMap.get(userId)!;
-      
-      // Add chit value if not already present
-      const chitValueExists = userData.chitValues.some(
-        cv => cv.value === chitAmount
-      );
-      if (!chitValueExists) {
-        userData.chitValues.push({
-          value: chitAmount,
-          subscriberId: payout.subscription.subscriberId,
-        });
-      }
-      
-      // Add payout amount to total incentive
-      userData.totalIncentive += Number(payout.amount);
+      return {
+        serialNumber: index + 1,
+        registrationId: payout.user.registrationId,
+        name: `${payout.user.firstName} ${payout.user.lastName}`,
+        subscriberId: payout.subscription.subscriberId,
+        amount: Number(payout.amount),
+        referrerIdentifier,
+      };
     });
-
-    // Convert map to array and format for PDF
-    const userData = Array.from(userPayoutMap.values()).map((data, index) => ({
-      index: index + 1,
-      name: `${data.user.firstName} ${data.user.lastName}`,
-      registrationId: data.user.registrationId,
-      chitValues: data.chitValues,
-      referrerIdentifier: data.referrerIdentifier,
-      totalIncentive: data.totalIncentive,
-    }));
 
     // Generate PDF
     const pdfBuffer = generateCompanyPayoutReport({
       month,
       year,
-      users: userData,
+      payoutRows,
       companyName: COMPANY_NAME,
+      companyAddress: COMPANY_ADDRESS,
     });
 
     // Create audit log
@@ -129,7 +97,7 @@ export async function GET(request: NextRequest) {
       data: {
         userId: adminUser.id,
         action: 'EXPORT_COMPANY_PAYOUT_PDF',
-        details: `Exported company payout PDF for ${month}/${year} - ${userData.length} users`,
+        details: `Exported company payout PDF for ${month}/${year} - ${payoutRows.length} payout records`,
         ipAddress,
         userAgent,
       },

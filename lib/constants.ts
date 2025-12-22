@@ -18,7 +18,8 @@ export const PAYOUT_STATUS = {
   CANCELLED: 'CANCELLED',
 } as const;
 
-export const COMPANY_NAME = 'Sri Rushi Chits';
+export const COMPANY_NAME = 'Sri Rushi Chits Indian Pvt Ltd';
+export const COMPANY_ADDRESS = 'Peerzadiguda, Hyderabad';
 
 // Organization user registration ID - the first user created for the system
 // This user will automatically get the first subscription slot in every chit scheme
