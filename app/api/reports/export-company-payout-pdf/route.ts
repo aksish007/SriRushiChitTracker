@@ -3,7 +3,7 @@ import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { generateCompanyPayoutReport } from '@/lib/pdf-generator';
 import logger from '@/lib/logger';
-import { COMPANY_NAME, COMPANY_ADDRESS } from '@/lib/constants';
+import { COMPANY_NAME, COMPANY_ADDRESS, ORGANIZATION_REGISTRATION_ID } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,11 +24,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch actual payouts for the specified month/year
+    // Fetch actual payouts for the specified month/year (excluding organization user)
     const payouts = await prisma.payout.findMany({
       where: {
         month,
         year,
+        user: {
+          registrationId: {
+            not: ORGANIZATION_REGISTRATION_ID,
+          },
+        },
       },
       include: {
         user: {

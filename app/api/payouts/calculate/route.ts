@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/database';
+import { prisma, isOrganizationUserByRegistrationId } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { PayoutCalculator } from '@/lib/payout-calculator';
 import logger from '@/lib/logger';
@@ -89,6 +89,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Subscription not found' },
         { status: 404 }
+      );
+    }
+
+    // Prevent calculating payouts for organization user subscriptions
+    if (isOrganizationUserByRegistrationId(subscription.user.registrationId)) {
+      return NextResponse.json(
+        { error: 'Cannot calculate payouts for organization user subscriptions' },
+        { status: 400 }
       );
     }
 

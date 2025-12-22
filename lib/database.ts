@@ -46,6 +46,34 @@ export async function generateSubscriberId(chitId: string): Promise<string> {
   return generateSubscriberIdWithNumber(chitId);
 }
 
+// Helper function to check if a user is the organization user
+export function isOrganizationUser(userId: string | null | undefined): boolean {
+  if (!userId) return false;
+  // We'll need to check by registration ID, so this is a helper that will be used with user objects
+  return false; // Will be checked via registrationId
+}
+
+// Helper function to check if a user is the organization user by registration ID
+export function isOrganizationUserByRegistrationId(registrationId: string | null | undefined): boolean {
+  return registrationId === ORGANIZATION_REGISTRATION_ID;
+}
+
+// Helper function to check if a subscription belongs to organization user
+export async function isOrganizationSubscription(subscriptionId: string): Promise<boolean> {
+  const subscription = await prisma.chitSubscription.findUnique({
+    where: { id: subscriptionId },
+    include: {
+      user: {
+        select: {
+          registrationId: true,
+        },
+      },
+    },
+  });
+  
+  return subscription?.user.registrationId === ORGANIZATION_REGISTRATION_ID;
+}
+
 // Helper function to generate Subscriber ID with a specific number
 export async function generateSubscriberIdWithNumber(chitId: string, subscriberNumber?: number): Promise<string> {
   if (subscriberNumber) {
@@ -73,8 +101,24 @@ export async function generateSubscriberIdWithNumber(chitId: string, subscriberN
     })
     .filter(num => num > 0);
 
+  // Check if /01 is already taken by organization
+  const hasOrganizationSubscription = existingSubscriptions.some(sub => {
+    const match = sub.subscriberId.match(/\/(\d+)$/);
+    return match && parseInt(match[1]) === 1;
+  });
+
   // Find the next available number
-  const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+  // If /01 exists, start from /02, otherwise start from /01
+  let nextNumber = 1;
+  if (existingNumbers.length > 0) {
+    const maxNumber = Math.max(...existingNumbers);
+    // If /01 exists (organization), start from /02 if max is 1, otherwise use max + 1
+    if (hasOrganizationSubscription && maxNumber === 1) {
+      nextNumber = 2;
+    } else {
+      nextNumber = maxNumber + 1;
+    }
+  }
   
   return `${chitId}/${nextNumber.toString().padStart(2, '0')}`;
 }

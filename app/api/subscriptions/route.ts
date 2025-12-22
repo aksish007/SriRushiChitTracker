@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { subscriptionSchema } from '@/lib/validations';
+import { ORGANIZATION_REGISTRATION_ID } from '@/lib/constants';
 import logger from '@/lib/logger';
 
 // Force dynamic rendering for this API route
@@ -178,6 +179,18 @@ export async function POST(request: NextRequest) {
         { error: `Subscriber ID ${subscriberId} already exists in this chit scheme` },
         { status: 400 }
       );
+    }
+
+    // Prevent non-organization users from getting /01 subscriber ID
+    const subscriberNumber = subscriberId.match(/\/(\d+)$/);
+    if (subscriberNumber && parseInt(subscriberNumber[1]) === 1) {
+      const isOrgUser = user.registrationId === ORGANIZATION_REGISTRATION_ID;
+      if (!isOrgUser) {
+        return NextResponse.json(
+          { error: 'Subscriber ID ending in /01 is reserved for the organization user' },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if scheme has available slots

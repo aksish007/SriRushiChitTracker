@@ -25,6 +25,13 @@ export async function GET(request: NextRequest) {
         role: true,
         isActive: true,
         createdAt: true,
+        referrer: {
+          select: {
+            registrationId: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { generateUserPayoutReport } from '@/lib/pdf-generator';
 import logger from '@/lib/logger';
-import { COMPANY_NAME } from '@/lib/constants';
+import { COMPANY_NAME, ORGANIZATION_REGISTRATION_ID } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -208,6 +208,10 @@ export async function GET(request: NextRequest) {
           referredBy: {
             in: currentLevelUsers.map(u => u.id),
           },
+          // Exclude organization user from referral tree
+          registrationId: {
+            not: ORGANIZATION_REGISTRATION_ID,
+          },
         },
         include: {
           referrer: {
@@ -251,7 +255,15 @@ export async function GET(request: NextRequest) {
       });
 
       const payouts = await prisma.payout.findMany({
-        where: payoutWhere,
+        where: {
+          ...payoutWhere,
+          // Exclude organization user payouts
+          user: {
+            registrationId: {
+              not: ORGANIZATION_REGISTRATION_ID,
+            },
+          },
+        },
         include: {
           subscription: {
             include: {

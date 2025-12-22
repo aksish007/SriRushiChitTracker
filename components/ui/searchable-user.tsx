@@ -99,15 +99,57 @@ export function SearchableUser({
     return () => clearTimeout(timeoutId);
   }, [searchQuery, searchUsers]);
 
-  // Find selected user when value changes
+  // Fetch user by ID when value is set but not found in search results
   React.useEffect(() => {
-    if (value && value !== noOptionValue && users.length > 0) {
-      const user = users.find(u => u.id === value);
-      setSelectedUser(user || null);
-    } else {
-      setSelectedUser(null);
-    }
-  }, [value, users, noOptionValue]);
+    const fetchUserById = async () => {
+      if (!value || value === noOptionValue || !token) {
+        setSelectedUser(null);
+        return;
+      }
+
+      // Check if user is already in the users array
+      const foundUser = users.find(u => u.id === value);
+      if (foundUser) {
+        setSelectedUser(foundUser);
+        return;
+      }
+
+      // If not found, try to fetch by ID
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/users/${value}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            const user: User = {
+              id: data.user.id,
+              registrationId: data.user.registrationId,
+              firstName: data.user.firstName,
+              lastName: data.user.lastName,
+              email: data.user.email,
+              referrals: data.user.referrals,
+            };
+            setSelectedUser(user);
+            // Also add to users array so it's available for display
+            setUsers(prev => {
+              const exists = prev.find(u => u.id === user.id);
+              return exists ? prev : [...prev, user];
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user by ID:', error);
+        setSelectedUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserById();
+  }, [value, noOptionValue, token, users]);
 
   const handleSelect = (selectedValue: string) => {
     if (selectedValue === noOptionValue) {

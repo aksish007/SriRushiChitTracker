@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/database';
+import { prisma, isOrganizationUserByRegistrationId } from '@/lib/database';
 import { requireAuth } from '@/lib/auth';
 import { payoutSchema } from '@/lib/validations';
+import { ORGANIZATION_REGISTRATION_ID } from '@/lib/constants';
 import logger from '@/lib/logger';
 
 // Force dynamic rendering for this API route
@@ -26,7 +27,14 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    let where: any = {};
+    let where: any = {
+      // Exclude organization user payouts
+      user: {
+        registrationId: {
+          not: ORGANIZATION_REGISTRATION_ID,
+        },
+      },
+    };
 
     if (user.role === 'USER') {
       where.userId = user.id;
@@ -155,6 +163,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Subscription not found' },
         { status: 404 }
+      );
+    }
+
+    // Prevent creating payouts for organization user subscriptions
+    if (isOrganizationUserByRegistrationId(subscription.user.registrationId)) {
+      return NextResponse.json(
+        { error: 'Cannot create payouts for organization user subscriptions' },
+        { status: 400 }
       );
     }
 
