@@ -1063,15 +1063,15 @@ export default function ChitSchemesPage() {
 
       {/* View Scheme Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Chit Scheme Details</DialogTitle>
             <DialogDescription>
               View detailed information about the chit scheme
             </DialogDescription>
           </DialogHeader>
           {selectedScheme && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Chit ID</Label>
@@ -1112,8 +1112,10 @@ export default function ChitSchemesPage() {
               </div>
               <div>
                 <Label>Subscriptions ({selectedScheme.subscriptions.length})</Label>
-                <div className="space-y-2 mt-2">
-                  {selectedScheme.subscriptions.map((sub) => (
+                <div className="space-y-2 mt-2 max-h-96 overflow-y-auto pr-2">
+                  {[...selectedScheme.subscriptions]
+                    .sort((a, b) => a.subscriberId.localeCompare(b.subscriberId))
+                    .map((sub) => (
                     <div key={sub.id} className="flex items-center justify-between p-2 border rounded">
                       <div>
                         <span className="font-medium">{sub.user.firstName} {sub.user.lastName}</span>

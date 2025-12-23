@@ -100,9 +100,9 @@ export async function PUT(
     const body = await request.json();
     const { firstName, lastName, email, phone, address, role, isActive, nominee, referredBy } = body;
 
-    // Validate required fields
-    if (!firstName || !lastName || !email) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // Validate required fields (email is optional)
+    if (!firstName || !lastName) {
+      return NextResponse.json({ error: 'First name and last name are required' }, { status: 400 });
     }
 
     // Check if phone is already taken by another user
