@@ -132,6 +132,9 @@ export default function PayoutsPage() {
   const [loadingReferralInfo, setLoadingReferralInfo] = useState(false);
   const [showBulkMarkPaidDialog, setShowBulkMarkPaidDialog] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState<Payout | null>(null);
+  const [showCustomerReportDialog, setShowCustomerReportDialog] = useState(false);
+  const [customerReportMonth, setCustomerReportMonth] = useState<string>('');
+  const [customerReportYear, setCustomerReportYear] = useState<string>('');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -266,6 +269,62 @@ export default function PayoutsPage() {
       toast({
         title: 'PDF Export Failed',
         description: error.message || 'Failed to export user payout report',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportCustomerReport = async () => {
+    if (!customerReportMonth || !customerReportYear) {
+      toast({
+        title: 'Error',
+        description: 'Please select both month and year',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: 'Error',
+        description: 'User information not available',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/reports/export-user-payout-pdf?userId=${user.id}&month=${customerReportMonth}&year=${customerReportYear}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `my-payout-${customerReportYear}-${customerReportMonth.padStart(2, '0')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'PDF Export Complete',
+        description: 'Your payout report has been downloaded successfully',
+        variant: 'success',
+      });
+
+      setShowCustomerReportDialog(false);
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      toast({
+        title: 'PDF Export Failed',
+        description: error.message || 'Failed to export payout report',
         variant: 'destructive',
       });
     }
@@ -835,7 +894,21 @@ export default function PayoutsPage() {
             }
           </p>
         </div>
-        {user?.role === 'ADMIN' && (
+        <div className="flex gap-2">
+          {user?.role !== 'ADMIN' && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCustomerReportDialog(true);
+                setCustomerReportMonth(currentMonth.toString());
+                setCustomerReportYear(currentYear.toString());
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download My Report
+            </Button>
+          )}
+          {user?.role === 'ADMIN' && (
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
@@ -1027,7 +1100,8 @@ export default function PayoutsPage() {
               </form>
             </DialogContent>
           </Dialog>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -1760,6 +1834,58 @@ export default function PayoutsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Customer Report Dialog */}
+      {user?.role !== 'ADMIN' && (
+        <Dialog open={showCustomerReportDialog} onOpenChange={setShowCustomerReportDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Download My Payout Report</DialogTitle>
+              <DialogDescription>
+                Select the month and year to download your payout report
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="month">Month *</Label>
+                <Select value={customerReportMonth} onValueChange={setCustomerReportMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                      <SelectItem key={month} value={month.toString()}>
+                        {getMonthName(month)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="year">Year *</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  value={customerReportYear}
+                  onChange={(e) => setCustomerReportYear(e.target.value)}
+                  placeholder={currentYear.toString()}
+                  min="2020"
+                  max={currentYear + 5}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCustomerReportDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleExportCustomerReport}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Report
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

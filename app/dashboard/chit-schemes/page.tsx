@@ -246,13 +246,14 @@ export default function ChitSchemesPage() {
         });
         fetchSchemes();
       } else {
-        throw new Error('Failed to delete chit scheme');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete chit scheme' }));
+        throw new Error(errorData.error || 'Failed to delete chit scheme');
       }
     } catch (error) {
       console.error('Error deleting chit scheme:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete chit scheme',
+        description: error instanceof Error ? error.message : 'Failed to delete chit scheme',
         variant: 'destructive',
       });
     } finally {
