@@ -120,6 +120,7 @@ export default function SubscriptionsPage() {
     chitSchemeId: '',
     subscriberId: '',
     selfRefer: false,
+    referredBy: '',
   });
   const [editForm, setEditForm] = useState({
     status: '',
@@ -486,7 +487,7 @@ export default function SubscriptionsPage() {
           variant: 'success',
         });
         setShowCreateDialog(false);
-        setFormData({ userId: '', chitSchemeId: '', subscriberId: '', selfRefer: false });
+        setFormData({ userId: '', chitSchemeId: '', subscriberId: '', selfRefer: false, referredBy: '' });
         fetchData();
       } else {
         const errorData = await response.json();
@@ -990,7 +991,11 @@ export default function SubscriptionsPage() {
               <Label htmlFor="userId">User *</Label>
               <SearchableUser
                 value={formData.userId}
-                onValueChange={(value) => setFormData({ ...formData, userId: value })}
+                onValueChange={(value) => {
+                  // Reset referredBy if it was set to the old userId (self-referral)
+                  const newReferredBy = formData.referredBy === formData.userId ? '' : formData.referredBy;
+                  setFormData({ ...formData, userId: value, referredBy: newReferredBy });
+                }}
                 placeholder="Select a user"
                 error={!!errors.userId}
                 showNoOption={false}
@@ -1029,15 +1034,30 @@ export default function SubscriptionsPage() {
                 Format: {'{'}ChitID{'}'}/{'{'}SlotNumber{'}'} (e.g., SRC01NS/01, SRC03MC/15)
               </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="selfRefer"
-                checked={formData.selfRefer}
-                onCheckedChange={(checked) => setFormData({ ...formData, selfRefer: checked === true })}
+            <div>
+              <Label htmlFor="referredBy">Referred By</Label>
+              <SearchableUser
+                value={formData.referredBy === formData.userId && formData.userId ? 'self' : formData.referredBy}
+                onValueChange={(value) => {
+                  if (value === 'self') {
+                    // Set referredBy to the selected user's ID for self-referral
+                    setFormData({ ...formData, referredBy: formData.userId, selfRefer: true });
+                  } else if (!value || value === '') {
+                    // Clear referral
+                    setFormData({ ...formData, referredBy: '', selfRefer: false });
+                  } else {
+                    // Set to selected user ID
+                    setFormData({ ...formData, referredBy: value, selfRefer: false });
+                  }
+                }}
+                placeholder="Select a referrer or choose self-referral"
+                showNoOption={true}
+                noOptionLabel="Self Referral"
+                noOptionValue="self"
               />
-              <Label htmlFor="selfRefer" className="text-sm font-normal cursor-pointer">
-                Set as self-referrer (user will refer themselves)
-              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Select who referred this user, or choose "Self Referral" for self-referral
+              </p>
             </div>
           </div>
           <div className="flex justify-end gap-2">

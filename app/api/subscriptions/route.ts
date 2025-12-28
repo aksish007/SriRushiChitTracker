@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     const adminUser = await requireAuth(request, 'ADMIN');
 
     const body = await request.json();
-    const { userId, chitSchemeId, subscriberId, selfRefer } = subscriptionSchema.parse(body);
+    const { userId, chitSchemeId, subscriberId, selfRefer, referredBy } = subscriptionSchema.parse(body);
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -228,8 +228,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Handle self-referral if requested
-    if (selfRefer === true) {
+    // Handle referral - prioritize referredBy over selfRefer for consistency
+    if (referredBy) {
+      // If referredBy is the same as userId, it's self-referral
+      if (referredBy === userId) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { referredBy: userId },
+        });
+      } else {
+        // Check if referrer exists
+        const referrer = await prisma.user.findUnique({
+          where: { id: referredBy },
+        });
+        if (referrer) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { referredBy: referredBy },
+          });
+        }
+      }
+    } else if (selfRefer === true) {
+      // Fallback to selfRefer flag for backward compatibility
       await prisma.user.update({
         where: { id: userId },
         data: { referredBy: userId },
@@ -241,7 +261,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: adminUser.id,
         action: 'SUBSCRIPTION_CREATE',
-        details: `Created subscription: ${newSubscription.subscriberId} for user: ${user.registrationId}${selfRefer ? ' (self-referred)' : ''}`,
+        details: `Created subscription: ${newSubscription.subscriberId} for user: ${user.registrationId}${(referredBy === userId || selfRefer) ? ' (self-referred)' : referredBy ? ` (referred by: ${referredBy})` : ''}`,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       },
