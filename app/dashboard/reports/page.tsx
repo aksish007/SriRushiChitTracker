@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Download, Users, TrendingUp, IndianRupee, Calendar, BarChart3, PieChart, Activity } from 'lucide-react';
+import { FileText, Download, Users, TrendingUp, IndianRupee, Calendar, BarChart3, PieChart, Activity, Receipt } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { SearchableUser } from '@/components/ui/searchable-user';
 
@@ -24,6 +24,9 @@ export default function ReportsPage() {
   const [userPayoutUserId, setUserPayoutUserId] = useState<string>('');
   const [userPayoutMonth, setUserPayoutMonth] = useState<string>('');
   const [userPayoutYear, setUserPayoutYear] = useState<string>('');
+  const [showTdsDialog, setShowTdsDialog] = useState(false);
+  const [tdsStartDate, setTdsStartDate] = useState<string>('');
+  const [tdsEndDate, setTdsEndDate] = useState<string>('');
 
   const getMonthName = (month: number) => {
     const months = [
@@ -148,6 +151,20 @@ export default function ReportsPage() {
         'Referral tree information',
         'Detailed breakdown'
       ]
+    },
+    {
+      id: 'tds',
+      title: 'TDS Amount Report',
+      description: 'TDS calculation report with date range selection',
+      icon: Receipt,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      features: [
+        'TDS amount calculations',
+        'Date range filtering',
+        'Payout details with TDS',
+        'Net amount summaries'
+      ]
     }
   ];
 
@@ -204,6 +221,16 @@ export default function ReportsPage() {
           setUserPayoutUserId('');
           setUserPayoutMonth(currentMonth.toString());
           setUserPayoutYear(currentYear.toString());
+          setDownloading(null);
+          return;
+        case 'tds':
+          // Show dialog for date range selection
+          setShowTdsDialog(true);
+          // Set default dates (first day of current month to today)
+          const today = new Date();
+          const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          setTdsStartDate(firstDayOfMonth.toISOString().split('T')[0]);
+          setTdsEndDate(today.toISOString().split('T')[0]);
           setDownloading(null);
           return;
         default:
@@ -345,6 +372,57 @@ export default function ReportsPage() {
       });
 
       setShowUserPayoutDialog(false);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: 'Download Failed',
+        description: error instanceof Error ? error.message : 'Failed to download report',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleTdsDownload = async () => {
+    if (!tdsStartDate || !tdsEndDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select both start and end dates',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDownloading('tds');
+    try {
+      const endpoint = `/api/reports/export-tds?startDate=${tdsStartDate}&endDate=${tdsEndDate}`;
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tds-report-${tdsStartDate}-to-${tdsEndDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'Report Downloaded!',
+        description: 'TDS Report has been downloaded successfully.',
+        variant: 'success',
+      });
+
+      setShowTdsDialog(false);
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -715,6 +793,48 @@ export default function ReportsPage() {
             </Button>
             <Button onClick={handleUserPayoutDownload} disabled={downloading === 'user-payout-pdf-monthly'}>
               {downloading === 'user-payout-pdf-monthly' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* TDS Report Dialog */}
+      <Dialog open={showTdsDialog} onOpenChange={setShowTdsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>TDS Amount Report</DialogTitle>
+            <DialogDescription>
+              Select the date range for the TDS report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date *</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={tdsStartDate}
+                onChange={(e) => setTdsStartDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date *</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={tdsEndDate}
+                onChange={(e) => setTdsEndDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTdsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleTdsDownload} disabled={downloading === 'tds'}>
+              {downloading === 'tds' ? 'Generating...' : 'Generate Report'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -67,6 +67,7 @@ export default function ReferralTreeV2Page() {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [referralTree, setReferralTree] = useState<ReferralNode | null>(null);
+  const [referralCounts, setReferralCounts] = useState<{ directReferralCount: number; indirectReferralCount: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(0.6); // Default more zoomed out
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -126,6 +127,7 @@ export default function ReferralTreeV2Page() {
       if (response.ok) {
         const data = await response.json();
         setReferralTree(data.tree);
+        setReferralCounts(data.referralCounts || null);
         // Expand all nodes by default
         const allNodeIds = getAllNodeIds(data.tree);
         setExpandedNodes(new Set(allNodeIds));
@@ -680,11 +682,11 @@ export default function ReferralTreeV2Page() {
         return null;
       }
     
-    // Calculate dimensions based on tree size
+    // Calculate dimensions based on tree size - compact layout
     const nodeWidth = 280;
-    const nodeHeight = 200;
-    const levelHeight = 300; // Vertical spacing between levels (rows)
-    const horizontalSpacing = 320; // Horizontal spacing between nodes in same level
+    const nodeHeight = 45;
+    const levelHeight = 90; // Vertical spacing between levels (rows) - reduced from 300
+    const horizontalSpacing = 300; // Horizontal spacing between nodes in same level - reduced from 320
     const margin = 100; // Margin around the tree
     
     // Group nodes by depth (level)
@@ -704,11 +706,16 @@ export default function ReferralTreeV2Page() {
     const width = Math.max(1200, maxNodesAtAnyLevel * horizontalSpacing) + margin * 2;
     const height = (maxDepth + 1) * levelHeight + margin * 2;
 
+    // Store level Y positions for step labels
+    const levelYPositions: Map<number, number> = new Map();
+
     // Position nodes: each level is a horizontal row
     nodesByLevel.forEach((levelNodes, depth) => {
       if (levelNodes.length === 0) return;
       
       const y = margin + depth * levelHeight + levelHeight / 2;
+      levelYPositions.set(depth, y);
+      
       const totalWidth = levelNodes.length * horizontalSpacing;
       const startX = (width - totalWidth) / 2 + horizontalSpacing / 2;
       
@@ -718,7 +725,7 @@ export default function ReferralTreeV2Page() {
       });
     });
 
-      return { hierarchy, width, height, nodeWidth, nodeHeight };
+      return { hierarchy, width, height, nodeWidth, nodeHeight, levelYPositions };
     } catch (error) {
       console.error('Error creating tree layout:', error);
       return null;
@@ -762,19 +769,16 @@ export default function ReferralTreeV2Page() {
 
   const renderNodeCard = (node: ReferralNode, hierarchyNode: HierarchyNode) => {
     const isHighlighted = highlightedNode === node.id;
-    const performanceBadge = getPerformanceBadge(node.totalPayouts);
-    const PerformanceIcon = performanceBadge.icon;
     
     // Always check the original tree for children, not the transformed hierarchy
     const originalNode = findNodeInTree(node.id, referralTree);
     const hasChildren = originalNode ? (originalNode.children && originalNode.children.length > 0) : false;
     const isExpanded = expandedNodes.has(node.id);
     const childrenCount = hasChildren && originalNode ? originalNode.children.length : 0;
-    const hiddenChildrenCount = hasChildren && !isExpanded ? childrenCount : 0;
 
-    // Center the card on the node position
+    // Compact single-line dimensions - increased width to fit full names
     const cardWidth = 280;
-    const cardHeight = 200;
+    const cardHeight = 45;
 
     return (
       <g key={node.id} transform={`translate(${hierarchyNode.x}, ${hierarchyNode.y})`}>
@@ -784,114 +788,67 @@ export default function ReferralTreeV2Page() {
           width={cardWidth}
           height={cardHeight}
         >
-          <div className="relative flex flex-col items-center">
-            <Card 
-              className={`w-full max-w-[280px] min-w-[200px] cursor-pointer transition-all duration-300 ${
-                isHighlighted ? 'ring-4 ring-primary shadow-glow' : 'shadow-glow border-2 border-primary/20'
-              } hover:shadow-glow-blue ${!isExpanded && hasChildren ? 'border-orange-300 bg-orange-50/30' : ''}`}
-              onClick={(e) => handleNodeClick(node, e)}
+          <div className="relative flex items-center">
+            <div 
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border-2 transition-all duration-200 cursor-pointer ${
+                isHighlighted 
+                  ? 'ring-2 ring-primary border-primary bg-primary/10' 
+                  : 'border-primary/20 bg-white hover:border-primary/40 hover:bg-primary/5'
+              } ${!isExpanded && hasChildren ? 'border-orange-300 bg-orange-50/50' : ''}`}
+              onClick={(e) => {
+                // Don't trigger if clicking on expand/collapse button
+                if (!(e.target as HTMLElement).closest('.expand-toggle-area') && 
+                    !(e.target as HTMLElement).closest('button')) {
+                  handleNodeClick(node, e);
+                }
+              }}
             >
-            <CardContent className="p-4">
-              <div className="text-center space-y-3">
-                {/* Expand/Collapse Indicator and Performance Badge */}
-                <div className="flex justify-center items-center gap-2">
-                  {hasChildren && (
-                    <div 
-                      className="expand-toggle-area flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleNodeExpansion(node.id);
-                      }}
-                      title={isExpanded ? 'Collapse children' : 'Expand children'}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-primary" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-primary" />
-                      )}
-                      <span className="text-xs font-semibold text-primary">{childrenCount}</span>
-                    </div>
+              {/* Expand/Collapse Indicator */}
+              {hasChildren ? (
+                <button
+                  className="expand-toggle-area flex items-center justify-center w-6 h-6 rounded bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer flex-shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleNodeExpansion(node.id);
+                  }}
+                  title={isExpanded ? 'Collapse children' : 'Expand children'}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="h-3 w-3 text-primary" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3 text-primary" />
                   )}
-                  <Badge className={`${performanceBadge.color} text-white text-xs`}>
-                    <PerformanceIcon className="h-3 w-3 mr-1" />
-                    {performanceBadge.text}
-                  </Badge>
-                </div>
-
-                {/* Collapsed State Indicator */}
-                {!isExpanded && hasChildren && (
-                  <div className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded border border-orange-300 font-medium">
-                    {hiddenChildrenCount} referral{hiddenChildrenCount !== 1 ? 's' : ''} hidden
-                  </div>
-                )}
-
-                {/* User Info */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className={`w-3 h-3 ${getNodeColor(node.level, isHighlighted)} rounded-full`}></div>
-                    <h3 className="font-semibold text-sm">
-                      {node.firstName} {node.lastName}
-                    </h3>
-                  </div>
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {node.registrationId}
-                  </div>
-                  {node.referredBy && (
-                    <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">
-                      <span className="font-medium">Referred by:</span> {node.referredBy.firstName} {node.referredBy.lastName}
-                      <br />
-                      <span className="text-[10px] font-mono text-blue-600">({node.referredBy.registrationId})</span>
-                    </div>
-                  )}
-                  <Badge variant="outline" className="text-xs">
-                    Step {node.level}
-                  </Badge>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div 
-                    className="text-center p-2 bg-gradient-primary/10 rounded-lg cursor-pointer hover:bg-gradient-primary/20 transition-colors"
-                    onClick={(e) => handleSchemeCountClick(e, node)}
-                  >
-                    <div className="font-bold text-primary">{node.subscriptionsCount}</div>
-                    <div className="text-muted-foreground">Subscriptions</div>
-                  </div>
-                  <div className="text-center p-2 bg-gradient-success/10 rounded-lg">
-                    <div className="font-bold text-success">₹{Number(node.totalPayouts).toLocaleString()}</div>
-                    <div className="text-muted-foreground">Payouts</div>
-                  </div>
-                </div>
-
-                {/* Expand/Collapse Button (Alternative) */}
-                {hasChildren && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleNodeExpansion(node.id);
-                    }}
-                    className="h-7 w-full text-xs hover:bg-primary/10 border-primary/30"
-                  >
-                    {isExpanded ? (
-                      <>
-                        <ChevronDown className="h-3 w-3 mr-1" />
-                        Collapse ({childrenCount})
-                      </>
-                    ) : (
-                      <>
-                        <ChevronRight className="h-3 w-3 mr-1" />
-                        Expand ({childrenCount})
-                      </>
-                    )}
-                  </Button>
-                )}
+                </button>
+              ) : (
+                <div className="w-6 h-6 flex-shrink-0"></div>
+              )}
+              
+              {/* Level indicator dot */}
+              <div className={`w-2 h-2 ${getNodeColor(node.level, isHighlighted)} rounded-full flex-shrink-0`}></div>
+              
+              {/* Name only */}
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-sm text-gray-900 whitespace-nowrap">
+                  {node.firstName} {node.lastName}
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </foreignObject>
+              
+              {/* View Details Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNodeClick(node, e);
+                }}
+                className="h-7 px-2 text-xs flex-shrink-0"
+                title="View Details"
+              >
+                View
+              </Button>
+            </div>
+          </div>
+        </foreignObject>
       </g>
     );
   };
@@ -976,6 +933,40 @@ export default function ReferralTreeV2Page() {
           />
         </CardContent>
       </Card>
+
+      {/* Referral Counts Stats */}
+      {referralCounts && referralTree && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="shadow-glow border-2 border-primary/20">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Direct Referrals</p>
+                  <p className="text-3xl font-bold text-primary mt-2">{referralCounts.directReferralCount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Immediate referrals</p>
+                </div>
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <UserCheck className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-glow border-2 border-primary/20">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Indirect Referrals</p>
+                  <p className="text-3xl font-bold text-green-600 mt-2">{referralCounts.indirectReferralCount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Total downline network</p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Network className="h-8 w-8 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Controls - Sticky */}
       {referralTree && (
@@ -1188,6 +1179,48 @@ export default function ReferralTreeV2Page() {
                       <polygon points="0 0, 10 3, 0 6" fill="rgb(59, 130, 246)" />
                     </marker>
                   </defs>
+
+                  {/* Step labels on the left side of each level */}
+                  {treeData.levelYPositions && Array.from(treeData.levelYPositions.entries()).map(([level, yPos]) => {
+                    // Position label on the left side
+                    const labelX = 20;
+                    // Find the leftmost node in this level to draw the connecting line
+                    const nodesInLevel = treeData.hierarchy.descendants().filter(
+                      (node: HierarchyNode) => node.depth === level && node.x !== undefined && node.y !== undefined
+                    );
+                    const leftmostX = nodesInLevel.length > 0 
+                      ? Math.min(...nodesInLevel.map((n: HierarchyNode) => n.x!))
+                      : labelX + 100;
+                    
+                    return (
+                      <g key={`step-label-${level}`}>
+                        <text
+                          x={labelX}
+                          y={yPos}
+                          textAnchor="start"
+                          fontSize="14"
+                          fontWeight="bold"
+                          fill="rgb(59, 130, 246)"
+                          className="select-none"
+                        >
+                          Step {level}
+                        </text>
+                        {/* Dashed line connecting the label to the level */}
+                        {nodesInLevel.length > 0 && (
+                          <line
+                            x1={labelX + 60}
+                            y1={yPos}
+                            x2={leftmostX - 20}
+                            y2={yPos}
+                            stroke="rgb(200, 200, 200)"
+                            strokeWidth="1"
+                            strokeDasharray="3,3"
+                            strokeOpacity="0.4"
+                          />
+                        )}
+                      </g>
+                    );
+                  })}
 
                   {/* Connection lines */}
                   {showConnections && treeData.hierarchy.links && treeData.hierarchy.links().map((link: any, i: number) => {

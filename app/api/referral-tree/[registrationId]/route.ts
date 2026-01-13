@@ -161,6 +161,23 @@ async function buildReferralTree(
   return nodes;
 }
 
+// Recursive function to count total downline
+async function countTotalDownline(userId: string): Promise<number> {
+  const directReferrals = await prisma.user.findMany({
+    where: { referredBy: userId },
+    select: { id: true },
+  });
+
+  let totalCount = directReferrals.length;
+
+  // Recursively count referrals of referrals
+  for (const referral of directReferrals) {
+    totalCount += await countTotalDownline(referral.id);
+  }
+
+  return totalCount;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ registrationId: string }> }
@@ -228,6 +245,13 @@ export async function GET(
       status: sub.status,
     }));
 
+    // Calculate referral counts
+    const directReferralCount = await prisma.user.count({
+      where: { referredBy: targetUser.id },
+    });
+
+    const totalDownlineCount = await countTotalDownline(targetUser.id);
+
     const rootNode: ReferralNode = {
       id: targetUser.id,
       registrationId: targetUser.registrationId,
@@ -242,7 +266,13 @@ export async function GET(
       chitGroups,
     };
 
-    return NextResponse.json({ tree: rootNode });
+    return NextResponse.json({ 
+      tree: rootNode,
+      referralCounts: {
+        directReferralCount,
+        indirectReferralCount: totalDownlineCount,
+      }
+    });
   } catch (error: any) {
     console.error('Get referral tree error:', error);
     

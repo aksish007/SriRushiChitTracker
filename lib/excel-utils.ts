@@ -216,3 +216,70 @@ export function exportFinancialToExcel(data: { subscriptions: any[], payouts: an
   const buffer = xlsx.build(workbook);
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 }
+
+export function exportTdsToExcel(payouts: any[]): ArrayBuffer {
+  const TDS_RATE = 0.05; // 5% TDS
+  
+  const headers = [
+    'Serial Number',
+    'Registration ID',
+    'User Name',
+    'Subscriber ID',
+    'Payout Amount',
+    'TDS Amount (5%)',
+    'Net Amount',
+    'Month',
+    'Year',
+    'Status',
+    'Created At'
+  ];
+  
+  let serialNumber = 1;
+  let totalPayoutAmount = 0;
+  let totalTdsAmount = 0;
+  let totalNetAmount = 0;
+  
+  const data = payouts.map(payout => {
+    const payoutAmount = Number(payout.amount);
+    const tdsAmount = payoutAmount * TDS_RATE;
+    const netAmount = payoutAmount - tdsAmount;
+    
+    totalPayoutAmount += payoutAmount;
+    totalTdsAmount += tdsAmount;
+    totalNetAmount += netAmount;
+    
+    return [
+      serialNumber++,
+      payout.user.registrationId,
+      `${payout.user.firstName} ${payout.user.lastName}`,
+      payout.subscription.subscriberId,
+      payoutAmount.toFixed(2),
+      tdsAmount.toFixed(2),
+      netAmount.toFixed(2),
+      payout.month,
+      payout.year,
+      payout.status,
+      new Date(payout.createdAt).toLocaleDateString(),
+    ];
+  });
+  
+  // Add summary row
+  data.push([
+    '',
+    'TOTAL',
+    '',
+    '',
+    totalPayoutAmount.toFixed(2),
+    totalTdsAmount.toFixed(2),
+    totalNetAmount.toFixed(2),
+    '',
+    '',
+    '',
+    '',
+  ]);
+  
+  const sheetData = [headers, ...data];
+  const buffer = xlsx.build([{ name: 'TDS Report', data: sheetData, options: {} }]);
+  
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+}
