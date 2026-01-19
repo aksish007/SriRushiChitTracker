@@ -4,7 +4,182 @@ import { requireAuth } from '@/lib/auth';
 import { PayoutCalculator } from '@/lib/payout-calculator';
 import logger from '@/lib/logger';
 
-// Function to calculate actual referral counts by step
+// Interface for user step assignment
+interface UserStepAssignment {
+  userId: string;
+  stepNumber: number;
+  joinOrder: number; // Position in join sequence
+}
+
+// Function to assign step number based on join order
+function assignStepToUser(userIndex: number): number {
+  // userIndex is 1-based (1 = first joiner after root)
+  if (userIndex === 0) return 0; // Root
+  
+  let cumulativeCount = 0;
+  for (let step = 1; step <= 9; step++) {
+    const stepSize = Math.pow(3, step);
+    cumulativeCount += stepSize;
+    if (userIndex <= cumulativeCount) {
+      return step;
+    }
+  }
+  return 9; // Default to step 9 if beyond
+}
+
+// Get all users referred by a user (recursively via referral hierarchy)
+// Includes self-referrals (users who refer themselves)
+async function getAllReferredUsers(userId: string, visited: Set<string> = new Set()): Promise<Array<{ id: string }>> {
+  if (visited.has(userId)) {
+    return []; // Prevent cycles (but self-referrals are already captured in directReferrals)
+  }
+  
+  visited.add(userId);
+  
+  // Get direct referrals - this includes self-referrals (where referredBy === userId)
+  const directReferrals = await prisma.user.findMany({
+    where: { referredBy: userId },
+    select: { id: true },
+  });
+  
+  // Include self-referrals explicitly (users who refer themselves)
+  // This ensures self-referrals are always counted
+  const allReferrals: Array<{ id: string }> = [...directReferrals];
+  
+  // Recursively get referrals of referrals (but skip if it's the same user to prevent infinite loops)
+  for (const referral of directReferrals) {
+    if (referral.id !== userId) {
+      // Only recurse for non-self referrals to prevent cycles
+      const nestedReferrals = await getAllReferredUsers(referral.id, visited);
+      allReferrals.push(...nestedReferrals);
+    }
+    // Self-referrals are already in allReferrals, no need to recurse
+  }
+  
+  return allReferrals;
+}
+
+// Get all downline users for a root user (recursively)
+// Includes self-referrals but prevents infinite loops
+async function getAllDownlineUsers(rootUserId: string, visited: Set<string> = new Set()): Promise<Array<{ id: string; createdAt: Date }>> {
+  if (visited.has(rootUserId)) {
+    return []; // Prevent cycles
+  }
+  
+  visited.add(rootUserId);
+  
+  // Get direct referrals - includes self-referrals (where referredBy === rootUserId)
+  const directReferrals = await prisma.user.findMany({
+    where: { referredBy: rootUserId },
+    select: { 
+      id: true,
+      createdAt: true,
+    },
+  });
+  
+  const allDownline: Array<{ id: string; createdAt: Date }> = [...directReferrals];
+  
+  // Recursively get downline of downline (but skip self-referrals to prevent infinite loops)
+  for (const referral of directReferrals) {
+    if (referral.id !== rootUserId) {
+      // Only recurse for non-self referrals to prevent cycles
+      const nestedDownline = await getAllDownlineUsers(referral.id, visited);
+      allDownline.push(...nestedDownline);
+    }
+    // Self-referrals are already in allDownline, no need to recurse
+  }
+  
+  return allDownline;
+}
+
+// Build sequential steps for root user
+async function buildSequentialStepsForRoot(rootUserId: string): Promise<Map<string, UserStepAssignment>> {
+  // Get all downline users (via referral hierarchy)
+  const allDownline = await getAllDownlineUsers(rootUserId);
+  
+  // Order by createdAt (join order)
+  const sortedDownline = allDownline.sort((a, b) => {
+    const dateA = a.createdAt.getTime();
+    const dateB = b.createdAt.getTime();
+    if (dateA !== dateB) {
+      return dateA - dateB;
+    }
+    // If same timestamp, sort by ID for consistency
+    return a.id.localeCompare(b.id);
+  });
+  
+  // Assign step numbers based on sequential position
+  const stepAssignments = new Map<string, UserStepAssignment>();
+  
+  sortedDownline.forEach((user, index) => {
+    const stepNumber = assignStepToUser(index + 1); // +1 because root is 0
+    stepAssignments.set(user.id, {
+      userId: user.id,
+      stepNumber,
+      joinOrder: index + 1,
+    });
+  });
+  
+  return stepAssignments;
+}
+
+// Calculate referral counts by sequential step
+async function calculateReferralCountsBySequentialStep(
+  userId: string,
+  rootUserId: string,
+  maxSteps: number = 100
+): Promise<number[]> {
+  // 1. Build step assignments for root
+  const stepAssignments = await buildSequentialStepsForRoot(rootUserId);
+  
+  // 2. Get user's step number
+  // If user is the root, they're in Step 0
+  const isRoot = userId === rootUserId;
+  const userStep = isRoot ? 0 : stepAssignments.get(userId)?.stepNumber;
+  
+  if (userStep === undefined && !isRoot) {
+    // User not found in downline and not root, return empty array
+    return [];
+  }
+  
+  // 3. Get all users referred by this user (recursively)
+  // This includes self-referrals (users where referredBy === userId)
+  const referredUsers = await getAllReferredUsers(userId);
+  const referredUserIds = new Set(referredUsers.map(u => u.id));
+  
+  // 4. Build a map of step number -> count of referred users in that step
+  // This is more efficient than iterating all assignments for each step
+  const stepCounts = new Map<number, number>();
+  
+  // Initialize counts for all relevant steps
+  const startStep = isRoot ? 1 : userStep + 1; // Root starts from Step 1, others from their next step
+  const maxStepToCheck = Math.min(startStep + maxSteps - 1, 9); // Cap at step 9
+  for (let step = startStep; step <= maxStepToCheck; step++) {
+    stepCounts.set(step, 0);
+  }
+  
+  // Iterate through referred users once and count them by step
+  // Self-referrals are included in referredUserIds and will be counted if they appear in subsequent steps
+  for (const referredUserId of referredUserIds) {
+    const assignment = stepAssignments.get(referredUserId);
+    if (assignment) {
+      const step = assignment.stepNumber;
+      if (step >= startStep && step <= maxStepToCheck) {
+        stepCounts.set(step, (stepCounts.get(step) || 0) + 1);
+      }
+    }
+  }
+  
+  // Build the counts array in order
+  const counts: number[] = [];
+  for (let step = startStep; step <= maxStepToCheck; step++) {
+    counts.push(stepCounts.get(step) || 0);
+  }
+  
+  return counts;
+}
+
+// Legacy function - kept for reference but deprecated
 async function calculateActualReferralCountsByStep(userId: string, maxSteps: number = 100): Promise<number[]> {
   const counts: number[] = [];
   let currentLevelUsers = [userId];
@@ -108,9 +283,6 @@ export async function POST(request: NextRequest) {
     // Count total downline (all levels)
     const totalDownlineCount = await countTotalDownline(subscription.userId);
 
-    // Calculate actual referral counts by step
-    const actualReferralCounts = await calculateActualReferralCountsByStep(subscription.userId, stepsToCalculate);
-
     // Determine club tier based on chit scheme amount (as per PDF)
     const chitAmount = Number(subscription.chitScheme.amount);
     let clubTier = 'EXECUTIVE';
@@ -136,11 +308,35 @@ export async function POST(request: NextRequest) {
       baseRate = 50;
     }
 
-    // Calculate payout using actual referral counts
-    const payoutResult = PayoutCalculator.calculatePayoutWithActualCounts(
-      baseRate,
-      actualReferralCounts
+    // Calculate referral counts by sequential step (new method)
+    // Use subscription user as root (they're the one getting paid)
+    const actualReferralCounts = await calculateReferralCountsBySequentialStep(
+      subscription.userId,
+      subscription.userId, // Root is the subscription user
+      stepsToCalculate
     );
+
+    // Handle empty referral counts (user has no referrals in subsequent steps)
+    let payoutResult;
+    if (actualReferralCounts.length === 0) {
+      // Return zero payout with empty steps
+      payoutResult = {
+        clubBaseRate: baseRate,
+        totalPayout: 0,
+        steps: [],
+        calculationDetails: {
+          formula: 'Actual referral counts based calculation',
+          totalSteps: 0,
+          calculatedAt: new Date(),
+        },
+      };
+    } else {
+      // Calculate payout using actual referral counts
+      payoutResult = PayoutCalculator.calculatePayoutWithActualCounts(
+        baseRate,
+        actualReferralCounts
+      );
+    }
 
     return NextResponse.json({
       subscription: {
@@ -192,7 +388,15 @@ export async function POST(request: NextRequest) {
 }
 
 // Recursive function to count total downline
-async function countTotalDownline(userId: string): Promise<number> {
+// Includes self-referrals but prevents infinite loops
+async function countTotalDownline(userId: string, visited: Set<string> = new Set()): Promise<number> {
+  if (visited.has(userId)) {
+    return 0; // Prevent cycles
+  }
+  
+  visited.add(userId);
+  
+  // Get direct referrals - includes self-referrals (where referredBy === userId)
   const directReferrals = await prisma.user.findMany({
     where: { referredBy: userId },
     select: { id: true },
@@ -200,9 +404,13 @@ async function countTotalDownline(userId: string): Promise<number> {
 
   let totalCount = directReferrals.length;
 
-  // Recursively count referrals of referrals
+  // Recursively count referrals of referrals (but skip self-referrals to prevent infinite loops)
   for (const referral of directReferrals) {
-    totalCount += await countTotalDownline(referral.id);
+    if (referral.id !== userId) {
+      // Only recurse for non-self referrals to prevent cycles
+      totalCount += await countTotalDownline(referral.id, visited);
+    }
+    // Self-referrals are already counted in directReferrals.length, no need to recurse
   }
 
   return totalCount;

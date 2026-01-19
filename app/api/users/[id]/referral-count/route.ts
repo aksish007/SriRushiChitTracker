@@ -90,7 +90,15 @@ export async function GET(
 }
 
 // Recursive function to count total downline
-async function countTotalDownline(userId: string): Promise<number> {
+// Includes self-referrals but prevents infinite loops
+async function countTotalDownline(userId: string, visited: Set<string> = new Set()): Promise<number> {
+  if (visited.has(userId)) {
+    return 0; // Prevent cycles
+  }
+  
+  visited.add(userId);
+  
+  // Get direct referrals - includes self-referrals (where referredBy === userId)
   const directReferrals = await prisma.user.findMany({
     where: { referredBy: userId },
     select: { id: true },
@@ -98,9 +106,13 @@ async function countTotalDownline(userId: string): Promise<number> {
 
   let totalCount = directReferrals.length;
 
-  // Recursively count referrals of referrals
+  // Recursively count referrals of referrals (but skip self-referrals to prevent infinite loops)
   for (const referral of directReferrals) {
-    totalCount += await countTotalDownline(referral.id);
+    if (referral.id !== userId) {
+      // Only recurse for non-self referrals to prevent cycles
+      totalCount += await countTotalDownline(referral.id, visited);
+    }
+    // Self-referrals are already counted in directReferrals.length, no need to recurse
   }
 
   return totalCount;

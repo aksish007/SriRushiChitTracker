@@ -5,21 +5,19 @@ import { requireAuth } from '@/lib/auth';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-interface ReferralNode {
+interface Member {
   id: string;
   registrationId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  level: number;
   referredBy?: {
     id: string;
     registrationId: string;
     firstName: string;
     lastName: string;
   };
-  children: ReferralNode[];
   subscriptionsCount: number;
   totalPayouts: number;
   chitGroups: Array<{
@@ -29,29 +27,209 @@ interface ReferralNode {
     duration: number;
     status: string;
   }>;
+  joinOrder: number;
 }
 
-async function buildReferralTree(
-  userId: string, 
-  level: number = 0, 
-  maxLevel: number = 1000,
-  visitedNodes: Set<string> = new Set()
-): Promise<ReferralNode[]> {
-  // Safety limit to prevent infinite loops (1000 levels should be more than enough)
-  // The function will naturally stop when there are no more children
-  if (level > maxLevel) return [];
+interface Step {
+  stepNumber: number;
+  memberCount: number;
+  expectedCount: number;
+  members: Member[];
+}
 
-  // Prevent circular references (e.g., self-referral creating infinite loops)
-  if (visitedNodes.has(userId)) {
-    return [];
+interface SequentialTreeResponse {
+  rootUser: {
+    id: string;
+    registrationId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    subscriptionsCount: number;
+    totalPayouts: number;
+    chitGroups: Array<{
+      chitId: string;
+      name: string;
+      amount: number;
+      duration: number;
+      status: string;
+    }>;
+  };
+  steps: Step[];
+  summary: {
+    totalMembers: number;
+    directMembers: number;
+    indirectMembers: number;
+  };
+}
+
+// Function to assign step number based on join order
+function assignStepToUser(userIndex: number): number {
+  // userIndex is 1-based (1 = first joiner after root)
+  if (userIndex === 0) return 0; // Root
+  
+  let cumulativeCount = 0;
+  for (let step = 1; step <= 9; step++) {
+    const stepSize = Math.pow(3, step);
+    cumulativeCount += stepSize;
+    if (userIndex <= cumulativeCount) {
+      return step;
+    }
+  }
+  return 9; // Default to step 9 if beyond
+}
+
+// Get all downline users for a root user (recursively, including self-referrals)
+async function getAllDownlineUsersForTree(rootUserId: string, visited: Set<string> = new Set()): Promise<Array<{
+  id: string;
+  registrationId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  referredBy: string | null;
+  createdAt: Date;
+}>> {
+  if (visited.has(rootUserId)) {
+    return []; // Prevent cycles
+  }
+  
+  visited.add(rootUserId);
+  
+  // Get direct referrals - includes self-referrals (where referredBy === rootUserId)
+  const directReferrals = await prisma.user.findMany({
+    where: { referredBy: rootUserId },
+    select: {
+      id: true,
+      registrationId: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      referredBy: true,
+      createdAt: true,
+    },
+  });
+  
+  const allDownline: Array<{
+    id: string;
+    registrationId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    referredBy: string | null;
+    createdAt: Date;
+  }> = [...directReferrals];
+  
+  // Recursively get downline of downline
+  for (const referral of directReferrals) {
+    if (referral.id !== rootUserId) {
+      // Only recurse for non-self referrals to prevent cycles
+      const nestedDownline = await getAllDownlineUsersForTree(referral.id, visited);
+      allDownline.push(...nestedDownline);
+    }
+    // Self-referrals are already in allDownline, no need to recurse
+  }
+  
+  return allDownline;
+}
+
+// Build sequential steps based on join order (only root's downline, including self-referrals)
+async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeResponse> {
+  // Get root user
+  const rootUser = await prisma.user.findUnique({
+    where: { id: rootUserId },
+    select: {
+      id: true,
+      registrationId: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      subscriptions: {
+        where: { status: 'ACTIVE' },
+        select: { 
+          id: true,
+          chitScheme: {
+            select: {
+              chitId: true,
+              name: true,
+              amount: true,
+              duration: true,
+            }
+          },
+          status: true,
+        },
+      },
+      payouts: {
+        where: { status: 'PAID' },
+        select: { amount: true },
+      },
+    },
+  });
+
+  if (!rootUser) {
+    throw new Error('Root user not found');
   }
 
-  // Add current node to visited set
-  const currentVisited = new Set(visitedNodes);
-  currentVisited.add(userId);
+  // Get all downline users (via referral hierarchy, including self-referrals)
+  const downlineUsers = await getAllDownlineUsersForTree(rootUserId);
+  
+  // Get full user data for downline users, ordered by join time
+  const downlineUserIds = downlineUsers.map(u => u.id);
+  
+  // If no downline users, return empty steps
+  if (downlineUserIds.length === 0) {
+    const steps: Step[] = [];
+    for (let stepNum = 1; stepNum <= 9; stepNum++) {
+      steps.push({
+        stepNumber: stepNum,
+        memberCount: 0,
+        expectedCount: Math.pow(3, stepNum),
+        members: [],
+      });
+    }
+    
+    const rootUserTotalPayouts = rootUser.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
+    const rootUserChitGroups = rootUser.subscriptions.map(sub => ({
+      chitId: sub.chitScheme.chitId,
+      name: sub.chitScheme.name,
+      amount: Number(sub.chitScheme.amount),
+      duration: sub.chitScheme.duration,
+      status: sub.status,
+    }));
+    
+    return {
+      rootUser: {
+        id: rootUser.id,
+        registrationId: rootUser.registrationId,
+        firstName: rootUser.firstName,
+        lastName: rootUser.lastName,
+        email: rootUser.email || '',
+        phone: rootUser.phone,
+        subscriptionsCount: rootUser.subscriptions.length,
+        totalPayouts: rootUserTotalPayouts,
+        chitGroups: rootUserChitGroups,
+      },
+      steps,
+      summary: {
+        totalMembers: 0,
+        directMembers: 0,
+        indirectMembers: 0,
+      },
+    };
+  }
 
-  const users = await prisma.user.findMany({
-    where: { referredBy: userId },
+  // Get full user data for downline users, maintaining join order
+  const allUsers = await prisma.user.findMany({
+    where: { 
+      id: { in: downlineUserIds },
+    },
+    orderBy: [
+      { createdAt: 'asc' },
+      { registrationId: 'asc' }
+    ],
     select: {
       id: true,
       registrationId: true,
@@ -90,44 +268,11 @@ async function buildReferralTree(
     },
   });
 
-  const nodes: ReferralNode[] = [];
-
-  for (const user of users) {
-    // Skip if this user would create a cycle
-    if (currentVisited.has(user.id)) {
-      // Still add the node but mark it as a cycle (no children)
-      const totalPayouts = user.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
-      const chitGroups = user.subscriptions.map(sub => ({
-        chitId: sub.chitScheme.chitId,
-        name: sub.chitScheme.name,
-        amount: Number(sub.chitScheme.amount),
-        duration: sub.chitScheme.duration,
-        status: sub.status,
-      }));
-
-      nodes.push({
-        id: user.id,
-        registrationId: user.registrationId,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email || '',
-        phone: user.phone,
-        level: level + 1,
-        referredBy: user.referrer ? {
-          id: user.referrer.id,
-          registrationId: user.referrer.registrationId,
-          firstName: user.referrer.firstName,
-          lastName: user.referrer.lastName,
-        } : undefined,
-        children: [], // No children to prevent cycle
-        subscriptionsCount: user.subscriptions.length,
-        totalPayouts,
-        chitGroups,
-      });
-      continue;
-    }
-
-    const children = await buildReferralTree(user.id, level + 1, maxLevel, currentVisited);
+  // Group users by step
+  const usersByStep: Map<number, Member[]> = new Map();
+  
+  allUsers.forEach((user, index) => {
+    const step = assignStepToUser(index + 1); // +1 because root is 0
     const totalPayouts = user.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
     const chitGroups = user.subscriptions.map(sub => ({
       chitId: sub.chitScheme.chitId,
@@ -137,45 +282,82 @@ async function buildReferralTree(
       status: sub.status,
     }));
 
-    nodes.push({
+    const member: Member = {
       id: user.id,
       registrationId: user.registrationId,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email || '',
       phone: user.phone,
-      level: level + 1,
       referredBy: user.referrer ? {
         id: user.referrer.id,
         registrationId: user.referrer.registrationId,
         firstName: user.referrer.firstName,
         lastName: user.referrer.lastName,
       } : undefined,
-      children,
       subscriptionsCount: user.subscriptions.length,
       totalPayouts,
       chitGroups,
+      joinOrder: index + 1,
+    };
+
+    if (!usersByStep.has(step)) {
+      usersByStep.set(step, []);
+    }
+    usersByStep.get(step)!.push(member);
+  });
+
+  // Build steps array
+  const steps: Step[] = [];
+  for (let stepNum = 1; stepNum <= 9; stepNum++) {
+    const expectedCount = Math.pow(3, stepNum);
+    const members = usersByStep.get(stepNum) || [];
+    steps.push({
+      stepNumber: stepNum,
+      memberCount: members.length,
+      expectedCount,
+      members,
     });
   }
 
-  return nodes;
-}
+  // Calculate summary based on actual referral relationship, not step numbers
+  // Direct = members directly referred by root user
+  // Indirect = members referred by others (not root)
+  const totalMembers = allUsers.length;
+  const directMembers = allUsers.filter(user => 
+    user.referrer?.id === rootUserId
+  ).length;
+  const indirectMembers = totalMembers - directMembers;
 
-// Recursive function to count total downline
-async function countTotalDownline(userId: string): Promise<number> {
-  const directReferrals = await prisma.user.findMany({
-    where: { referredBy: userId },
-    select: { id: true },
-  });
+  // Build root user data
+  const rootUserTotalPayouts = rootUser.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
+  const rootUserChitGroups = rootUser.subscriptions.map(sub => ({
+    chitId: sub.chitScheme.chitId,
+    name: sub.chitScheme.name,
+    amount: Number(sub.chitScheme.amount),
+    duration: sub.chitScheme.duration,
+    status: sub.status,
+  }));
 
-  let totalCount = directReferrals.length;
-
-  // Recursively count referrals of referrals
-  for (const referral of directReferrals) {
-    totalCount += await countTotalDownline(referral.id);
-  }
-
-  return totalCount;
+  return {
+    rootUser: {
+      id: rootUser.id,
+      registrationId: rootUser.registrationId,
+      firstName: rootUser.firstName,
+      lastName: rootUser.lastName,
+      email: rootUser.email || '',
+      phone: rootUser.phone,
+      subscriptionsCount: rootUser.subscriptions.length,
+      totalPayouts: rootUserTotalPayouts,
+      chitGroups: rootUserChitGroups,
+    },
+    steps,
+    summary: {
+      totalMembers,
+      directMembers,
+      indirectMembers,
+    },
+  };
 }
 
 export async function GET(
@@ -234,45 +416,10 @@ export async function GET(
       );
     }
 
-    // Build tree with no artificial limit - will traverse all levels dynamically
-    const children = await buildReferralTree(targetUser.id, 0, 1000);
-    const totalPayouts = targetUser.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
-    const chitGroups = targetUser.subscriptions.map(sub => ({
-      chitId: sub.chitScheme.chitId,
-      name: sub.chitScheme.name,
-      amount: Number(sub.chitScheme.amount),
-      duration: sub.chitScheme.duration,
-      status: sub.status,
-    }));
+    // Build sequential steps based on join order
+    const sequentialData = await buildSequentialSteps(targetUser.id);
 
-    // Calculate referral counts
-    const directReferralCount = await prisma.user.count({
-      where: { referredBy: targetUser.id },
-    });
-
-    const totalDownlineCount = await countTotalDownline(targetUser.id);
-
-    const rootNode: ReferralNode = {
-      id: targetUser.id,
-      registrationId: targetUser.registrationId,
-      firstName: targetUser.firstName,
-      lastName: targetUser.lastName,
-      email: targetUser.email || '',
-      phone: targetUser.phone,
-      level: 0,
-      children,
-      subscriptionsCount: targetUser.subscriptions.length,
-      totalPayouts,
-      chitGroups,
-    };
-
-    return NextResponse.json({ 
-      tree: rootNode,
-      referralCounts: {
-        directReferralCount,
-        indirectReferralCount: totalDownlineCount,
-      }
-    });
+    return NextResponse.json(sequentialData);
   } catch (error: any) {
     console.error('Get referral tree error:', error);
     
