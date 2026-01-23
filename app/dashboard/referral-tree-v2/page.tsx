@@ -192,50 +192,6 @@ export default function ReferralTreeV2Page() {
     setShowQuickView(true);
   };
 
-  // Render member card (for steps 1-3)
-  const renderMemberCard = (member: Member) => {
-    const rootUserId = sequentialData?.rootUser.id;
-    const isDirect = rootUserId && member.referredBy?.id === rootUserId;
-    
-    return (
-      <Card 
-        key={member.id} 
-        className={`h-full hover:shadow-md transition-shadow border-2 ${isDirect ? 'border-orange-500/30' : 'border-green-500/30'}`}
-      >
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isDirect ? 'bg-orange-500' : 'bg-green-500'}`}></div>
-            {member.firstName} {member.lastName}
-            {isDirect ? (
-              <Badge variant="outline" className="bg-orange-500/20 text-xs ml-auto">Direct</Badge>
-            ) : (
-              <Badge variant="outline" className="bg-green-500/20 text-xs ml-auto">Indirect</Badge>
-            )}
-          </CardTitle>
-          <CardDescription className="font-mono text-xs">{member.registrationId}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {member.referredBy && (
-            <div className="text-sm">
-              <span className="text-muted-foreground">Referred By: </span>
-              <span className="font-medium">{member.referredBy.firstName} {member.referredBy.lastName}</span>
-              <br />
-              <span className="text-xs text-muted-foreground font-mono">{member.referredBy.registrationId}</span>
-            </div>
-          )}
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="w-full"
-            onClick={() => handleViewMember(member)}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            View
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  };
 
   // Render step section
   const renderStep = (step: Step | null, stepNumber: number) => {
@@ -302,7 +258,6 @@ export default function ReferralTreeV2Page() {
     if (!step || step.memberCount === 0) return null;
 
     const isExpanded = expandedSteps.has(stepNumber);
-    const useCardView = stepNumber <= 3; // Card view for steps 1-3, table for 4+
 
     return (
       <Card 
@@ -333,79 +288,92 @@ export default function ReferralTreeV2Page() {
         </CardHeader>
         {isExpanded && (
           <CardContent className="pt-6">
-            {useCardView ? (
-              // Card grid view for steps 1-3
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {step.members.map(member => renderMemberCard(member))}
-              </div>
-            ) : (
-              // Table view for steps 4+
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Registration ID</TableHead>
-                    <TableHead>Referred By</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {step.members.map(member => {
-                    const rootUserId = sequentialData?.rootUser.id;
-                    const isDirect = rootUserId && member.referredBy?.id === rootUserId;
-                    
-                    return (
-                      <TableRow 
-                        key={member.id}
-                        className={isDirect ? 'bg-orange-50/50' : 'bg-green-50/50'}
-                      >
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isDirect ? 'bg-orange-500' : 'bg-green-500'}`}></div>
-                            {member.firstName} {member.lastName}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sub ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Group Name/Ticket Number</TableHead>
+                  <TableHead>Chit Value</TableHead>
+                  <TableHead>Chit Duration</TableHead>
+                  <TableHead>Referred By</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {step.members.map(member => {
+                  const rootUserId = sequentialData?.rootUser.id;
+                  const isDirect = rootUserId && member.referredBy?.id === rootUserId;
+                  
+                  // Get primary chit group (first active one, or first one if none active)
+                  const primaryChitGroup = member.chitGroups.length > 0 
+                    ? member.chitGroups.find(g => g.status === 'ACTIVE') || member.chitGroups[0]
+                    : null;
+                  
+                  return (
+                    <TableRow 
+                      key={member.id}
+                      className={isDirect ? 'bg-orange-50/50' : 'bg-green-50/50'}
+                    >
+                      <TableCell className="font-mono text-sm">
+                        {member.registrationId}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {member.firstName} {member.lastName}
+                      </TableCell>
+                      <TableCell>
+                        {primaryChitGroup ? (
+                          <div>
+                            <div className="font-medium">{primaryChitGroup.name}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{primaryChitGroup.chitId}</div>
                           </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {member.registrationId}
-                        </TableCell>
-                        <TableCell>
-                          {member.referredBy ? (
-                            <div>
-                              <div className="font-medium">
-                                {member.referredBy.firstName} {member.referredBy.lastName}
-                              </div>
-                              <div className="text-xs text-muted-foreground font-mono">
-                                {member.referredBy.registrationId}
-                              </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {primaryChitGroup ? (
+                          <span className="font-semibold">₹{Number(primaryChitGroup.amount).toLocaleString()}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {primaryChitGroup ? (
+                          <span>{primaryChitGroup.duration} months</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {member.referredBy ? (
+                          <div>
+                            <div className="font-medium">
+                              {member.referredBy.firstName} {member.referredBy.lastName}
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {isDirect ? (
-                            <Badge variant="outline" className="bg-orange-500/20 text-xs">Direct</Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-green-500/20 text-xs">Indirect</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleViewMember(member)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {member.referredBy.registrationId}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewMember(member)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </CardContent>
         )}
       </Card>
@@ -434,14 +402,14 @@ export default function ReferralTreeV2Page() {
             Select User
           </CardTitle>
           <CardDescription className="text-blue-100 text-sm">
-            Choose a user to view their referral tree
+            Choose a user to view their referral network
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           <SearchableUser
             value={selectedUser}
             onValueChange={setSelectedUser}
-            placeholder="Select a user to view referral tree"
+            placeholder="Select a user to view referral network"
             className="w-full border-2 border-primary/20 focus:border-primary focus:ring-2 focus:ring-primary/20"
             showNoOption={false}
           />
@@ -493,12 +461,12 @@ export default function ReferralTreeV2Page() {
                 {/* Legend */}
                 <div className="flex items-center gap-4 text-xs">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                    <span className="text-muted-foreground">Direct (referred by root user)</span>
+                    <Badge variant="outline" className="bg-orange-500/20 text-xs">Direct</Badge>
+                    <span className="text-muted-foreground">(referred by root user)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-muted-foreground">Indirect (referred by others)</span>
+                    <Badge variant="outline" className="bg-green-500/20 text-xs">Indirect</Badge>
+                    <span className="text-muted-foreground">(referred by others)</span>
                   </div>
                 </div>
               </div>
@@ -532,7 +500,7 @@ export default function ReferralTreeV2Page() {
                           </span>
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent><p>Download referral tree as PDF</p></TooltipContent>
+                      <TooltipContent><p>Download referral network as PDF</p></TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
@@ -584,7 +552,7 @@ export default function ReferralTreeV2Page() {
               <TreePine className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium mb-2">Select a User</h3>
               <p className="text-muted-foreground">
-                Choose a user from the dropdown above to view their referral tree.
+                Choose a user from the dropdown above to view their referral network.
               </p>
             </div>
           </CardContent>

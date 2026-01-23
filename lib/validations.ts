@@ -37,6 +37,8 @@ export const subscriptionSchema = z.object({
   subscriberId: z.string().min(1, 'Subscriber ID is required'),
   selfRefer: z.boolean().optional().default(false),
   referredBy: z.string().optional(),
+  month: z.string().optional().transform((val) => val ? parseInt(val) : undefined),
+  year: z.string().optional().transform((val) => val ? parseInt(val) : undefined),
 });
 
 export const payoutSchema = z.object({

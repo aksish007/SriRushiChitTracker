@@ -15,42 +15,49 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const allTillDate = searchParams.get('allTillDate') === 'true';
 
-    if (!startDate || !endDate) {
-      return NextResponse.json(
-        { error: 'Start date and end date are required' },
-        { status: 400 }
-      );
+    // Build where clause
+    const where: any = {};
+
+    if (!allTillDate) {
+      if (!startDate || !endDate) {
+        return NextResponse.json(
+          { error: 'Start date and end date are required, or select "All till date"' },
+          { status: 400 }
+        );
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999); // Include entire end date
+
+      // Validate dates
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid date format' },
+          { status: 400 }
+        );
+      }
+
+      if (start > end) {
+        return NextResponse.json(
+          { error: 'Start date must be before or equal to end date' },
+          { status: 400 }
+        );
+      }
+
+      where.createdAt = {
+        gte: start,
+        lte: end,
+      };
     }
+    // If allTillDate is true, no date filter applied
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999); // Include entire end date
-
-    // Validate dates
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return NextResponse.json(
-        { error: 'Invalid date format' },
-        { status: 400 }
-      );
-    }
-
-    if (start > end) {
-      return NextResponse.json(
-        { error: 'Start date must be before or equal to end date' },
-        { status: 400 }
-      );
-    }
-
-    // Fetch payouts within the date range
+    // Fetch payouts within the date range (or all if allTillDate)
     // Using createdAt for date filtering (can be changed to paidAt if needed)
     const payouts = await prisma.payout.findMany({
-      where: {
-        createdAt: {
-          gte: start,
-          lte: end,
-        },
-      },
+      where,
       include: {
         user: {
           select: {
@@ -79,11 +86,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Create audit log
+    const dateRange = allTillDate ? 'all till date' : `${startDate} to ${endDate}`;
     await prisma.auditLog.create({
       data: {
         userId: adminUser.id,
         action: 'EXPORT_TDS_REPORT',
-        details: `Exported TDS report from ${startDate} to ${endDate} - ${payouts.length} payout records`,
+        details: `Exported TDS report from ${dateRange} - ${payouts.length} payout records`,
         ipAddress,
         userAgent,
       },
@@ -92,7 +100,7 @@ export async function GET(request: NextRequest) {
     // Generate Excel file
     const excelBuffer = exportTdsToExcel(payouts);
 
-    const filename = `tds-report-${startDate}-to-${endDate}.xlsx`;
+    const filename = allTillDate ? 'tds-report-all-till-date.xlsx' : `tds-report-${startDate}-to-${endDate}.xlsx`;
 
     return new NextResponse(excelBuffer, {
       headers: {

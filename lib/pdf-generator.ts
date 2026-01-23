@@ -125,6 +125,15 @@ export function generateUserPayoutReport(data: {
     });
   });
 
+  // Calculate totals
+  const totalIncentive = data.steps.reduce((sum, stepData) => {
+    return sum + stepData.referrals.reduce((stepSum, referral) => {
+      return stepSum + referral.incentiveAmount;
+    }, 0);
+  }, 0);
+  const tds = totalIncentive * 0.05;
+  const netAmount = totalIncentive - tds;
+
   // Generate table only if there's data
   if (tableData.length > 0) {
     autoTable(doc, {
@@ -141,6 +150,27 @@ export function generateUserPayoutReport(data: {
         4: { cellWidth: 30 },
       },
       margin: { left: 14, right: 14 },
+      didDrawPage: (data: any) => {
+        // Draw totals on last page
+        if (data.pageNumber === (data as any).pageCount && data.cursor) {
+          const finalY = data.cursor.y + 10;
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          
+          // Total row
+          doc.text('Total', 14, finalY);
+          const totalsX = 14 + 25 + 60 + 40; // After STEP, NAME, GROUP/CHIT VALUE columns
+          doc.text(formatCurrency(totalIncentive), totalsX + 35, finalY, { align: 'right' });
+          
+          // TDS row
+          doc.text('5% TDS', 14, finalY + 8);
+          doc.text(formatCurrency(tds), totalsX + 35, finalY + 8, { align: 'right' });
+          
+          // Net Amount row
+          doc.text('After TDS (Net Amount)', 14, finalY + 16);
+          doc.text(formatCurrency(netAmount), totalsX + 35, finalY + 16, { align: 'right' });
+        }
+      },
     });
   } else {
     // Show message if no data
@@ -203,14 +233,14 @@ export function generateCompanyPayoutReport(data: {
   doc.text(companyAddress, addressX, yPos, { align: 'right' });
   yPos += 10;
 
-  // Report Title - "Business Report for the Month [Month] – [Year]"
+  // Report Title - "Payout Report for the Month [Month] – [Year]"
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  const monthYear = `Business Report for the Month ${getMonthName(data.month)} – ${data.year}`;
+  const monthYear = `Payout Report for the Month ${getMonthName(data.month)} – ${data.year}`;
   doc.text(monthYear, pageWidth / 2, yPos, { align: 'center' });
   yPos += 15;
 
-  // Table data - Format: Ss.No., ID No., Subscriber Name, Group & A/C No., Amount, Remarks
+  // Table data - Format: Ss.No., ID No., Subscriber Name, Group & A/C No., Amount, Referred By
   // Each payout is a separate row (matching sample format)
   const tableData: any[][] = data.payoutRows.map((row) => {
     const groupAccountNo = row.subscriberId 
@@ -232,14 +262,14 @@ export function generateCompanyPayoutReport(data: {
   const tds = totalIncentive * 0.05;
   const netAmount = totalIncentive - tds;
 
-  // Generate table - Columns: Ss.No., ID No., Subscriber Name, Group & A/C No., Amount, Remarks
+  // Generate table - Columns: Ss.No., ID No., Subscriber Name, Group & A/C No., Amount, Referred By
   // Calculate available width for table (page width minus margins)
   const availableWidth = pageWidth - leftMargin - rightMargin;
   
   // Calculate column widths as percentages of available width
   // Total: 10% + 15% + 25% + 20% + 15% + 15% = 100%
   autoTable(doc, {
-    head: [['Ss.No.', 'ID No.', 'Subscriber Name', 'Group & A/C No.', 'Amount', 'Remarks']],
+    head: [['Ss.No.', 'ID No.', 'Subscriber Name', 'Group & A/C No.', 'Amount', 'Referred By']],
     body: tableData,
     startY: yPos,
     styles: { fontSize: 9, cellPadding: 3 },

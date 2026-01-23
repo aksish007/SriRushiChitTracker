@@ -121,6 +121,8 @@ export default function SubscriptionsPage() {
     subscriberId: '',
     selfRefer: false,
     referredBy: '',
+    month: '',
+    year: '',
   });
   const [editForm, setEditForm] = useState({
     status: '',
@@ -476,7 +478,11 @@ export default function SubscriptionsPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          month: formData.month ? parseInt(formData.month) : undefined,
+          year: formData.year ? parseInt(formData.year) : undefined,
+        }),
       });
 
       if (response.ok) {
@@ -1058,6 +1064,38 @@ export default function SubscriptionsPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 Select who referred this user, or choose "Self Referral" for self-referral
               </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="month">Month</Label>
+                <Select
+                  value={formData.month}
+                  onValueChange={(value) => setFormData({ ...formData, month: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                      <SelectItem key={month} value={month.toString()}>
+                        {new Date(2000, month - 1).toLocaleString('default', { month: 'long' })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="year">Year</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                  placeholder={new Date().getFullYear().toString()}
+                  min="2020"
+                  max={new Date().getFullYear() + 5}
+                />
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-2">

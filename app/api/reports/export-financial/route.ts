@@ -12,10 +12,50 @@ export async function GET(request: NextRequest) {
 
   try {
     const adminUser = await requireAuth(request, 'ADMIN');
+    const { searchParams } = new URL(request.url);
+    const month = searchParams.get('month');
+    const year = searchParams.get('year');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const allTillDate = searchParams.get('allTillDate') === 'true';
+
+    // Build where clauses based on filters
+    const subscriptionWhere: any = { status: 'ACTIVE' };
+    const payoutWhere: any = {};
+
+    if (!allTillDate) {
+      if (month && year) {
+        // Filter by month and year
+        const start = new Date(parseInt(year), parseInt(month) - 1, 1);
+        const end = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59, 999);
+        subscriptionWhere.createdAt = {
+          gte: start,
+          lte: end,
+        };
+        payoutWhere.month = parseInt(month);
+        payoutWhere.year = parseInt(year);
+      } else if (startDate && endDate) {
+        // Filter by date range
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        subscriptionWhere.createdAt = {
+          gte: start,
+          lte: end,
+        };
+        payoutWhere.createdAt = {
+          gte: start,
+          lte: end,
+        };
+      }
+      // If no filters provided, show all (existing behavior)
+    }
+    // If allTillDate is true, no filters applied (show all)
 
     // Fetch financial data
     const [subscriptions, payouts, chitSchemes] = await Promise.all([
       prisma.chitSubscription.findMany({
+        where: subscriptionWhere,
         include: {
           user: {
             select: {
@@ -33,11 +73,9 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        where: {
-          status: 'ACTIVE',
-        },
       }),
       prisma.payout.findMany({
+        where: payoutWhere,
         include: {
           subscription: {
             include: {

@@ -62,7 +62,7 @@ const sidebarItems: SidebarItem[] = [
     adminOnly: true,
   },
   {
-    title: 'Chit Schemes',
+    title: 'Chit Group Details',
     href: '/dashboard/chit-schemes',
     icon: CreditCard,
   },
@@ -77,7 +77,7 @@ const sidebarItems: SidebarItem[] = [
     icon: FileText,
   },
   {
-    title: 'Referral Tree',
+    title: 'Referral Network',
     href: '/dashboard/referral-tree',
     icon: PieChart,
   },

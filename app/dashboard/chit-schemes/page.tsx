@@ -456,7 +456,7 @@ export default function ChitSchemesPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Chit Schemes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Chit Group Details</h1>
         </div>
         <Card>
           <CardContent className="p-6">
@@ -476,7 +476,7 @@ export default function ChitSchemesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Chit Schemes</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-primary">Chit Group Details</h1>
           <p className="text-muted-foreground">
             {user?.role === 'ADMIN' 
               ? 'Manage chit fund schemes and their subscriptions'
@@ -494,7 +494,7 @@ export default function ChitSchemesPage() {
             </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create New Chit Scheme</DialogTitle>
+              <DialogTitle>Create New Chit Group</DialogTitle>
               <DialogDescription>
                 Fill in the details to create a new chit fund scheme
               </DialogDescription>
@@ -733,9 +733,9 @@ export default function ChitSchemesPage() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Chit Schemes</AlertDialogTitle>
+                      <AlertDialogTitle>Delete Chit Groups</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete {selectedSchemes.length} chit scheme(s)? This action cannot be undone.
+                        Are you sure you want to delete {selectedSchemes.length} chit group(s)? This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -757,7 +757,7 @@ export default function ChitSchemesPage() {
         <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
           <CardTitle className="text-white">Search & Filters</CardTitle>
           <CardDescription className="text-blue-100">
-            Find and filter chit schemes
+            Find and filter chit group details
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -817,7 +817,7 @@ export default function ChitSchemesPage() {
       {/* Schemes Table */}
       <Card className="shadow-glow border-2 border-primary/20">
         <CardHeader className="bg-gradient-primary text-white rounded-t-lg">
-          <CardTitle className="text-white">All Chit Schemes ({pagination.total})</CardTitle>
+          <CardTitle className="text-white">All Chit Group Details ({pagination.total})</CardTitle>
           <CardDescription className="text-yellow-100">
             Manage and monitor all chit fund schemes
           </CardDescription>
@@ -989,7 +989,7 @@ export default function ChitSchemesPage() {
                               </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Chit Scheme</AlertDialogTitle>
+                              <AlertDialogTitle>Delete Chit Group</AlertDialogTitle>
                               <AlertDialogDescription>
                                 Are you sure you want to delete {scheme.name}? This action cannot be undone.
                               </AlertDialogDescription>
@@ -1066,9 +1066,9 @@ export default function ChitSchemesPage() {
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle>Chit Scheme Details</DialogTitle>
+            <DialogTitle>Chit Group Details</DialogTitle>
             <DialogDescription>
-              View detailed information about the chit scheme
+              View detailed information about the chit group
             </DialogDescription>
           </DialogHeader>
           {selectedScheme && (
@@ -1139,9 +1139,9 @@ export default function ChitSchemesPage() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Chit Scheme</DialogTitle>
+            <DialogTitle>Edit Chit Group</DialogTitle>
             <DialogDescription>
-              Update chit scheme information
+              Update chit group information
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

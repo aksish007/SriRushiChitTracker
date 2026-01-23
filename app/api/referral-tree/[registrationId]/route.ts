@@ -63,21 +63,12 @@ interface SequentialTreeResponse {
   };
 }
 
-// Function to assign step number based on join order
-function assignStepToUser(userIndex: number): number {
-  // userIndex is 1-based (1 = first joiner after root)
-  if (userIndex === 0) return 0; // Root
-  
-  let cumulativeCount = 0;
-  for (let step = 1; step <= 9; step++) {
-    const stepSize = Math.pow(3, step);
-    cumulativeCount += stepSize;
-    if (userIndex <= cumulativeCount) {
-      return step;
-    }
-  }
-  return 9; // Default to step 9 if beyond
-}
+// Function to assign step number based on referral depth (pyramid scheme)
+// Step 1: All direct referrals of root
+// Step 2: All referrals of Step 1 members
+// Step 3: All referrals of Step 2 members
+// etc.
+// This is based on referral depth, not join order
 
 // Get all downline users for a root user (recursively, including self-referrals)
 async function getAllDownlineUsersForTree(rootUserId: string, visited: Set<string> = new Set()): Promise<Array<{
@@ -221,15 +212,11 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
     };
   }
 
-  // Get full user data for downline users, maintaining join order
+  // Get full user data for downline users
   const allUsers = await prisma.user.findMany({
     where: { 
       id: { in: downlineUserIds },
     },
-    orderBy: [
-      { createdAt: 'asc' },
-      { registrationId: 'asc' }
-    ],
     select: {
       id: true,
       registrationId: true,
@@ -268,11 +255,53 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
     },
   });
 
-  // Group users by step
+  // Build a map of user ID to step number based on referral depth (pyramid scheme)
+  // Step 1: All direct referrals of root
+  // Step 2: All referrals of Step 1 members
+  // Step 3: All referrals of Step 2 members, etc.
+  const userStepMap = new Map<string, number>();
   const usersByStep: Map<number, Member[]> = new Map();
   
-  allUsers.forEach((user, index) => {
-    const step = assignStepToUser(index + 1); // +1 because root is 0
+  // Create a map for quick user lookup
+  const userMap = new Map<string, typeof allUsers[0]>();
+  allUsers.forEach(user => userMap.set(user.id, user));
+
+  // BFS traversal to assign steps based on referral depth
+  let currentStepUsers: string[] = [rootUserId]; // Start with root
+  let currentStep = 1;
+  const processed = new Set<string>([rootUserId]); // Track processed users
+
+  while (currentStepUsers.length > 0 && currentStep <= 9) {
+    const nextStepUsers: string[] = [];
+    
+    // For each user in current step, find their direct referrals
+    for (const currentUserId of currentStepUsers) {
+      // Find all users referred by current step users
+      for (const user of allUsers) {
+        if (!processed.has(user.id) && user.referredBy === currentUserId) {
+          userStepMap.set(user.id, currentStep);
+          processed.add(user.id);
+          nextStepUsers.push(user.id);
+        }
+      }
+    }
+    
+    // Move to next step
+    currentStepUsers = nextStepUsers;
+    currentStep++;
+  }
+
+  // Assign remaining users (those not in the referral chain) to step 9
+  for (const user of allUsers) {
+    if (!userStepMap.has(user.id)) {
+      userStepMap.set(user.id, 9);
+    }
+  }
+
+  // Group users by step and create Member objects
+  let joinOrder = 1;
+  allUsers.forEach((user) => {
+    const step = userStepMap.get(user.id) || 9;
     const totalPayouts = user.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
     const chitGroups = user.subscriptions.map(sub => ({
       chitId: sub.chitScheme.chitId,
@@ -298,7 +327,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
       subscriptionsCount: user.subscriptions.length,
       totalPayouts,
       chitGroups,
-      joinOrder: index + 1,
+      joinOrder: joinOrder++,
     };
 
     if (!usersByStep.has(step)) {

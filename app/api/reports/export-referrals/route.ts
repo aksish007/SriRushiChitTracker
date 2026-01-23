@@ -12,9 +12,29 @@ export async function GET(request: NextRequest) {
 
   try {
     const adminUser = await requireAuth(request, 'ADMIN');
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const allTillDate = searchParams.get('allTillDate') === 'true';
 
-    // Fetch all users with referral data
+    // Build where clause based on filters
+    const where: any = {};
+
+    if (!allTillDate && startDate && endDate) {
+      // Filter by date range
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt = {
+        gte: start,
+        lte: end,
+      };
+    }
+    // If allTillDate is true or no dates provided, show all
+
+    // Fetch users with referral data
     const users = await prisma.user.findMany({
+      where,
       include: {
         referrer: {
           select: {

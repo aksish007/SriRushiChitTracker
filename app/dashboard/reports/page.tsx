@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Download, Users, TrendingUp, IndianRupee, Calendar, BarChart3, PieChart, Activity, Receipt } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
@@ -27,6 +29,36 @@ export default function ReportsPage() {
   const [showTdsDialog, setShowTdsDialog] = useState(false);
   const [tdsStartDate, setTdsStartDate] = useState<string>('');
   const [tdsEndDate, setTdsEndDate] = useState<string>('');
+  const [tdsAllTillDate, setTdsAllTillDate] = useState<boolean>(false);
+  const [showPayoutsDialog, setShowPayoutsDialog] = useState(false);
+  const [payoutsFilterType, setPayoutsFilterType] = useState<'month' | 'range' | 'all'>('month');
+  const [payoutsMonth, setPayoutsMonth] = useState<string>('');
+  const [payoutsYear, setPayoutsYear] = useState<string>('');
+  const [payoutsStartDate, setPayoutsStartDate] = useState<string>('');
+  const [payoutsEndDate, setPayoutsEndDate] = useState<string>('');
+  const [payoutsAllTillDate, setPayoutsAllTillDate] = useState<boolean>(false);
+  const [showSubscriptionsDialog, setShowSubscriptionsDialog] = useState(false);
+  const [subscriptionsFilterType, setSubscriptionsFilterType] = useState<'month' | 'range' | 'all'>('month');
+  const [subscriptionsMonth, setSubscriptionsMonth] = useState<string>('');
+  const [subscriptionsYear, setSubscriptionsYear] = useState<string>('');
+  const [subscriptionsStartDate, setSubscriptionsStartDate] = useState<string>('');
+  const [subscriptionsEndDate, setSubscriptionsEndDate] = useState<string>('');
+  const [subscriptionsAllTillDate, setSubscriptionsAllTillDate] = useState<boolean>(false);
+  const [showFinancialDialog, setShowFinancialDialog] = useState(false);
+  const [financialFilterType, setFinancialFilterType] = useState<'month' | 'range' | 'all'>('month');
+  const [financialMonth, setFinancialMonth] = useState<string>('');
+  const [financialYear, setFinancialYear] = useState<string>('');
+  const [financialStartDate, setFinancialStartDate] = useState<string>('');
+  const [financialEndDate, setFinancialEndDate] = useState<string>('');
+  const [financialAllTillDate, setFinancialAllTillDate] = useState<boolean>(false);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [activityStartDate, setActivityStartDate] = useState<string>('');
+  const [activityEndDate, setActivityEndDate] = useState<string>('');
+  const [activityAllTillDate, setActivityAllTillDate] = useState<boolean>(false);
+  const [showReferralsDialog, setShowReferralsDialog] = useState(false);
+  const [referralsStartDate, setReferralsStartDate] = useState<string>('');
+  const [referralsEndDate, setReferralsEndDate] = useState<string>('');
+  const [referralsAllTillDate, setReferralsAllTillDate] = useState<boolean>(false);
 
   const getMonthName = (month: number) => {
     const months = [
@@ -126,7 +158,7 @@ export default function ReportsPage() {
     },
     {
       id: 'company-payout-pdf',
-      title: 'Company Payout Report (PDF)',
+      title: 'Payout Report (PDF)',
       description: 'Consolidated monthly payout report with TDS',
       icon: FileText,
       color: 'text-cyan-600',
@@ -181,25 +213,52 @@ export default function ReportsPage() {
           filename = `users-report-${new Date().toISOString().split('T')[0]}.xlsx`;
           break;
         case 'subscriptions':
-          endpoint = '/api/reports/export-subscriptions';
-          filename = `subscriptions-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-          break;
+          // Show dialog for date filtering
+          setShowSubscriptionsDialog(true);
+          setSubscriptionsFilterType('month');
+          setSubscriptionsMonth(currentMonth.toString());
+          setSubscriptionsYear(currentYear.toString());
+          setSubscriptionsAllTillDate(false);
+          setDownloading(null);
+          return;
         case 'payouts':
-          endpoint = '/api/reports/export-payouts';
-          filename = `payouts-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-          break;
+          // Show dialog for date filtering
+          setShowPayoutsDialog(true);
+          setPayoutsFilterType('month');
+          setPayoutsMonth(currentMonth.toString());
+          setPayoutsYear(currentYear.toString());
+          setPayoutsAllTillDate(false);
+          setDownloading(null);
+          return;
         case 'referrals':
-          endpoint = '/api/reports/export-referrals';
-          filename = `referrals-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-          break;
+          // Show dialog for date range selection
+          setShowReferralsDialog(true);
+          const todayReferrals = new Date();
+          const firstDayReferrals = new Date(todayReferrals.getFullYear(), todayReferrals.getMonth(), 1);
+          setReferralsStartDate(firstDayReferrals.toISOString().split('T')[0]);
+          setReferralsEndDate(todayReferrals.toISOString().split('T')[0]);
+          setReferralsAllTillDate(false);
+          setDownloading(null);
+          return;
         case 'activity':
-          endpoint = '/api/reports/export-activity';
-          filename = `activity-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-          break;
+          // Show dialog for date range selection
+          setShowActivityDialog(true);
+          const todayActivity = new Date();
+          const firstDayActivity = new Date(todayActivity.getFullYear(), todayActivity.getMonth(), 1);
+          setActivityStartDate(firstDayActivity.toISOString().split('T')[0]);
+          setActivityEndDate(todayActivity.toISOString().split('T')[0]);
+          setActivityAllTillDate(false);
+          setDownloading(null);
+          return;
         case 'financial':
-          endpoint = '/api/reports/export-financial';
-          filename = `financial-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-          break;
+          // Show dialog for date filtering
+          setShowFinancialDialog(true);
+          setFinancialFilterType('month');
+          setFinancialMonth(currentMonth.toString());
+          setFinancialYear(currentYear.toString());
+          setFinancialAllTillDate(false);
+          setDownloading(null);
+          return;
         case 'user-payout-pdf':
           // This requires userId and month/year - redirect to payouts page
           toast({
@@ -307,7 +366,7 @@ export default function ReportsPage() {
 
       toast({
         title: 'Report Downloaded!',
-        description: 'Company Payout Report has been downloaded successfully.',
+        description: 'Payout Report has been downloaded successfully.',
         variant: 'success',
       });
 
@@ -385,10 +444,10 @@ export default function ReportsPage() {
   };
 
   const handleTdsDownload = async () => {
-    if (!tdsStartDate || !tdsEndDate) {
+    if (!tdsAllTillDate && (!tdsStartDate || !tdsEndDate)) {
       toast({
         title: 'Error',
-        description: 'Please select both start and end dates',
+        description: 'Please select both start and end dates or choose "All till date"',
         variant: 'destructive',
       });
       return;
@@ -396,7 +455,9 @@ export default function ReportsPage() {
 
     setDownloading('tds');
     try {
-      const endpoint = `/api/reports/export-tds?startDate=${tdsStartDate}&endDate=${tdsEndDate}`;
+      const endpoint = tdsAllTillDate 
+        ? `/api/reports/export-tds?allTillDate=true`
+        : `/api/reports/export-tds?startDate=${tdsStartDate}&endDate=${tdsEndDate}`;
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -410,7 +471,9 @@ export default function ReportsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `tds-report-${tdsStartDate}-to-${tdsEndDate}.xlsx`;
+      a.download = tdsAllTillDate 
+        ? `tds-report-all-till-date.xlsx`
+        : `tds-report-${tdsStartDate}-to-${tdsEndDate}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -423,6 +486,552 @@ export default function ReportsPage() {
       });
 
       setShowTdsDialog(false);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: 'Download Failed',
+        description: error instanceof Error ? error.message : 'Failed to download report',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handlePayoutsDownload = async () => {
+    if (payoutsAllTillDate) {
+      // All till date
+      setDownloading('payouts');
+      try {
+        const endpoint = '/api/reports/export-payouts?allTillDate=true';
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `payouts-report-all-till-date.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Payouts Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowPayoutsDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+      return;
+    }
+
+    if (payoutsFilterType === 'month') {
+      if (!payoutsMonth || !payoutsYear) {
+        toast({
+          title: 'Error',
+          description: 'Please select both month and year',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setDownloading('payouts');
+      try {
+        const endpoint = `/api/reports/export-payouts?month=${payoutsMonth}&year=${payoutsYear}`;
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `payouts-report-${payoutsYear}-${payoutsMonth.padStart(2, '0')}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Payouts Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowPayoutsDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+    } else if (payoutsFilterType === 'range') {
+      if (!payoutsStartDate || !payoutsEndDate) {
+        toast({
+          title: 'Error',
+          description: 'Please select both start and end dates',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setDownloading('payouts');
+      try {
+        const endpoint = `/api/reports/export-payouts?startDate=${payoutsStartDate}&endDate=${payoutsEndDate}`;
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `payouts-report-${payoutsStartDate}-to-${payoutsEndDate}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Payouts Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowPayoutsDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+    }
+  };
+
+  const handleSubscriptionsDownload = async () => {
+    if (subscriptionsAllTillDate) {
+      setDownloading('subscriptions');
+      try {
+        const endpoint = '/api/reports/export-subscriptions?allTillDate=true';
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `subscriptions-report-all-till-date.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Subscriptions Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowSubscriptionsDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+      return;
+    }
+
+    if (subscriptionsFilterType === 'month') {
+      if (!subscriptionsMonth || !subscriptionsYear) {
+        toast({
+          title: 'Error',
+          description: 'Please select both month and year',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setDownloading('subscriptions');
+      try {
+        const endpoint = `/api/reports/export-subscriptions?month=${subscriptionsMonth}&year=${subscriptionsYear}`;
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `subscriptions-report-${subscriptionsYear}-${subscriptionsMonth.padStart(2, '0')}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Subscriptions Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowSubscriptionsDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+    } else if (subscriptionsFilterType === 'range') {
+      if (!subscriptionsStartDate || !subscriptionsEndDate) {
+        toast({
+          title: 'Error',
+          description: 'Please select both start and end dates',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setDownloading('subscriptions');
+      try {
+        const endpoint = `/api/reports/export-subscriptions?startDate=${subscriptionsStartDate}&endDate=${subscriptionsEndDate}`;
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `subscriptions-report-${subscriptionsStartDate}-to-${subscriptionsEndDate}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Subscriptions Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowSubscriptionsDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+    }
+  };
+
+  const handleFinancialDownload = async () => {
+    if (financialAllTillDate) {
+      setDownloading('financial');
+      try {
+        const endpoint = '/api/reports/export-financial?allTillDate=true';
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `financial-report-all-till-date.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Financial Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowFinancialDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+      return;
+    }
+
+    if (financialFilterType === 'month') {
+      if (!financialMonth || !financialYear) {
+        toast({
+          title: 'Error',
+          description: 'Please select both month and year',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setDownloading('financial');
+      try {
+        const endpoint = `/api/reports/export-financial?month=${financialMonth}&year=${financialYear}`;
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `financial-report-${financialYear}-${financialMonth.padStart(2, '0')}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Financial Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowFinancialDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+    } else if (financialFilterType === 'range') {
+      if (!financialStartDate || !financialEndDate) {
+        toast({
+          title: 'Error',
+          description: 'Please select both start and end dates',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setDownloading('financial');
+      try {
+        const endpoint = `/api/reports/export-financial?startDate=${financialStartDate}&endDate=${financialEndDate}`;
+        const response = await fetch(endpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate report');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `financial-report-${financialStartDate}-to-${financialEndDate}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Report Downloaded!',
+          description: 'Financial Report has been downloaded successfully.',
+          variant: 'success',
+        });
+
+        setShowFinancialDialog(false);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'Failed to download report',
+          variant: 'destructive',
+        });
+      } finally {
+        setDownloading(null);
+      }
+    }
+  };
+
+  const handleActivityDownload = async () => {
+    if (!activityAllTillDate && (!activityStartDate || !activityEndDate)) {
+      toast({
+        title: 'Error',
+        description: 'Please select both start and end dates or choose "All till date"',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDownloading('activity');
+    try {
+      const endpoint = activityAllTillDate
+        ? '/api/reports/export-activity?allTillDate=true'
+        : `/api/reports/export-activity?startDate=${activityStartDate}&endDate=${activityEndDate}`;
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = activityAllTillDate
+        ? `activity-report-all-till-date.xlsx`
+        : `activity-report-${activityStartDate}-to-${activityEndDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'Report Downloaded!',
+        description: 'Activity Report has been downloaded successfully.',
+        variant: 'success',
+      });
+
+      setShowActivityDialog(false);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: 'Download Failed',
+        description: error instanceof Error ? error.message : 'Failed to download report',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleReferralsDownload = async () => {
+    if (!referralsAllTillDate && (!referralsStartDate || !referralsEndDate)) {
+      toast({
+        title: 'Error',
+        description: 'Please select both start and end dates or choose "All till date"',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDownloading('referrals');
+    try {
+      const endpoint = referralsAllTillDate
+        ? '/api/reports/export-referrals?allTillDate=true'
+        : `/api/reports/export-referrals?startDate=${referralsStartDate}&endDate=${referralsEndDate}`;
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = referralsAllTillDate
+        ? `referrals-report-all-till-date.xlsx`
+        : `referrals-report-${referralsStartDate}-to-${referralsEndDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'Report Downloaded!',
+        description: 'Referrals Report has been downloaded successfully.',
+        variant: 'success',
+      });
+
+      setShowReferralsDialog(false);
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -696,9 +1305,9 @@ export default function ReportsPage() {
       <Dialog open={showCompanyPayoutDialog} onOpenChange={setShowCompanyPayoutDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Company Payout Report</DialogTitle>
+            <DialogTitle>Payout Report</DialogTitle>
             <DialogDescription>
-              Select the month and year for the company payout report
+              Select the month and year for the payout report
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -808,26 +1417,46 @@ export default function ReportsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={tdsStartDate}
-                onChange={(e) => setTdsStartDate(e.target.value)}
-                required
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="tdsAllTillDate"
+                checked={tdsAllTillDate}
+                onCheckedChange={(checked) => {
+                  setTdsAllTillDate(checked as boolean);
+                  if (checked) {
+                    setTdsStartDate('');
+                    setTdsEndDate('');
+                  }
+                }}
               />
+              <Label htmlFor="tdsAllTillDate" className="cursor-pointer">
+                All till date
+              </Label>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date *</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={tdsEndDate}
-                onChange={(e) => setTdsEndDate(e.target.value)}
-                required
-              />
-            </div>
+            {!tdsAllTillDate && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date *</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={tdsStartDate}
+                    onChange={(e) => setTdsStartDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">End Date *</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={tdsEndDate}
+                    onChange={(e) => setTdsEndDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTdsDialog(false)}>
@@ -835,6 +1464,466 @@ export default function ReportsPage() {
             </Button>
             <Button onClick={handleTdsDownload} disabled={downloading === 'tds'}>
               {downloading === 'tds' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payouts Report Dialog */}
+      <Dialog open={showPayoutsDialog} onOpenChange={setShowPayoutsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Payouts Report</DialogTitle>
+            <DialogDescription>
+              Select filtering options for the payouts report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="payoutsAllTillDate"
+                checked={payoutsAllTillDate}
+                onCheckedChange={(checked) => {
+                  setPayoutsAllTillDate(checked as boolean);
+                  if (checked) {
+                    setPayoutsFilterType('all');
+                  }
+                }}
+              />
+              <Label htmlFor="payoutsAllTillDate" className="cursor-pointer">
+                All till date
+              </Label>
+            </div>
+            {!payoutsAllTillDate && (
+              <>
+                <div className="space-y-2">
+                  <Label>Filter Type</Label>
+                  <RadioGroup
+                    value={payoutsFilterType}
+                    onValueChange={(value) => setPayoutsFilterType(value as 'month' | 'range')}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="month" id="payouts-month" />
+                      <Label htmlFor="payouts-month" className="cursor-pointer">Month & Year</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="range" id="payouts-range" />
+                      <Label htmlFor="payouts-range" className="cursor-pointer">Date Range</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                {payoutsFilterType === 'month' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="payoutsMonth">Month *</Label>
+                      <Select value={payoutsMonth} onValueChange={setPayoutsMonth}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                            <SelectItem key={month} value={month.toString()}>
+                              {getMonthName(month)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payoutsYear">Year *</Label>
+                      <Input
+                        id="payoutsYear"
+                        type="number"
+                        value={payoutsYear}
+                        onChange={(e) => setPayoutsYear(e.target.value)}
+                        placeholder={currentYear.toString()}
+                        min="2020"
+                        max={currentYear + 5}
+                      />
+                    </div>
+                  </>
+                )}
+                {payoutsFilterType === 'range' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="payoutsStartDate">Start Date *</Label>
+                      <Input
+                        id="payoutsStartDate"
+                        type="date"
+                        value={payoutsStartDate}
+                        onChange={(e) => setPayoutsStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payoutsEndDate">End Date *</Label>
+                      <Input
+                        id="payoutsEndDate"
+                        type="date"
+                        value={payoutsEndDate}
+                        onChange={(e) => setPayoutsEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPayoutsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePayoutsDownload} disabled={downloading === 'payouts'}>
+              {downloading === 'payouts' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscriptions Report Dialog */}
+      <Dialog open={showSubscriptionsDialog} onOpenChange={setShowSubscriptionsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Subscriptions Report</DialogTitle>
+            <DialogDescription>
+              Select filtering options for the subscriptions report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="subscriptionsAllTillDate"
+                checked={subscriptionsAllTillDate}
+                onCheckedChange={(checked) => {
+                  setSubscriptionsAllTillDate(checked as boolean);
+                  if (checked) {
+                    setSubscriptionsFilterType('all');
+                  }
+                }}
+              />
+              <Label htmlFor="subscriptionsAllTillDate" className="cursor-pointer">
+                All till date
+              </Label>
+            </div>
+            {!subscriptionsAllTillDate && (
+              <>
+                <div className="space-y-2">
+                  <Label>Filter Type</Label>
+                  <RadioGroup
+                    value={subscriptionsFilterType}
+                    onValueChange={(value) => setSubscriptionsFilterType(value as 'month' | 'range')}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="month" id="subscriptions-month" />
+                      <Label htmlFor="subscriptions-month" className="cursor-pointer">Month & Year</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="range" id="subscriptions-range" />
+                      <Label htmlFor="subscriptions-range" className="cursor-pointer">Date Range</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                {subscriptionsFilterType === 'month' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="subscriptionsMonth">Month *</Label>
+                      <Select value={subscriptionsMonth} onValueChange={setSubscriptionsMonth}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                            <SelectItem key={month} value={month.toString()}>
+                              {getMonthName(month)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="subscriptionsYear">Year *</Label>
+                      <Input
+                        id="subscriptionsYear"
+                        type="number"
+                        value={subscriptionsYear}
+                        onChange={(e) => setSubscriptionsYear(e.target.value)}
+                        placeholder={currentYear.toString()}
+                        min="2020"
+                        max={currentYear + 5}
+                      />
+                    </div>
+                  </>
+                )}
+                {subscriptionsFilterType === 'range' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="subscriptionsStartDate">Start Date *</Label>
+                      <Input
+                        id="subscriptionsStartDate"
+                        type="date"
+                        value={subscriptionsStartDate}
+                        onChange={(e) => setSubscriptionsStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="subscriptionsEndDate">End Date *</Label>
+                      <Input
+                        id="subscriptionsEndDate"
+                        type="date"
+                        value={subscriptionsEndDate}
+                        onChange={(e) => setSubscriptionsEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubscriptionsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubscriptionsDownload} disabled={downloading === 'subscriptions'}>
+              {downloading === 'subscriptions' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Financial Report Dialog */}
+      <Dialog open={showFinancialDialog} onOpenChange={setShowFinancialDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Financial Report</DialogTitle>
+            <DialogDescription>
+              Select filtering options for the financial report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="financialAllTillDate"
+                checked={financialAllTillDate}
+                onCheckedChange={(checked) => {
+                  setFinancialAllTillDate(checked as boolean);
+                  if (checked) {
+                    setFinancialFilterType('all');
+                  }
+                }}
+              />
+              <Label htmlFor="financialAllTillDate" className="cursor-pointer">
+                All till date
+              </Label>
+            </div>
+            {!financialAllTillDate && (
+              <>
+                <div className="space-y-2">
+                  <Label>Filter Type</Label>
+                  <RadioGroup
+                    value={financialFilterType}
+                    onValueChange={(value) => setFinancialFilterType(value as 'month' | 'range')}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="month" id="financial-month" />
+                      <Label htmlFor="financial-month" className="cursor-pointer">Month & Year</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="range" id="financial-range" />
+                      <Label htmlFor="financial-range" className="cursor-pointer">Date Range</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                {financialFilterType === 'month' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="financialMonth">Month *</Label>
+                      <Select value={financialMonth} onValueChange={setFinancialMonth}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                            <SelectItem key={month} value={month.toString()}>
+                              {getMonthName(month)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="financialYear">Year *</Label>
+                      <Input
+                        id="financialYear"
+                        type="number"
+                        value={financialYear}
+                        onChange={(e) => setFinancialYear(e.target.value)}
+                        placeholder={currentYear.toString()}
+                        min="2020"
+                        max={currentYear + 5}
+                      />
+                    </div>
+                  </>
+                )}
+                {financialFilterType === 'range' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="financialStartDate">Start Date *</Label>
+                      <Input
+                        id="financialStartDate"
+                        type="date"
+                        value={financialStartDate}
+                        onChange={(e) => setFinancialStartDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="financialEndDate">End Date *</Label>
+                      <Input
+                        id="financialEndDate"
+                        type="date"
+                        value={financialEndDate}
+                        onChange={(e) => setFinancialEndDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFinancialDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleFinancialDownload} disabled={downloading === 'financial'}>
+              {downloading === 'financial' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Activity Report Dialog */}
+      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Activity Report</DialogTitle>
+            <DialogDescription>
+              Select the date range for the activity report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="activityAllTillDate"
+                checked={activityAllTillDate}
+                onCheckedChange={(checked) => {
+                  setActivityAllTillDate(checked as boolean);
+                  if (checked) {
+                    setActivityStartDate('');
+                    setActivityEndDate('');
+                  }
+                }}
+              />
+              <Label htmlFor="activityAllTillDate" className="cursor-pointer">
+                All till date
+              </Label>
+            </div>
+            {!activityAllTillDate && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="activityStartDate">Start Date *</Label>
+                  <Input
+                    id="activityStartDate"
+                    type="date"
+                    value={activityStartDate}
+                    onChange={(e) => setActivityStartDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="activityEndDate">End Date *</Label>
+                  <Input
+                    id="activityEndDate"
+                    type="date"
+                    value={activityEndDate}
+                    onChange={(e) => setActivityEndDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowActivityDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleActivityDownload} disabled={downloading === 'activity'}>
+              {downloading === 'activity' ? 'Generating...' : 'Generate Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Referrals Report Dialog */}
+      <Dialog open={showReferralsDialog} onOpenChange={setShowReferralsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Referrals Report</DialogTitle>
+            <DialogDescription>
+              Select the date range for the referrals report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="referralsAllTillDate"
+                checked={referralsAllTillDate}
+                onCheckedChange={(checked) => {
+                  setReferralsAllTillDate(checked as boolean);
+                  if (checked) {
+                    setReferralsStartDate('');
+                    setReferralsEndDate('');
+                  }
+                }}
+              />
+              <Label htmlFor="referralsAllTillDate" className="cursor-pointer">
+                All till date
+              </Label>
+            </div>
+            {!referralsAllTillDate && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="referralsStartDate">Start Date *</Label>
+                  <Input
+                    id="referralsStartDate"
+                    type="date"
+                    value={referralsStartDate}
+                    onChange={(e) => setReferralsStartDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="referralsEndDate">End Date *</Label>
+                  <Input
+                    id="referralsEndDate"
+                    type="date"
+                    value={referralsEndDate}
+                    onChange={(e) => setReferralsEndDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReferralsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleReferralsDownload} disabled={downloading === 'referrals'}>
+              {downloading === 'referrals' ? 'Generating...' : 'Generate Report'}
             </Button>
           </DialogFooter>
         </DialogContent>
