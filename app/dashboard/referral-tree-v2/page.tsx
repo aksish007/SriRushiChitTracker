@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   TreePine, UserCheck, IndianRupee,
   ChevronDown, ChevronRight,
-  Network, Phone, CreditCard, Calendar, Eye, Download
+  Users, Phone, CreditCard, Calendar, Eye, Download
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -442,7 +442,7 @@ export default function ReferralTreeV2Page() {
                   <p className="text-xs text-muted-foreground mt-1">Referred by others</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-lg">
-                  <Network className="h-8 w-8 text-green-600" />
+                  <Users className="h-8 w-8 text-green-600" />
                 </div>
               </div>
             </CardContent>
@@ -461,12 +461,10 @@ export default function ReferralTreeV2Page() {
                 {/* Legend */}
                 <div className="flex items-center gap-4 text-xs">
                   <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="bg-orange-500/20 text-xs">Direct</Badge>
-                    <span className="text-muted-foreground">(referred by root user)</span>
+                    <span className="text-muted-foreground">Direct (referred by root user)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="bg-green-500/20 text-xs">Indirect</Badge>
-                    <span className="text-muted-foreground">(referred by others)</span>
+                    <span className="text-muted-foreground">Indirect (referred by others)</span>
                   </div>
                 </div>
               </div>
@@ -618,7 +616,7 @@ export default function ReferralTreeV2Page() {
               <Card className="border-2 border-primary/20">
                 <CardHeader className="bg-gradient-secondary text-white rounded-t-lg">
                   <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <Network className="h-5 w-5" />
+                    <CreditCard className="h-5 w-5" />
                     Chit Groups ({selectedMemberForView.chitGroups.length})
                   </CardTitle>
                 </CardHeader>
@@ -668,7 +666,7 @@ export default function ReferralTreeV2Page() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Network className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <CreditCard className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                       <p className="text-muted-foreground">No active chit groups found</p>
                     </div>
                   )}

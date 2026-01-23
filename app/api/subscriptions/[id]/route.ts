@@ -73,7 +73,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { status, subscriberId } = body;
+    const { status, subscriberId, month, year } = body;
 
     // Validate status if provided
     if (status && !['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(status)) {

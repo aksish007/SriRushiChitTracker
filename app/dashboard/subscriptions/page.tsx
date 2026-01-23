@@ -127,6 +127,8 @@ export default function SubscriptionsPage() {
   const [editForm, setEditForm] = useState({
     status: '',
     subscriberId: '',
+    month: '',
+    year: '',
   });
   const [bulkImportData, setBulkImportData] = useState({
     userId: '',
@@ -260,9 +262,13 @@ export default function SubscriptionsPage() {
 
   const handleEditSubscription = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
+    // Extract month and year from joinedAt if available, or leave empty
+    const joinedDate = subscription.joinedAt ? new Date(subscription.joinedAt) : null;
     setEditForm({
       status: subscription.status,
       subscriberId: subscription.subscriberId,
+      month: joinedDate ? (joinedDate.getMonth() + 1).toString() : '',
+      year: joinedDate ? joinedDate.getFullYear().toString() : '',
     });
     setShowEditDialog(true);
   };
@@ -287,7 +293,11 @@ export default function SubscriptionsPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          ...editForm,
+          month: editForm.month ? parseInt(editForm.month) : undefined,
+          year: editForm.year ? parseInt(editForm.year) : undefined,
+        }),
       });
 
       if (response.ok) {
@@ -493,7 +503,7 @@ export default function SubscriptionsPage() {
           variant: 'success',
         });
         setShowCreateDialog(false);
-        setFormData({ userId: '', chitSchemeId: '', subscriberId: '', selfRefer: false, referredBy: '' });
+        setFormData({ userId: '', chitSchemeId: '', subscriberId: '', selfRefer: false, referredBy: '', month: '', year: '' });
         fetchData();
       } else {
         const errorData = await response.json();
@@ -1237,6 +1247,38 @@ export default function SubscriptionsPage() {
                   <SelectItem value="CANCELLED">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="editMonth">Month</Label>
+                <Select
+                  value={editForm.month}
+                  onValueChange={(value) => setEditForm({ ...editForm, month: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                      <SelectItem key={month} value={month.toString()}>
+                        {new Date(2000, month - 1).toLocaleString('default', { month: 'long' })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editYear">Year</Label>
+                <Input
+                  id="editYear"
+                  type="number"
+                  value={editForm.year}
+                  onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
+                  placeholder={new Date().getFullYear().toString()}
+                  min="2020"
+                  max={new Date().getFullYear() + 5}
+                />
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-2">
