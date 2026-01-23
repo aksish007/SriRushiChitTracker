@@ -107,6 +107,8 @@ export default function SubscriptionsPage() {
     pages: 0,
   });
   const [pageSize, setPageSize] = useState(10);
+  const [totalSubscriptionsCount, setTotalSubscriptionsCount] = useState(0);
+  const [activeSubscriptionsCount, setActiveSubscriptionsCount] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   
@@ -149,7 +151,8 @@ export default function SubscriptionsPage() {
         sortOrder: sortOrder,
       });
 
-      const [subscriptionsRes, usersRes, schemesRes] = await Promise.all([
+      // Fetch subscriptions data, users, schemes, and stats in parallel
+      const [subscriptionsRes, usersRes, schemesRes, totalStatsRes, activeStatsRes] = await Promise.all([
         fetch(`/api/subscriptions?${params}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
@@ -157,6 +160,14 @@ export default function SubscriptionsPage() {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch('/api/chit-schemes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch total subscriptions count (no filters)
+        fetch('/api/subscriptions?page=1&limit=1', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch active subscriptions count
+        fetch('/api/subscriptions?page=1&limit=1&status=ACTIVE', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -175,6 +186,18 @@ export default function SubscriptionsPage() {
       if (schemesRes.ok) {
         const schemesData = await schemesRes.json();
         setSchemes(schemesData.schemes.filter((scheme: ChitScheme) => scheme.isActive));
+      }
+
+      // Set total subscriptions count
+      if (totalStatsRes.ok) {
+        const totalStatsData: SubscriptionsResponse = await totalStatsRes.json();
+        setTotalSubscriptionsCount(totalStatsData.pagination.total);
+      }
+
+      // Set active subscriptions count
+      if (activeStatsRes.ok) {
+        const activeStatsData: SubscriptionsResponse = await activeStatsRes.json();
+        setActiveSubscriptionsCount(activeStatsData.pagination.total);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -472,7 +495,7 @@ export default function SubscriptionsPage() {
     // Validate form
     const newErrors: Record<string, string> = {};
     if (!formData.userId) newErrors.userId = 'User is required';
-    if (!formData.chitSchemeId) newErrors.chitSchemeId = 'Chit scheme is required';
+    if (!formData.chitSchemeId) newErrors.chitSchemeId = 'Chit group is required';
     if (!formData.subscriberId) newErrors.subscriberId = 'Subscriber ID is required';
 
     if (Object.keys(newErrors).length > 0) {
@@ -611,7 +634,7 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-primary">
-                  {subscriptions.length}
+                  {totalSubscriptionsCount}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Subscriptions</p>
               </div>
@@ -626,7 +649,7 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-success">
-                  {subscriptions.filter(s => s.status === 'ACTIVE').length}
+                  {activeSubscriptionsCount}
                 </p>
                 <p className="text-sm text-muted-foreground">Active</p>
               </div>
@@ -719,7 +742,7 @@ export default function SubscriptionsPage() {
                 <SelectValue placeholder="Filter by chit ID" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Chit Schemes</SelectItem>
+                <SelectItem value="all">All Chit Groups</SelectItem>
                 {schemes.map((scheme) => (
                   <SelectItem key={scheme.id} value={scheme.chitId}>
                     {scheme.chitId} - {scheme.name}

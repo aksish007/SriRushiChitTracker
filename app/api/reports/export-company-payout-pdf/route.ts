@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
         registrationId: payout.user.registrationId,
         name: `${payout.user.firstName} ${payout.user.lastName}`,
         subscriberId: payout.subscription.subscriberId,
+        chitSchemeName: payout.subscription.chitScheme.name,
         amount: Number(payout.amount),
         referrerIdentifier,
       };

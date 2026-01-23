@@ -14,7 +14,7 @@ interface DashboardStats {
   totalUsers: number;
   totalSubscriptions: number;
   totalPayouts: number;
-  activeSchemes: number;
+  activeGroups: number;
   monthlyData: Array<{ month: string; users: number; payouts: number }>;
   statusData: Array<{ name: string; value: number; color: string }>;
   userStats?: {
@@ -41,7 +41,12 @@ export default function Dashboard() {
           setLoading(true);
           
           // Fetch multiple endpoints for dashboard data
-          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse] = await Promise.all([
+          // For active subscriptions count, we need to fetch separately to get the total count
+          const activeSubscriptionsUrl = user?.role !== 'ADMIN' 
+            ? `/api/subscriptions?page=1&limit=1&status=ACTIVE&userId=${user?.id}`
+            : '/api/subscriptions?page=1&limit=1&status=ACTIVE';
+          
+          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse, activeSubscriptionsResponse] = await Promise.all([
             fetch('/api/users?limit=1000', {
               headers: { 'Authorization': `Bearer ${token}` }
             }),
@@ -53,14 +58,18 @@ export default function Dashboard() {
             }),
             fetch('/api/chit-schemes', {
               headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(activeSubscriptionsUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
             })
           ]);
 
-          const [usersData, subscriptionsData, payoutsData, schemesData] = await Promise.all([
+          const [usersData, subscriptionsData, payoutsData, schemesData, activeSubscriptionsData] = await Promise.all([
             usersResponse.json(),
             subscriptionsResponse.json(),
             payoutsResponse.json(),
-            schemesResponse.json()
+            schemesResponse.json(),
+            activeSubscriptionsResponse.json()
           ]);
 
           // Calculate stats
@@ -69,6 +78,8 @@ export default function Dashboard() {
 
           // Calculate user-specific stats if not admin
           let userStats = undefined;
+          let activeSubscriptionsCount = 0;
+          
           if (user?.role !== 'ADMIN') {
             // Use userId if available, otherwise fall back to filtering by registrationId
             const mySubscriptions = subscriptionsData.subscriptions?.filter((s: any) => 
@@ -76,7 +87,8 @@ export default function Dashboard() {
             const myPayouts = payoutsData.payouts?.filter((p: any) => 
               p.userId === user?.id || p.user?.registrationId === user?.registrationId) || [];
             
-
+            // Get active subscriptions count from API response (total count)
+            activeSubscriptionsCount = activeSubscriptionsData?.pagination?.total || 0;
             
             userStats = {
               mySubscriptions: mySubscriptions.length,
@@ -85,6 +97,9 @@ export default function Dashboard() {
                 sum + (p.status === 'PAID' ? Number(p.amount) : 0), 0),
               nextPayoutDate: mySubscriptions.find((s: any) => s.status === 'ACTIVE')?.nextPayoutDate
             };
+          } else {
+            // For admin, get total active subscriptions count from API response
+            activeSubscriptionsCount = activeSubscriptionsData?.pagination?.total || 0;
           }
 
           // Generate monthly data from real data
@@ -133,9 +148,9 @@ export default function Dashboard() {
 
           setStats({
             totalUsers: usersData.pagination?.total || 0,
-            totalSubscriptions: subscriptionsData.subscriptions?.length || 0,
+            totalSubscriptions: activeSubscriptionsCount,
             totalPayouts,
-            activeSchemes: schemesData.schemes?.filter((s: any) => s.isActive).length || 0,
+            activeGroups: schemesData.schemes?.filter((s: any) => s.isActive).length || 0,
             monthlyData,
             statusData,
             userStats,
@@ -240,9 +255,9 @@ export default function Dashboard() {
               icon={IndianRupee}
             />
             <StatsCard
-              title="Active Schemes"
-              value={stats?.activeSchemes || 0}
-              description="Running chit schemes"
+              title="Active Groups"
+              value={stats?.activeGroups || 0}
+              description="Running chit groups"
               icon={Activity}
             />
           </>
@@ -376,8 +391,8 @@ export default function Dashboard() {
               >
                 <CreditCard className="h-8 w-8 text-yellow-600" />
                 <div className="text-center">
-                  <h3 className="font-semibold">Create Scheme</h3>
-                  <p className="text-sm text-muted-foreground">New chit scheme</p>
+                  <h3 className="font-semibold">Create Group</h3>
+                  <p className="text-sm text-muted-foreground">New chit group</p>
                 </div>
               </Button>
               <Button 

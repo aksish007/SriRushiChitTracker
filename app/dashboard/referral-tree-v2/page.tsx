@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   TreePine, UserCheck, IndianRupee,
   ChevronDown, ChevronRight,
-  Users, Phone, CreditCard, Calendar, Eye, Download
+  Users, Phone, CreditCard, Calendar, Eye, Download, MapPin
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -23,6 +23,7 @@ interface Member {
   lastName: string;
   email: string;
   phone: string;
+  address?: string;
   referredBy?: {
     id: string;
     registrationId: string;
@@ -33,6 +34,7 @@ interface Member {
   totalPayouts: number;
   chitGroups: Array<{
     chitId: string;
+    subscriberId?: string;
     name: string;
     amount: number;
     duration: number;
@@ -56,10 +58,12 @@ interface SequentialTreeData {
     lastName: string;
     email: string;
     phone: string;
+    address?: string;
     subscriptionsCount: number;
     totalPayouts: number;
     chitGroups: Array<{
       chitId: string;
+      subscriberId?: string;
       name: string;
       amount: number;
       duration: number;
@@ -238,6 +242,10 @@ export default function ReferralTreeV2Page() {
                       onClick={() => {
                         const rootMember: Member = {
                           ...root,
+                          chitGroups: root.chitGroups.map(group => ({
+                            ...group,
+                            subscriberId: group.subscriberId || '',
+                          })),
                           joinOrder: 0,
                         };
                         handleViewMember(rootMember);
@@ -325,7 +333,7 @@ export default function ReferralTreeV2Page() {
                         {primaryChitGroup ? (
                           <div>
                             <div className="font-medium">{primaryChitGroup.name}</div>
-                            <div className="text-xs text-muted-foreground font-mono">{primaryChitGroup.chitId}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{primaryChitGroup.subscriberId || primaryChitGroup.chitId}</div>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -592,6 +600,13 @@ export default function ReferralTreeV2Page() {
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Email</label>
                         <p className="text-lg">{selectedMemberForView.email || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          Address
+                        </label>
+                        <p className="text-lg">{selectedMemberForView.address || 'Not provided'}</p>
                       </div>
                     </div>
                     <div className="space-y-3">

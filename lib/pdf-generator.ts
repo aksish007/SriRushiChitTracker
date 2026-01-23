@@ -206,6 +206,7 @@ export function generateCompanyPayoutReport(data: {
     registrationId: string;
     name: string;
     subscriberId: string;
+    chitSchemeName: string;
     amount: number;
     referrerIdentifier?: string;
   }>;
@@ -243,9 +244,10 @@ export function generateCompanyPayoutReport(data: {
   // Table data - Format: Ss.No., ID No., Subscriber Name, Group & A/C No., Amount, Referred By
   // Each payout is a separate row (matching sample format)
   const tableData: any[][] = data.payoutRows.map((row) => {
+    // Group & A/C No. should be: Group Name / Subscriber ID
     const groupAccountNo = row.subscriberId 
-      ? `${row.registrationId}/${row.subscriberId}`
-      : row.registrationId;
+      ? `${row.chitSchemeName} / ${row.subscriberId}`
+      : `${row.chitSchemeName} / ${row.registrationId}`;
     
     return [
       row.serialNumber.toString(),
@@ -283,36 +285,35 @@ export function generateCompanyPayoutReport(data: {
       5: { cellWidth: availableWidth * 0.15, halign: 'left' }, // Remarks - 15%
     },
     margin: { left: leftMargin, right: rightMargin },
-    didDrawPage: (data: any) => {
-      // Draw totals on last page
-      if (data.pageNumber === (data as any).pageCount && data.cursor) {
-        const finalY = data.cursor.y + 10;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        
-        doc.text('Total', leftMargin, finalY);
-        // Align totals to the right, within the table width
-        const totalsX = leftMargin + availableWidth - 28; // Right align to Amount column
-        doc.text(formatCurrency(totalIncentive), totalsX, finalY, { align: 'right' });
-        
-        doc.text('5% TDS', leftMargin, finalY + 8);
-        doc.text(formatCurrency(tds), totalsX, finalY + 8, { align: 'right' });
-        
-        doc.text('Net Amt Paid', leftMargin, finalY + 16);
-        doc.text(formatCurrency(netAmount), totalsX, finalY + 16, { align: 'right' });
-        
-        // Company footer
-        const footerY = pageWidth > 200 ? 280 : pageWidth * 1.4;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(companyName, pageWidth / 2, footerY, { align: 'center' });
-        doc.text('Foreman', pageWidth / 2, footerY + 15, { align: 'center' });
-        
-        // Signature line
-        doc.line(60, footerY + 20, 150, footerY + 20);
-      }
-    },
   });
+
+  // Get the final Y position from the table and add totals
+  const finalTableY = (doc as any).lastAutoTable?.finalY || yPos;
+  const finalY = finalTableY + 15;
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  
+  doc.text('Total', leftMargin, finalY);
+  // Align totals to the right, within the table width
+  const totalsX = leftMargin + availableWidth - 28; // Right align to Amount column
+  doc.text(formatCurrency(totalIncentive), totalsX, finalY, { align: 'right' });
+  
+  doc.text('5% TDS', leftMargin, finalY + 8);
+  doc.text(formatCurrency(tds), totalsX, finalY + 8, { align: 'right' });
+  
+  doc.text('Net Amt Paid', leftMargin, finalY + 16);
+  doc.text(formatCurrency(netAmount), totalsX, finalY + 16, { align: 'right' });
+  
+  // Company footer
+  const footerY = pageWidth > 200 ? 280 : pageWidth * 1.4;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(companyName, pageWidth / 2, footerY, { align: 'center' });
+  doc.text('Foreman', pageWidth / 2, footerY + 15, { align: 'center' });
+  
+  // Signature line
+  doc.line(60, footerY + 20, 150, footerY + 20);
 
   return doc.output('arraybuffer') as ArrayBuffer;
 }
@@ -357,6 +358,15 @@ export function generateReferralTreeReport(data: {
   doc.text(`Root User: ${data.rootUser.name} (${data.rootUser.registrationId})`, 14, yPos);
   yPos += 15;
 
+  // Calculate totals from all steps
+  const totalIncentive = data.steps.reduce((sum, stepData) => {
+    return sum + stepData.referrals.reduce((stepSum, referral) => {
+      return stepSum + referral.incentiveAmount;
+    }, 0);
+  }, 0);
+  const tds = totalIncentive * 0.05;
+  const netAmount = totalIncentive - tds;
+
   // Generate content for each step
   data.steps.forEach((stepData) => {
     // Step header
@@ -381,7 +391,7 @@ export function generateReferralTreeReport(data: {
       ]);
 
       autoTable(doc, {
-        head: [['Name', 'Chit Scheme', 'Amount', 'Referred By', 'Incentive']],
+        head: [['Name', 'Chit Group', 'Amount', 'Referred By', 'Incentive']],
         body: stepTableData,
         startY: yPos,
         styles: { fontSize: 9, cellPadding: 2 },
@@ -403,6 +413,33 @@ export function generateReferralTreeReport(data: {
       yPos = 20;
     }
   });
+
+  // Add totals at the end (after all steps)
+  if (totalIncentive > 0) {
+    // Ensure we're on a new page if too close to bottom
+    if (yPos > 240) {
+      doc.addPage();
+      yPos = 20;
+    } else {
+      yPos += 10;
+    }
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    
+    // Total row
+    doc.text('Total', 14, yPos);
+    const totalsX = 14 + 60 + 40 + 30; // After Name, Chit Group, Amount, Referred By columns
+    doc.text(formatCurrency(totalIncentive), totalsX + 35, yPos, { align: 'right' });
+    
+    // TDS row
+    doc.text('5% TDS', 14, yPos + 8);
+    doc.text(formatCurrency(tds), totalsX + 35, yPos + 8, { align: 'right' });
+    
+    // Net Amount row
+    doc.text('After TDS (Net Amount)', 14, yPos + 16);
+    doc.text(formatCurrency(netAmount), totalsX + 35, yPos + 16, { align: 'right' });
+  }
 
   return doc.output('arraybuffer') as ArrayBuffer;
 }

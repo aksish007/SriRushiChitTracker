@@ -45,6 +45,7 @@ interface SequentialTreeResponse {
     lastName: string;
     email: string;
     phone: string;
+    address: string;
     subscriptionsCount: number;
     totalPayouts: number;
     chitGroups: Array<{
@@ -138,10 +139,12 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
       lastName: true,
       email: true,
       phone: true,
+      address: true,
       subscriptions: {
         where: { status: 'ACTIVE' },
         select: { 
           id: true,
+          subscriberId: true,
           chitScheme: {
             select: {
               chitId: true,
@@ -185,6 +188,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
     const rootUserTotalPayouts = rootUser.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
     const rootUserChitGroups = rootUser.subscriptions.map(sub => ({
       chitId: sub.chitScheme.chitId,
+      subscriberId: sub.subscriberId,
       name: sub.chitScheme.name,
       amount: Number(sub.chitScheme.amount),
       duration: sub.chitScheme.duration,
@@ -199,6 +203,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
         lastName: rootUser.lastName,
         email: rootUser.email || '',
         phone: rootUser.phone,
+        address: rootUser.address || '',
         subscriptionsCount: rootUser.subscriptions.length,
         totalPayouts: rootUserTotalPayouts,
         chitGroups: rootUserChitGroups,
@@ -224,6 +229,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
       lastName: true,
       email: true,
       phone: true,
+      address: true,
       referredBy: true,
       referrer: {
         select: {
@@ -237,6 +243,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
         where: { status: 'ACTIVE' },
         select: { 
           id: true,
+          subscriberId: true,
           chitScheme: {
             select: {
               chitId: true,
@@ -305,6 +312,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
     const totalPayouts = user.payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
     const chitGroups = user.subscriptions.map(sub => ({
       chitId: sub.chitScheme.chitId,
+      subscriberId: sub.subscriberId,
       name: sub.chitScheme.name,
       amount: Number(sub.chitScheme.amount),
       duration: sub.chitScheme.duration,
@@ -318,6 +326,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
       lastName: user.lastName,
       email: user.email || '',
       phone: user.phone,
+      address: user.address || '',
       referredBy: user.referrer ? {
         id: user.referrer.id,
         registrationId: user.referrer.registrationId,
@@ -376,6 +385,7 @@ async function buildSequentialSteps(rootUserId: string): Promise<SequentialTreeR
       lastName: rootUser.lastName,
       email: rootUser.email || '',
       phone: rootUser.phone,
+      address: rootUser.address || '',
       subscriptionsCount: rootUser.subscriptions.length,
       totalPayouts: rootUserTotalPayouts,
       chitGroups: rootUserChitGroups,

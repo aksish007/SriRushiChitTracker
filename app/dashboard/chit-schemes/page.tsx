@@ -113,7 +113,7 @@ export default function ChitSchemesPage() {
       console.error('Error fetching schemes:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load chit schemes',
+        description: 'Failed to load chit groups',
         variant: 'destructive',
       });
     } finally {
@@ -210,19 +210,19 @@ export default function ChitSchemesPage() {
       if (response.ok) {
         toast({
           title: 'Success',
-          description: 'Chit scheme updated successfully',
+          description: 'Chit group updated successfully',
           variant: 'success',
         });
         setShowEditDialog(false);
         fetchSchemes();
       } else {
-        throw new Error('Failed to update chit scheme');
+        throw new Error('Failed to update chit group');
       }
     } catch (error) {
-      console.error('Error updating chit scheme:', error);
+      console.error('Error updating chit group:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update chit scheme',
+        description: 'Failed to update chit group',
         variant: 'destructive',
       });
     } finally {
@@ -241,19 +241,19 @@ export default function ChitSchemesPage() {
       if (response.ok) {
         toast({
           title: 'Success',
-          description: 'Chit scheme deleted successfully',
+          description: 'Chit group deleted successfully',
           variant: 'success',
         });
         fetchSchemes();
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to delete chit scheme' }));
-        throw new Error(errorData.error || 'Failed to delete chit scheme');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete chit group' }));
+        throw new Error(errorData.error || 'Failed to delete chit group');
       }
     } catch (error) {
-      console.error('Error deleting chit scheme:', error);
+      console.error('Error deleting chit group:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to delete chit scheme',
+        description: error instanceof Error ? error.message : 'Failed to delete chit group',
         variant: 'destructive',
       });
     } finally {
@@ -276,19 +276,19 @@ export default function ChitSchemesPage() {
       if (response.ok) {
         toast({
           title: 'Success',
-          description: `${selectedSchemes.length} chit schemes deleted successfully`,
+          description: `${selectedSchemes.length} chit groups deleted successfully`,
           variant: 'success',
         });
         setSelectedSchemes([]);
         fetchSchemes();
       } else {
-        throw new Error('Failed to delete chit schemes');
+        throw new Error('Failed to delete chit groups');
       }
     } catch (error) {
-      console.error('Error deleting chit schemes:', error);
+      console.error('Error deleting chit groups:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete chit schemes',
+        description: 'Failed to delete chit groups',
         variant: 'destructive',
       });
     } finally {
@@ -311,19 +311,19 @@ export default function ChitSchemesPage() {
       if (response.ok) {
         toast({
           title: 'Success',
-          description: `${selectedSchemes.length} chit schemes ${isActive ? 'activated' : 'deactivated'} successfully`,
+          description: `${selectedSchemes.length} chit groups ${isActive ? 'activated' : 'deactivated'} successfully`,
           variant: 'success',
         });
         setSelectedSchemes([]);
         fetchSchemes();
       } else {
-        throw new Error('Failed to update chit schemes');
+        throw new Error('Failed to update chit groups');
       }
     } catch (error) {
-      console.error('Error updating chit schemes:', error);
+      console.error('Error updating chit groups:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update chit schemes',
+        description: 'Failed to update chit groups',
         variant: 'destructive',
       });
     } finally {
@@ -388,7 +388,7 @@ export default function ChitSchemesPage() {
       if (response.ok) {
         toast({
           title: 'Success!',
-          description: `Chit scheme ${data.scheme.chitId} has been created successfully.`,
+          description: `Chit group ${data.scheme.chitId} has been created successfully.`,
           variant: 'success',
         });
         
@@ -398,7 +398,7 @@ export default function ChitSchemesPage() {
       } else {
         toast({
           title: 'Error',
-          description: data.error || 'Failed to create chit scheme',
+          description: data.error || 'Failed to create chit group',
           variant: 'destructive',
         });
       }
@@ -583,7 +583,7 @@ export default function ChitSchemesPage() {
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Describe the chit scheme..."
+                  placeholder="Describe the chit group..."
                   rows={3}
                 />
               </div>

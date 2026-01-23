@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       data: {
         userId: adminUser.id,
         action: 'EXPORT_FINANCIAL_REPORT',
-        details: `Exported financial data: ${subscriptions.length} subscriptions, ${payouts.length} payouts, ${chitSchemes.length} schemes`,
+        details: `Exported financial data: ${subscriptions.length} subscriptions, ${payouts.length} payouts, ${chitSchemes.length} groups`,
         ipAddress,
         userAgent,
       },

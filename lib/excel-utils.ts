@@ -86,7 +86,7 @@ export function exportUsersToExcel(users: any[]): ArrayBuffer {
 }
 
 export function exportSubscriptionsToExcel(subscriptions: any[]): ArrayBuffer {
-  const headers = ['Subscriber ID', 'User Name', 'User Email', 'User Phone', 'Chit Scheme', 'Amount', 'Duration', 'Status', 'Created At'];
+  const headers = ['Subscriber ID', 'User Name', 'User Email', 'User Phone', 'Chit Group', 'Amount', 'Duration', 'Status', 'Created At'];
   const data = subscriptions.map(sub => [
     sub.subscriberId,
     `${sub.user.firstName} ${sub.user.lastName}`,
@@ -106,7 +106,7 @@ export function exportSubscriptionsToExcel(subscriptions: any[]): ArrayBuffer {
 }
 
 export function exportPayoutsToExcel(payouts: any[]): ArrayBuffer {
-  const headers = ['User Name', 'User Email', 'Subscriber ID', 'Chit Scheme', 'Amount', 'Month', 'Year', 'Status', 'Created At'];
+  const headers = ['User Name', 'User Email', 'Subscriber ID', 'Chit Group', 'Amount', 'Month', 'Year', 'Status', 'Created At'];
   const data = payouts.map(payout => [
     `${payout.subscription.user.firstName} ${payout.subscription.user.lastName}`,
     payout.subscription.user.email,
@@ -168,7 +168,7 @@ export function exportFinancialToExcel(data: { subscriptions: any[], payouts: an
     {
       name: 'Active Subscriptions',
       data: [
-        ['Subscriber ID', 'User Name', 'Chit Scheme', 'Amount', 'Duration', 'Created At'],
+        ['Subscriber ID', 'User Name', 'Chit Group', 'Amount', 'Duration', 'Created At'],
         ...data.subscriptions.map(sub => [
           sub.subscriberId,
           `${sub.user.firstName} ${sub.user.lastName}`,
@@ -183,7 +183,7 @@ export function exportFinancialToExcel(data: { subscriptions: any[], payouts: an
     {
       name: 'Payouts',
       data: [
-        ['User Name', 'Subscriber ID', 'Chit Scheme', 'Amount', 'Month', 'Year', 'Status'],
+        ['User Name', 'Subscriber ID', 'Chit Group', 'Amount', 'Month', 'Year', 'Status'],
         ...data.payouts.map(payout => [
           `${payout.subscription.user.firstName} ${payout.subscription.user.lastName}`,
           payout.subscription.subscriberId,
@@ -197,7 +197,7 @@ export function exportFinancialToExcel(data: { subscriptions: any[], payouts: an
       options: {}
     },
     {
-      name: 'Chit Schemes',
+      name: 'Chit Groups',
       data: [
         ['Chit ID', 'Name', 'Amount', 'Duration', 'Total Slots', 'Active Subscriptions'],
         ...data.chitSchemes.map(scheme => [
