@@ -46,8 +46,22 @@ export default function Dashboard() {
             ? `/api/subscriptions?page=1&limit=1&status=ACTIVE&userId=${user?.id}`
             : '/api/subscriptions?page=1&limit=1&status=ACTIVE';
           
-          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse, activeSubscriptionsResponse, activeGroupsResponse] = await Promise.all([
-            fetch('/api/users?limit=1000', {
+          // Fetch stats for pie chart (subscription status counts)
+          const completedSubscriptionsUrl = user?.role !== 'ADMIN' 
+            ? `/api/subscriptions?page=1&limit=1&status=COMPLETED&userId=${user?.id}`
+            : '/api/subscriptions?page=1&limit=1&status=COMPLETED';
+          const cancelledSubscriptionsUrl = user?.role !== 'ADMIN' 
+            ? `/api/subscriptions?page=1&limit=1&status=CANCELLED&userId=${user?.id}`
+            : '/api/subscriptions?page=1&limit=1&status=CANCELLED';
+          
+          // Fetch total payouts amount (all paid payouts)
+          const allPaidPayoutsUrl = user?.role !== 'ADMIN' 
+            ? `/api/payouts?limit=10000&status=PAID&userId=${user?.id}`
+            : '/api/payouts?limit=10000&status=PAID';
+          
+          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse, activeSubscriptionsResponse, activeGroupsResponse, completedSubscriptionsResponse, cancelledSubscriptionsResponse, allPaidPayoutsResponse, allUsersResponse, allPayoutsResponse] = await Promise.all([
+            // Fetch users with high limit for monthly data calculation
+            fetch('/api/users?limit=10000', {
               headers: { 'Authorization': `Bearer ${token}` }
             }),
             fetch('/api/subscriptions', {
@@ -65,32 +79,70 @@ export default function Dashboard() {
             // Fetch active groups count
             fetch('/api/chit-schemes?page=1&limit=1&status=true', {
               headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            // Fetch completed subscriptions count
+            fetch(completedSubscriptionsUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            // Fetch cancelled subscriptions count
+            fetch(cancelledSubscriptionsUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            // Fetch all paid payouts to calculate total amount
+            fetch(allPaidPayoutsUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            // Fetch all users for accurate monthly data calculation
+            fetch('/api/users?limit=10000', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            // Fetch all payouts for accurate monthly data calculation
+            fetch('/api/payouts?limit=10000', {
+              headers: { 'Authorization': `Bearer ${token}` }
             })
           ]);
 
-          const [usersData, subscriptionsData, payoutsData, schemesData, activeSubscriptionsData, activeGroupsData] = await Promise.all([
+          const [usersData, subscriptionsData, payoutsData, schemesData, activeSubscriptionsData, activeGroupsData, completedSubscriptionsData, cancelledSubscriptionsData, allPaidPayoutsData, allUsersData, allPayoutsData] = await Promise.all([
             usersResponse.json(),
             subscriptionsResponse.json(),
             payoutsResponse.json(),
             schemesResponse.json(),
             activeSubscriptionsResponse.json(),
-            activeGroupsResponse.json()
+            activeGroupsResponse.json(),
+            completedSubscriptionsResponse.json(),
+            cancelledSubscriptionsResponse.json(),
+            allPaidPayoutsResponse.json(),
+            allUsersResponse.json(),
+            allPayoutsResponse.json()
           ]);
 
-          // Calculate stats
-          const totalPayouts = payoutsData.payouts?.reduce((sum: number, payout: any) => 
-            sum + (payout.status === 'PAID' ? Number(payout.amount) : 0), 0) || 0;
+          // Calculate total payouts from all paid payouts
+          const totalPayouts = allPaidPayoutsData.payouts?.reduce((sum: number, payout: any) => 
+            sum + Number(payout.amount), 0) || 0;
 
           // Calculate user-specific stats if not admin
           let userStats = undefined;
           let activeSubscriptionsCount = 0;
           
           if (user?.role !== 'ADMIN') {
-            // Use userId if available, otherwise fall back to filtering by registrationId
-            const mySubscriptions = subscriptionsData.subscriptions?.filter((s: any) => 
-              s.userId === user?.id || s.user?.registrationId === user?.registrationId) || [];
-            const myPayouts = payoutsData.payouts?.filter((p: any) => 
-              p.userId === user?.id || p.user?.registrationId === user?.registrationId) || [];
+            // Fetch all user's subscriptions and payouts for accurate stats
+            // API automatically filters by userId for non-admin users
+            const [userSubscriptionsRes, userPayoutsRes] = await Promise.all([
+              fetch(`/api/subscriptions?limit=10000`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              }),
+              fetch(`/api/payouts?limit=10000`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              })
+            ]);
+            
+            const [userSubscriptionsData, userPayoutsData] = await Promise.all([
+              userSubscriptionsRes.json(),
+              userPayoutsRes.json()
+            ]);
+            
+            const mySubscriptions = userSubscriptionsData.subscriptions || [];
+            const myPayouts = userPayoutsData.payouts || [];
             
             // Get active subscriptions count from API response (total count)
             activeSubscriptionsCount = activeSubscriptionsData?.pagination?.total || 0;
@@ -119,14 +171,14 @@ export default function Dashboard() {
               const monthName = months[date.getMonth()];
               const year = date.getFullYear();
               
-              // Count users registered in this month
-              const usersInMonth = usersData.users?.filter((user: any) => {
+              // Count users registered in this month (use allUsersData for complete data)
+              const usersInMonth = allUsersData.users?.filter((user: any) => {
                 const userDate = new Date(user.createdAt);
                 return userDate.getMonth() === date.getMonth() && userDate.getFullYear() === year;
               }).length || 0;
               
-              // Calculate payouts for this month
-              const payoutsInMonth = payoutsData.payouts?.filter((payout: any) => {
+              // Calculate payouts for this month (use allPayoutsData for complete data)
+              const payoutsInMonth = allPayoutsData.payouts?.filter((payout: any) => {
                 if (!payout.paidAt) return false;
                 const payoutDate = new Date(payout.paidAt);
                 return payoutDate.getMonth() === date.getMonth() && payoutDate.getFullYear() === year;
@@ -144,11 +196,11 @@ export default function Dashboard() {
           
           const monthlyData = generateMonthlyData();
 
-          // Status data for pie chart
+          // Status data for pie chart - use API pagination totals
           const statusData = [
-            { name: 'Active', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'ACTIVE').length || 0, color: '#10b981' },
-            { name: 'Completed', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'COMPLETED').length || 0, color: '#3b82f6' },
-            { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
+            { name: 'Active', value: activeSubscriptionsData?.pagination?.total || 0, color: '#10b981' },
+            { name: 'Completed', value: completedSubscriptionsData?.pagination?.total || 0, color: '#3b82f6' },
+            { name: 'Cancelled', value: cancelledSubscriptionsData?.pagination?.total || 0, color: '#ef4444' },
           ];
 
           // Get active groups count from API response

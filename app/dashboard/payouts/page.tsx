@@ -204,8 +204,8 @@ export default function PayoutsPage() {
         fetch('/api/payouts?page=1&limit=1&status=PENDING', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        // Fetch all payouts to calculate total amount
-        fetch('/api/payouts?limit=10000', {
+        // Fetch all payouts to calculate total amount (use high limit to get all)
+        fetch('/api/payouts?limit=50000', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
