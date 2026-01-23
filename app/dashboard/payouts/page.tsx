@@ -142,6 +142,10 @@ export default function PayoutsPage() {
     pages: 0,
   });
   const [pageSize, setPageSize] = useState(10);
+  const [totalPayoutsCount, setTotalPayoutsCount] = useState(0);
+  const [paidPayoutsCount, setPaidPayoutsCount] = useState(0);
+  const [pendingPayoutsCount, setPendingPayoutsCount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   
@@ -180,11 +184,28 @@ export default function PayoutsPage() {
         sortOrder: sortOrder,
       });
 
-      const [payoutsRes, subscriptionsRes] = await Promise.all([
+      // Fetch payouts data, subscriptions, and stats in parallel
+      const [payoutsRes, subscriptionsRes, totalStatsRes, paidStatsRes, pendingStatsRes, allPayoutsRes] = await Promise.all([
         fetch(`/api/payouts?${params}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch('/api/subscriptions', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch total payouts count (no filters)
+        fetch('/api/payouts?page=1&limit=1', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch paid payouts count
+        fetch('/api/payouts?page=1&limit=1&status=PAID', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch pending payouts count
+        fetch('/api/payouts?page=1&limit=1&status=PENDING', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch all payouts to calculate total amount
+        fetch('/api/payouts?limit=10000', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -198,6 +219,31 @@ export default function PayoutsPage() {
       if (subscriptionsRes.ok) {
         const subscriptionsData = await subscriptionsRes.json();
         setSubscriptions(subscriptionsData.subscriptions);
+      }
+
+      // Set total payouts count
+      if (totalStatsRes.ok) {
+        const totalStatsData = await totalStatsRes.json();
+        setTotalPayoutsCount(totalStatsData.pagination?.total || 0);
+      }
+
+      // Set paid payouts count
+      if (paidStatsRes.ok) {
+        const paidStatsData = await paidStatsRes.json();
+        setPaidPayoutsCount(paidStatsData.pagination?.total || 0);
+      }
+
+      // Set pending payouts count
+      if (pendingStatsRes.ok) {
+        const pendingStatsData = await pendingStatsRes.json();
+        setPendingPayoutsCount(pendingStatsData.pagination?.total || 0);
+      }
+
+      // Calculate total amount from all payouts
+      if (allPayoutsRes.ok) {
+        const allPayoutsData = await allPayoutsRes.json();
+        const total = allPayoutsData.payouts?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+        setTotalAmount(total);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -1114,7 +1160,7 @@ export default function PayoutsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-primary">
-                  {payouts.length}
+                  {totalPayoutsCount}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Payouts</p>
               </div>
@@ -1130,7 +1176,7 @@ export default function PayoutsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-success">
-                  {payouts.filter(p => p.status === 'PAID').length}
+                  {paidPayoutsCount}
                 </p>
                 <p className="text-sm text-muted-foreground">Paid Payouts</p>
               </div>
@@ -1146,7 +1192,7 @@ export default function PayoutsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-warning">
-                  {payouts.filter(p => p.status === 'PENDING').length}
+                  {pendingPayoutsCount}
                 </p>
                 <p className="text-sm text-muted-foreground">Pending Payouts</p>
               </div>
@@ -1162,7 +1208,7 @@ export default function PayoutsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-secondary">
-                  ₹{payouts.reduce((sum, p) => sum + Number(p.amount), 0).toLocaleString()}
+                  ₹{totalAmount.toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Amount</p>
               </div>

@@ -46,7 +46,7 @@ export default function Dashboard() {
             ? `/api/subscriptions?page=1&limit=1&status=ACTIVE&userId=${user?.id}`
             : '/api/subscriptions?page=1&limit=1&status=ACTIVE';
           
-          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse, activeSubscriptionsResponse] = await Promise.all([
+          const [usersResponse, subscriptionsResponse, payoutsResponse, schemesResponse, activeSubscriptionsResponse, activeGroupsResponse] = await Promise.all([
             fetch('/api/users?limit=1000', {
               headers: { 'Authorization': `Bearer ${token}` }
             }),
@@ -61,15 +61,20 @@ export default function Dashboard() {
             }),
             fetch(activeSubscriptionsUrl, {
               headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            // Fetch active groups count
+            fetch('/api/chit-schemes?page=1&limit=1&status=true', {
+              headers: { 'Authorization': `Bearer ${token}` }
             })
           ]);
 
-          const [usersData, subscriptionsData, payoutsData, schemesData, activeSubscriptionsData] = await Promise.all([
+          const [usersData, subscriptionsData, payoutsData, schemesData, activeSubscriptionsData, activeGroupsData] = await Promise.all([
             usersResponse.json(),
             subscriptionsResponse.json(),
             payoutsResponse.json(),
             schemesResponse.json(),
-            activeSubscriptionsResponse.json()
+            activeSubscriptionsResponse.json(),
+            activeGroupsResponse.json()
           ]);
 
           // Calculate stats
@@ -146,11 +151,14 @@ export default function Dashboard() {
             { name: 'Cancelled', value: subscriptionsData.subscriptions?.filter((s: any) => s.status === 'CANCELLED').length || 0, color: '#ef4444' },
           ];
 
+          // Get active groups count from API response
+          const activeGroupsCount = activeGroupsData?.pagination?.total || 0;
+
           setStats({
             totalUsers: usersData.pagination?.total || 0,
             totalSubscriptions: activeSubscriptionsCount,
             totalPayouts,
-            activeGroups: schemesData.schemes?.filter((s: any) => s.isActive).length || 0,
+            activeGroups: activeGroupsCount,
             monthlyData,
             statusData,
             userStats,

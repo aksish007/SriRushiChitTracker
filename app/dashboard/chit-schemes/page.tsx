@@ -62,6 +62,9 @@ export default function ChitSchemesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [totalSchemesCount, setTotalSchemesCount] = useState(0);
+  const [activeSchemesCount, setActiveSchemesCount] = useState(0);
+  const [totalSubscriptionsCount, setTotalSubscriptionsCount] = useState(0);
   
   // Sorting state
   const [sortField, setSortField] = useState<'name' | 'amount' | 'duration' | 'totalSlots' | 'createdAt' | 'chitId' | 'default'>('default');
@@ -100,15 +103,48 @@ export default function ChitSchemesPage() {
         ...(statusFilter !== 'all' && { status: statusFilter }),
       });
 
-      const response = await fetch(`/api/chit-schemes?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      // Fetch schemes data and stats in parallel
+      const [schemesRes, totalStatsRes, activeStatsRes, subscriptionsRes] = await Promise.all([
+        fetch(`/api/chit-schemes?${params}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch total schemes count (no filters)
+        fetch('/api/chit-schemes?page=1&limit=1', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch active schemes count
+        fetch('/api/chit-schemes?page=1&limit=1&status=true', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        // Fetch all subscriptions to count total
+        fetch('/api/subscriptions?page=1&limit=1', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
 
-      if (!response.ok) throw new Error('Failed to fetch schemes');
+      if (!schemesRes.ok) throw new Error('Failed to fetch schemes');
 
-      const data = await response.json();
+      const data = await schemesRes.json();
       setSchemes(data.schemes);
       setPagination(data.pagination);
+
+      // Set total schemes count
+      if (totalStatsRes.ok) {
+        const totalStatsData = await totalStatsRes.json();
+        setTotalSchemesCount(totalStatsData.pagination?.total || 0);
+      }
+
+      // Set active schemes count
+      if (activeStatsRes.ok) {
+        const activeStatsData = await activeStatsRes.json();
+        setActiveSchemesCount(activeStatsData.pagination?.total || 0);
+      }
+
+      // Set total subscriptions count
+      if (subscriptionsRes.ok) {
+        const subscriptionsData = await subscriptionsRes.json();
+        setTotalSubscriptionsCount(subscriptionsData.pagination?.total || 0);
+      }
     } catch (error) {
       console.error('Error fetching schemes:', error);
       toast({
@@ -619,9 +655,9 @@ export default function ChitSchemesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-primary">
-                  {schemes.length}
+                  {totalSchemesCount}
                 </p>
-                <p className="text-sm text-muted-foreground">Total Schemes</p>
+                <p className="text-sm text-muted-foreground">Total Groups</p>
               </div>
             </div>
           </CardContent>
@@ -635,9 +671,9 @@ export default function ChitSchemesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-success">
-                  {schemes.filter(s => s.isActive).length}
+                  {activeSchemesCount}
                 </p>
-                <p className="text-sm text-muted-foreground">Active Schemes</p>
+                <p className="text-sm text-muted-foreground">Active Groups</p>
               </div>
             </div>
           </CardContent>
@@ -651,7 +687,7 @@ export default function ChitSchemesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gradient-secondary">
-                  {schemes.reduce((sum, scheme) => sum + scheme.subscriptions.length, 0)}
+                  {totalSubscriptionsCount}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Subscriptions</p>
               </div>
