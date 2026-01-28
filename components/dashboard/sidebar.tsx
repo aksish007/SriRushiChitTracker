@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
 import {
   LayoutDashboard,
   Users,
@@ -22,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -50,10 +52,15 @@ const sidebarItems: SidebarItem[] = [
     adminOnly: true,
   },
   {
+    title: 'Pending Approvals',
+    href: '/dashboard/pending-approvals',
+    icon: Clock,
+    adminOnly: true,
+  },
+  {
     title: 'Register User',
     href: '/dashboard/register',
     icon: UserPlus,
-    adminOnly: true,
   },
   {
     title: 'Bulk Upload',
@@ -91,7 +98,29 @@ const sidebarItems: SidebarItem[] = [
 
 function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN' && token) {
+      const fetchPendingCount = async () => {
+        try {
+          const response = await fetch('/api/users/pending-count', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setPendingCount(data.count);
+          }
+        } catch (error) {
+          console.error('Error fetching pending count:', error);
+        }
+      };
+      fetchPendingCount();
+      const interval = setInterval(fetchPendingCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.role, token]);
 
   const filteredItems = sidebarItems.filter(
     item => !item.adminOnly || user?.role === 'ADMIN'
@@ -123,24 +152,43 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       
       <ScrollArea className="flex-1">
         <nav className="grid gap-2 p-4 lg:p-6">
-          {filteredItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant={pathname === item.href ? 'secondary' : 'ghost'}
-                className={cn(
-                  'w-full justify-start gap-2 transition-all duration-300',
-                  collapsed ? 'px-2' : 'px-4',
-                  pathname === item.href 
-                    ? 'bg-gradient-primary text-white shadow-glow hover:scale-105' 
-                    : 'hover:bg-primary/10 hover:text-primary hover:shadow-md'
-                )}
-                title={collapsed ? item.title : undefined}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {!collapsed && <span>{item.title}</span>}
-              </Button>
-            </Link>
-          ))}
+          {filteredItems.map((item) => {
+            const isPendingApprovals = item.href === '/dashboard/pending-approvals';
+            const showBadge = isPendingApprovals && pendingCount !== null && pendingCount > 0;
+            
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={pathname === item.href ? 'secondary' : 'ghost'}
+                  className={cn(
+                    'w-full justify-start gap-2 transition-all duration-300 relative',
+                    collapsed ? 'px-2' : 'px-4',
+                    pathname === item.href 
+                      ? 'bg-gradient-primary text-white shadow-glow hover:scale-105' 
+                      : 'hover:bg-primary/10 hover:text-primary hover:shadow-md'
+                  )}
+                  title={collapsed ? item.title : undefined}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span>{item.title}</span>
+                      {showBadge && (
+                        <Badge className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                          {pendingCount > 99 ? '99+' : pendingCount}
+                        </Badge>
+                      )}
+                    </>
+                  )}
+                  {collapsed && showBadge && (
+                    <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 py-0 min-w-[1.25rem] h-5 flex items-center justify-center">
+                      {pendingCount > 99 ? '99+' : pendingCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            );
+          })}
         </nav>
       </ScrollArea>
       

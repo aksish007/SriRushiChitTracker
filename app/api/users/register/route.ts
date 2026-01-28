@@ -8,8 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Require admin authentication
-    const adminUser = await requireAuth(request, 'ADMIN');
+    const currentUser = await requireAuth(request);
 
     const body = await request.json();
     const userData = registerUserSchema.parse(body);
@@ -40,12 +39,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate referrer if provided
+    // Determine referrer: use provided referrer if admin, otherwise auto-set to logged-in user
     let referrerId = null;
-    if (userData.referredBy) {
+    if (userData.referredBy && userData.referredBy !== 'none') {
+      // Admin provided a referrer, validate it
       const referrer = await prisma.user.findUnique({
         where: { id: userData.referredBy },
-        include: { referrals: true },
       });
 
       if (!referrer) {
@@ -56,7 +55,14 @@ export async function POST(request: NextRequest) {
       }
 
       referrerId = referrer.id;
+    } else if (currentUser.role !== 'ADMIN') {
+      // Regular users: auto-set referrer to themselves
+      referrerId = currentUser.id;
     }
+    // If admin and no referrer provided, referrerId remains null
+
+    // Determine isActive: admins create active users, regular users create inactive (pending approval)
+    const isActive = currentUser.role === 'ADMIN';
 
     const hashedPassword = await hashPassword(userData.password);
     const registrationId = await generateRegistrationId();
@@ -71,6 +77,7 @@ export async function POST(request: NextRequest) {
         phone: userData.phone,
         address: userData.address,
         referredBy: referrerId,
+        isActive,
         nominees: userData.nominee && (userData.nominee.name || userData.nominee.relation || userData.nominee.age || userData.nominee.dateOfBirth || userData.nominee.guardian) ? {
           create: {
             name: userData.nominee.name || '',
@@ -84,11 +91,17 @@ export async function POST(request: NextRequest) {
     });
 
     // Create audit log
+    const referrerInfo = referrerId 
+      ? await prisma.user.findUnique({ where: { id: referrerId }, select: { registrationId: true } })
+      : null;
+    const referrerText = referrerInfo ? referrerInfo.registrationId : 'None';
+    const statusText = isActive ? 'active' : 'pending approval';
+    
     await prisma.auditLog.create({
       data: {
-        userId: adminUser.id,
+        userId: currentUser.id,
         action: 'USER_REGISTER',
-        details: `Registered new user: ${newUser.registrationId}`,
+        details: `Registered new user: ${newUser.registrationId} (${statusText}). Referrer: ${referrerText}`,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       },
