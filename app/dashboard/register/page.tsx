@@ -173,8 +173,34 @@ export default function RegisterUserPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
+    // Real-time validation for Aadhar
+    if (field === 'aadharNumber' && value.trim()) {
+      const cleaned = value.replace(/\D/g, '');
+      if (cleaned.length > 0 && cleaned.length !== 12) {
+        setErrors(prev => ({ ...prev, aadharNumber: 'Aadhar number must be exactly 12 digits' }));
+      } else if (cleaned.length === 12) {
+        setErrors(prev => ({ ...prev, aadharNumber: '' }));
+      }
+    }
+    
+    // Real-time validation for PAN
+    if (field === 'panNumber' && value.trim()) {
+      const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (cleaned.length > 0 && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleaned)) {
+        if (cleaned.length < 10) {
+          setErrors(prev => ({ ...prev, panNumber: 'PAN number must be 10 characters (e.g., ABCDE1234F)' }));
+        } else {
+          setErrors(prev => ({ ...prev, panNumber: 'Invalid PAN format. Must be ABCDE1234F (5 letters, 4 digits, 1 letter)' }));
+        }
+      } else if (cleaned.length === 10 && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleaned)) {
+        setErrors(prev => ({ ...prev, panNumber: '' }));
+      }
     }
   };
 
@@ -298,10 +324,17 @@ export default function RegisterUserPage() {
                     <Label htmlFor="aadharNumber">Aadhar Number</Label>
                     <Input
                       id="aadharNumber"
+                      type="text"
+                      inputMode="numeric"
                       value={formData.aadharNumber}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, '').slice(0, 12);
                         handleInputChange('aadharNumber', value);
+                      }}
+                      onBlur={() => {
+                        if (formData.aadharNumber.trim() && formData.aadharNumber.replace(/\D/g, '').length !== 12) {
+                          setErrors(prev => ({ ...prev, aadharNumber: 'Aadhar number must be exactly 12 digits' }));
+                        }
                       }}
                       placeholder="Enter 12-digit Aadhar number (optional)"
                       className={errors.aadharNumber ? 'border-red-500' : ''}
@@ -312,18 +345,37 @@ export default function RegisterUserPage() {
                         {errors.aadharNumber}
                       </p>
                     )}
+                    {!errors.aadharNumber && formData.aadharNumber.trim() && formData.aadharNumber.replace(/\D/g, '').length === 12 && (
+                      <p className="text-sm text-green-600 flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Valid Aadhar number
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="panNumber">PAN Number</Label>
                     <Input
                       id="panNumber"
+                      type="text"
                       value={formData.panNumber}
                       onChange={(e) => {
                         const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
                         handleInputChange('panNumber', value);
                       }}
-                      placeholder="Enter PAN number (optional)"
+                      onBlur={() => {
+                        if (formData.panNumber.trim()) {
+                          const cleaned = formData.panNumber.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                          if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleaned)) {
+                            if (cleaned.length < 10) {
+                              setErrors(prev => ({ ...prev, panNumber: 'PAN number must be 10 characters (e.g., ABCDE1234F)' }));
+                            } else {
+                              setErrors(prev => ({ ...prev, panNumber: 'Invalid PAN format. Must be ABCDE1234F (5 letters, 4 digits, 1 letter)' }));
+                            }
+                          }
+                        }
+                      }}
+                      placeholder="Enter PAN number (e.g., ABCDE1234F)"
                       className={errors.panNumber ? 'border-red-500' : ''}
                       style={{ textTransform: 'uppercase' }}
                     />
@@ -331,6 +383,12 @@ export default function RegisterUserPage() {
                       <p className="text-sm text-red-500 flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.panNumber}
+                      </p>
+                    )}
+                    {!errors.panNumber && formData.panNumber.trim() && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.panNumber.toUpperCase().replace(/[^A-Z0-9]/g, '')) && (
+                      <p className="text-sm text-green-600 flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Valid PAN number
                       </p>
                     )}
                   </div>

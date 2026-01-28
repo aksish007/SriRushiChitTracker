@@ -70,6 +70,8 @@ export async function GET(request: NextRequest) {
           lastName: true,
           phone: true,
           address: true,
+          aadharNumber: true,
+          panNumber: true,
           role: true,
           isActive: true,
           createdAt: true,

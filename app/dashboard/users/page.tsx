@@ -30,6 +30,8 @@ interface User {
   lastName: string;
   phone: string;
   address: string | null;
+  aadharNumber: string | null;
+  panNumber: string | null;
   role: string;
   isActive: boolean;
   createdAt: string;
@@ -82,7 +84,7 @@ type SortField = 'firstName' | 'lastName' | 'email' | 'registrationId' | 'create
 type SortOrder = 'asc' | 'desc';
 
 export default function UsersPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -989,6 +991,46 @@ export default function UsersPage() {
                 <div>
                   <Label>Address</Label>
                   <p className="text-sm">{selectedUser.address}</p>
+                </div>
+              )}
+              {user?.role === 'ADMIN' && (selectedUser.aadharNumber || selectedUser.panNumber) && (
+                <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                  {selectedUser.aadharNumber && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Aadhar Number</Label>
+                      <div className="group relative mt-1">
+                        <p className="font-mono text-sm cursor-pointer select-none bg-gray-50 p-2 rounded border border-gray-200 hover:border-blue-300 transition-colors">
+                          <span className="group-hover:hidden text-gray-600">
+                            ****-****-{selectedUser.aadharNumber.slice(8, 12)}
+                          </span>
+                          <span className="hidden group-hover:inline text-gray-900">
+                            {selectedUser.aadharNumber.slice(0, 4)}-{selectedUser.aadharNumber.slice(4, 8)}-{selectedUser.aadharNumber.slice(8, 12)}
+                          </span>
+                        </p>
+                        <span className="absolute -top-8 left-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10">
+                          Hover to reveal full number
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedUser.panNumber && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">PAN Number</Label>
+                      <div className="group relative mt-1">
+                        <p className="font-mono text-sm cursor-pointer select-none bg-gray-50 p-2 rounded border border-gray-200 hover:border-blue-300 transition-colors">
+                          <span className="group-hover:hidden text-gray-600">
+                            {selectedUser.panNumber.slice(0, 1)}****{selectedUser.panNumber.slice(6, 10)}
+                          </span>
+                          <span className="hidden group-hover:inline text-gray-900">
+                            {selectedUser.panNumber}
+                          </span>
+                        </p>
+                        <span className="absolute -top-8 left-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10">
+                          Hover to reveal full number
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div>
