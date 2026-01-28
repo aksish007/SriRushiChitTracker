@@ -20,6 +20,8 @@ model User {
   lastName       String
   phone          String   @unique
   address        String?
+  aadharNumber   String?
+  panNumber      String?
   role           String   @default("USER") // Changed from UserRole enum
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())

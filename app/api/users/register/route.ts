@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
         lastName: userData.lastName,
         phone: userData.phone,
         address: userData.address,
+        aadharNumber: userData.aadharNumber && userData.aadharNumber.trim() ? userData.aadharNumber.trim() : null,
+        panNumber: userData.panNumber && userData.panNumber.trim() ? userData.panNumber.trim().toUpperCase() : null,
         referredBy: referrerId,
         isActive,
         nominees: userData.nominee && (userData.nominee.name || userData.nominee.relation || userData.nominee.age || userData.nominee.dateOfBirth || userData.nominee.guardian) ? {

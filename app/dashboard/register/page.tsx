@@ -24,6 +24,8 @@ export default function RegisterUserPage() {
     email: '',
     phone: '',
     address: '',
+    aadharNumber: '',
+    panNumber: '',
     password: '',
     confirmPassword: '',
     referredBy: 'none',
@@ -70,6 +72,14 @@ export default function RegisterUserPage() {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (formData.aadharNumber.trim() && !/^\d{12}$/.test(formData.aadharNumber.replace(/\D/g, ''))) {
+      newErrors.aadharNumber = 'Aadhar number must be exactly 12 digits';
+    }
+
+    if (formData.panNumber.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.panNumber.trim().toUpperCase())) {
+      newErrors.panNumber = 'PAN number must be in format ABCDE1234F';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -95,6 +105,8 @@ export default function RegisterUserPage() {
           email: formData.email.trim().toLowerCase(),
           phone: formData.phone.trim(),
           address: formData.address.trim() || undefined,
+          aadharNumber: formData.aadharNumber.trim() || undefined,
+          panNumber: formData.panNumber.trim() || undefined,
           password: formData.password,
           referredBy: user?.role === 'ADMIN' ? (formData.referredBy === 'none' ? undefined : formData.referredBy) : undefined,
           // Nominee details
@@ -127,6 +139,8 @@ export default function RegisterUserPage() {
           email: '',
           phone: '',
           address: '',
+          aadharNumber: '',
+          panNumber: '',
           password: '',
           confirmPassword: '',
           referredBy: 'none',
@@ -277,6 +291,49 @@ export default function RegisterUserPage() {
                     placeholder="Enter address (optional)"
                     rows={3}
                   />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="aadharNumber">Aadhar Number</Label>
+                    <Input
+                      id="aadharNumber"
+                      value={formData.aadharNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+                        handleInputChange('aadharNumber', value);
+                      }}
+                      placeholder="Enter 12-digit Aadhar number (optional)"
+                      className={errors.aadharNumber ? 'border-red-500' : ''}
+                    />
+                    {errors.aadharNumber && (
+                      <p className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.aadharNumber}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="panNumber">PAN Number</Label>
+                    <Input
+                      id="panNumber"
+                      value={formData.panNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                        handleInputChange('panNumber', value);
+                      }}
+                      placeholder="Enter PAN number (optional)"
+                      className={errors.panNumber ? 'border-red-500' : ''}
+                      style={{ textTransform: 'uppercase' }}
+                    />
+                    {errors.panNumber && (
+                      <p className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.panNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {user?.role === 'ADMIN' ? (
