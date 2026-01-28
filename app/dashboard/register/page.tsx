@@ -7,15 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SearchableUser } from '@/components/ui/searchable-user';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { SearchableUser } from '@/components/ui/searchable-user';
 import Link from 'next/link';
 
 
 export default function RegisterUserPage() {
-  const { makeAuthenticatedRequest } = useAuth();
+  const { makeAuthenticatedRequest, user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -96,7 +96,7 @@ export default function RegisterUserPage() {
           phone: formData.phone.trim(),
           address: formData.address.trim() || undefined,
           password: formData.password,
-          referredBy: formData.referredBy === 'none' ? undefined : formData.referredBy,
+          referredBy: user?.role === 'ADMIN' ? (formData.referredBy === 'none' ? undefined : formData.referredBy) : undefined,
           // Nominee details
           nominee: {
             name: formData.nomineeName.trim() || undefined,
@@ -111,9 +111,12 @@ export default function RegisterUserPage() {
       const data = await response.json();
 
       if (response.ok) {
+        const isAdmin = user?.role === 'ADMIN';
         toast({
           title: 'Success!',
-          description: `User ${data.user.registrationId} has been registered successfully.`,
+          description: isAdmin 
+            ? `User ${data.user.registrationId} has been registered successfully.`
+            : `User ${data.user.registrationId} has been registered and is pending admin approval.`,
           variant: 'success',
         });
         
@@ -276,18 +279,32 @@ export default function RegisterUserPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="referredBy">Referred By</Label>
-                  <SearchableUser
-                    value={formData.referredBy}
-                    onValueChange={(value) => handleInputChange('referredBy', value)}
-                    placeholder="Select referrer (optional)"
-                    showNoOption={true}
-                    noOptionLabel="Sri Rushi Chits"
-                    noOptionValue="none"
-                    showReferralCount={true}
-                  />
-                </div>
+                {user?.role === 'ADMIN' ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="referredBy">Referred By</Label>
+                    <SearchableUser
+                      value={formData.referredBy}
+                      onValueChange={(value) => handleInputChange('referredBy', value)}
+                      placeholder="Select referrer (optional)"
+                      showNoOption={true}
+                      noOptionLabel="None"
+                      noOptionValue="none"
+                      showReferralCount={true}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Referred By</Label>
+                    <div className="p-3 bg-muted rounded-md border">
+                      <p className="text-sm font-medium">
+                        {user?.firstName} {user?.lastName} ({user?.registrationId})
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You will be listed as the referrer for this registration
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Nominee Details Section */}
                 <div className="space-y-4 border-t pt-6">
@@ -475,14 +492,33 @@ export default function RegisterUserPage() {
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>Default role will be set to USER</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>User will be marked as active</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Referral system supports up to 3 direct referrals</span>
-              </div>
+              {user?.role === 'ADMIN' ? (
+                <>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>User will be marked as active immediately</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>You can select a referrer or leave it as None</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    <span>User will be marked as inactive until admin approval</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Referrer is automatically set to your account</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span>Admin will review and approve the registration</span>
+                  </div>
+                </>
+              )}
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>Nominee details are optional but recommended</span>
