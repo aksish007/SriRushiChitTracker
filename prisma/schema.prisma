@@ -22,6 +22,7 @@ model User {
   address        String?
   aadharNumber   String?
   panNumber      String?
+  intendedChitValue Decimal?
   role           String   @default("USER") // Changed from UserRole enum
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())

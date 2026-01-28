@@ -14,6 +14,7 @@ export const registerUserSchema = z.object({
   address: z.string().optional(),
   aadharNumber: z.string().regex(/^\d{12}$/, 'Aadhar number must be exactly 12 digits').optional().or(z.literal('')),
   panNumber: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'PAN number must be in format ABCDE1234F').optional().or(z.literal('')),
+  intendedChitValue: z.number().positive('Intended chit value must be a positive number').optional(),
   referredBy: z.string().optional(),
   nominee: z.object({
     name: z.string().optional(),

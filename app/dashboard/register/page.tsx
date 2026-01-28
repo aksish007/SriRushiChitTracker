@@ -26,6 +26,7 @@ export default function RegisterUserPage() {
     address: '',
     aadharNumber: '',
     panNumber: '',
+    intendedChitValue: '',
     password: '',
     confirmPassword: '',
     referredBy: 'none',
@@ -80,6 +81,10 @@ export default function RegisterUserPage() {
       newErrors.panNumber = 'PAN number must be in format ABCDE1234F';
     }
 
+    if (formData.intendedChitValue.trim() && (isNaN(parseFloat(formData.intendedChitValue)) || parseFloat(formData.intendedChitValue) <= 0)) {
+      newErrors.intendedChitValue = 'Intended chit value must be a positive number';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -107,6 +112,7 @@ export default function RegisterUserPage() {
           address: formData.address.trim() || undefined,
           aadharNumber: formData.aadharNumber.trim() || undefined,
           panNumber: formData.panNumber.trim() || undefined,
+          intendedChitValue: formData.intendedChitValue.trim() ? parseFloat(formData.intendedChitValue) : undefined,
           password: formData.password,
           referredBy: user?.role === 'ADMIN' ? (formData.referredBy === 'none' ? undefined : formData.referredBy) : undefined,
           // Nominee details
@@ -141,6 +147,7 @@ export default function RegisterUserPage() {
           address: '',
           aadharNumber: '',
           panNumber: '',
+          intendedChitValue: '',
           password: '',
           confirmPassword: '',
           referredBy: 'none',
@@ -392,6 +399,29 @@ export default function RegisterUserPage() {
                       </p>
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="intendedChitValue">Intended Chit Value</Label>
+                  <Input
+                    id="intendedChitValue"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.intendedChitValue}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      handleInputChange('intendedChitValue', value);
+                    }}
+                    placeholder="Enter intended chit value in ₹ (optional)"
+                    className={errors.intendedChitValue ? 'border-red-500' : ''}
+                  />
+                  {errors.intendedChitValue && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.intendedChitValue}
+                    </p>
+                  )}
                 </div>
 
                 {user?.role === 'ADMIN' ? (

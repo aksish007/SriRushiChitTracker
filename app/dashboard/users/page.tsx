@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Users, UserPlus, Download, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, Lock, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Users, UserPlus, Download, Filter, Edit, Trash2, Eye, MoreHorizontal, Check, X, Lock, ArrowUpDown, ArrowUp, ArrowDown, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { handleApiError, formatErrorForToast } from '@/lib/error-handler';
 import { COMPANY_NAME } from '@/lib/constants';
@@ -32,6 +32,7 @@ interface User {
   address: string | null;
   aadharNumber: string | null;
   panNumber: string | null;
+  intendedChitValue: number | null;
   role: string;
   isActive: boolean;
   createdAt: string;
@@ -123,6 +124,8 @@ export default function UsersPage() {
     email: '',
     phone: '',
     address: '',
+    aadharNumber: '',
+    panNumber: '',
     role: '',
     isActive: true,
     referredBy: '',
@@ -135,6 +138,9 @@ export default function UsersPage() {
     age: '',
     dateOfBirth: '',
   });
+
+  // Edit form validation errors
+  const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>({});
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -230,6 +236,8 @@ export default function UsersPage() {
       email: user.email,
       phone: user.phone,
       address: user.address || '',
+      aadharNumber: '',
+      panNumber: '',
       role: user.role,
       isActive: user.isActive,
       referredBy: user.referrer?.id || '',
@@ -244,30 +252,80 @@ export default function UsersPage() {
       dateOfBirth: firstNominee?.dateOfBirth ? new Date(firstNominee.dateOfBirth).toISOString().split('T')[0] : '',
     });
     
+    // Clear validation errors when opening edit dialog
+    setEditFormErrors({});
     setShowEditDialog(true);
+  };
+
+  const validateEditForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!editForm.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+
+    if (!editForm.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+
+    if (editForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!editForm.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(editForm.phone.replace(/\D/g, ''))) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    if (editForm.aadharNumber.trim() && !/^\d{12}$/.test(editForm.aadharNumber.replace(/\D/g, ''))) {
+      newErrors.aadharNumber = 'Aadhar number must be exactly 12 digits';
+    }
+
+    if (editForm.panNumber.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(editForm.panNumber.trim().toUpperCase())) {
+      newErrors.panNumber = 'PAN number must be in format ABCDE1234F';
+    }
+
+    setEditFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
 
+    if (!validateEditForm()) {
+      return;
+    }
+
     setSubmitting(true);
     try {
+      const updatePayload: any = {
+        ...editForm,
+        referredBy: editForm.referredBy === 'self' ? selectedUser.id : (editForm.referredBy || null),
+        nominee: {
+          name: nomineeForm.name.trim() || undefined,
+          relation: nomineeForm.relation.trim() || undefined,
+          age: nomineeForm.age ? parseInt(nomineeForm.age) : undefined,
+          dateOfBirth: nomineeForm.dateOfBirth || undefined,
+        },
+      };
+
+      // Only include Aadhar and PAN if user has entered new values
+      // If fields are empty, don't include them so existing values are preserved
+      if (editForm.aadharNumber.trim()) {
+        updatePayload.aadharNumber = editForm.aadharNumber.trim();
+      }
+      if (editForm.panNumber.trim()) {
+        updatePayload.panNumber = editForm.panNumber.trim();
+      }
+
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...editForm,
-          referredBy: editForm.referredBy === 'self' ? selectedUser.id : (editForm.referredBy || null),
-          nominee: {
-            name: nomineeForm.name.trim() || undefined,
-            relation: nomineeForm.relation.trim() || undefined,
-            age: nomineeForm.age ? parseInt(nomineeForm.age) : undefined,
-            dateOfBirth: nomineeForm.dateOfBirth || undefined,
-          },
-        }),
+        body: JSON.stringify(updatePayload),
       });
 
       if (response.ok) {
@@ -1016,21 +1074,19 @@ export default function UsersPage() {
                   {selectedUser.panNumber && (
                     <div>
                       <Label className="text-sm font-medium text-gray-600">PAN Number</Label>
-                      <div className="group relative mt-1">
-                        <p className="font-mono text-sm cursor-pointer select-none bg-gray-50 p-2 rounded border border-gray-200 hover:border-blue-300 transition-colors">
-                          <span className="group-hover:hidden text-gray-600">
-                            {selectedUser.panNumber.slice(0, 1)}****{selectedUser.panNumber.slice(6, 10)}
-                          </span>
-                          <span className="hidden group-hover:inline text-gray-900">
-                            {selectedUser.panNumber}
-                          </span>
-                        </p>
-                        <span className="absolute -top-8 left-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10">
-                          Hover to reveal full number
-                        </span>
-                      </div>
+                      <p className="font-mono text-sm bg-gray-50 p-2 rounded border border-gray-200">
+                        {selectedUser.panNumber}
+                      </p>
                     </div>
                   )}
+                </div>
+              )}
+              {!selectedUser.isActive && selectedUser.intendedChitValue && (
+                <div className="border-t pt-4">
+                  <Label className="text-sm font-medium text-gray-600">Intended Chit Value</Label>
+                  <p className="text-lg font-semibold text-blue-600 mt-1">
+                    ₹{selectedUser.intendedChitValue.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                  </p>
                 </div>
               )}
               <div>
@@ -1163,22 +1219,46 @@ export default function UsersPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">User Information</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={editForm.firstName}
-                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={editForm.lastName}
-                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                  />
-                </div>
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={editForm.firstName}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, firstName: e.target.value });
+                    if (editFormErrors.firstName) {
+                      setEditFormErrors({ ...editFormErrors, firstName: '' });
+                    }
+                  }}
+                  className={editFormErrors.firstName ? 'border-red-500' : ''}
+                />
+                {editFormErrors.firstName && (
+                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {editFormErrors.firstName}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={editForm.lastName}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, lastName: e.target.value });
+                    if (editFormErrors.lastName) {
+                      setEditFormErrors({ ...editFormErrors, lastName: '' });
+                    }
+                  }}
+                  className={editFormErrors.lastName ? 'border-red-500' : ''}
+                />
+                {editFormErrors.lastName && (
+                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {editFormErrors.lastName}
+                  </p>
+                )}
+              </div>
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
@@ -1186,17 +1266,41 @@ export default function UsersPage() {
                   id="email"
                   type="email"
                   value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, email: e.target.value });
+                    if (editFormErrors.email) {
+                      setEditFormErrors({ ...editFormErrors, email: '' });
+                    }
+                  }}
                   placeholder="Enter email address (optional)"
+                  className={editFormErrors.email ? 'border-red-500' : ''}
                 />
+                {editFormErrors.email && (
+                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {editFormErrors.email}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
                   value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  onChange={(e) => {
+                    setEditForm({ ...editForm, phone: e.target.value });
+                    if (editFormErrors.phone) {
+                      setEditFormErrors({ ...editFormErrors, phone: '' });
+                    }
+                  }}
+                  className={editFormErrors.phone ? 'border-red-500' : ''}
                 />
+                {editFormErrors.phone && (
+                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {editFormErrors.phone}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="address">Address</Label>
@@ -1205,6 +1309,85 @@ export default function UsersPage() {
                   value={editForm.address}
                   onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="aadharNumber">Aadhar Number</Label>
+                  <Input
+                    id="aadharNumber"
+                    type="text"
+                    inputMode="numeric"
+                    value={editForm.aadharNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+                      setEditForm({ ...editForm, aadharNumber: value });
+                      if (editFormErrors.aadharNumber) {
+                        setEditFormErrors({ ...editFormErrors, aadharNumber: '' });
+                      }
+                    }}
+                    onBlur={() => {
+                      if (editForm.aadharNumber.trim() && editForm.aadharNumber.replace(/\D/g, '').length !== 12) {
+                        setEditFormErrors({ ...editFormErrors, aadharNumber: 'Aadhar number must be exactly 12 digits' });
+                      }
+                    }}
+                    placeholder="Enter 12-digit Aadhar number (optional)"
+                    className={editFormErrors.aadharNumber ? 'border-red-500' : ''}
+                  />
+                  {editFormErrors.aadharNumber && (
+                    <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {editFormErrors.aadharNumber}
+                    </p>
+                  )}
+                  {!editFormErrors.aadharNumber && editForm.aadharNumber.trim() && editForm.aadharNumber.replace(/\D/g, '').length === 12 && (
+                    <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Valid Aadhar number
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="panNumber">PAN Number</Label>
+                  <Input
+                    id="panNumber"
+                    type="text"
+                    value={editForm.panNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                      setEditForm({ ...editForm, panNumber: value });
+                      if (editFormErrors.panNumber) {
+                        setEditFormErrors({ ...editFormErrors, panNumber: '' });
+                      }
+                    }}
+                    onBlur={() => {
+                      if (editForm.panNumber.trim()) {
+                        const cleaned = editForm.panNumber.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleaned)) {
+                          if (cleaned.length < 10) {
+                            setEditFormErrors({ ...editFormErrors, panNumber: 'PAN number must be 10 characters (e.g., ABCDE1234F)' });
+                          } else {
+                            setEditFormErrors({ ...editFormErrors, panNumber: 'Invalid PAN format. Must be ABCDE1234F (5 letters, 4 digits, 1 letter)' });
+                          }
+                        }
+                      }
+                    }}
+                    placeholder="Enter PAN number (optional)"
+                    className={editFormErrors.panNumber ? 'border-red-500' : ''}
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                  {editFormErrors.panNumber && (
+                    <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {editFormErrors.panNumber}
+                    </p>
+                  )}
+                  {!editFormErrors.panNumber && editForm.panNumber.trim() && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(editForm.panNumber.toUpperCase().replace(/[^A-Z0-9]/g, '')) && (
+                    <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Valid PAN number
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

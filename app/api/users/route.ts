@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
           address: true,
           aadharNumber: true,
           panNumber: true,
+          intendedChitValue: true,
           role: true,
           isActive: true,
           createdAt: true,

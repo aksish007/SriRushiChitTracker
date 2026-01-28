@@ -98,7 +98,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { firstName, lastName, email, phone, address, role, isActive, nominee, referredBy } = body;
+    const { firstName, lastName, email, phone, address, aadharNumber, panNumber, role, isActive, nominee, referredBy } = body;
 
     // Validate required fields (email is optional)
     if (!firstName || !lastName) {
@@ -166,6 +166,16 @@ export async function PUT(
         phone,
         address,
       };
+
+      // Only update Aadhar and PAN if new non-empty values are provided
+      // If empty string is sent, it means user wants to clear the field (set to null)
+      // If field is not provided at all (undefined), don't update it
+      if (aadharNumber !== undefined) {
+        updateData.aadharNumber = aadharNumber && aadharNumber.trim() ? aadharNumber.trim() : null;
+      }
+      if (panNumber !== undefined) {
+        updateData.panNumber = panNumber && panNumber.trim() ? panNumber.trim().toUpperCase() : null;
+      }
 
       // Only allow admin to update role and isActive
       if (decoded.role === 'ADMIN') {
